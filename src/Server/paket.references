@@ -1,0 +1,7 @@
+group Server
+    Saturn
+    Thoth.Json.Giraffe
+    Fable.Remoting.Giraffe
+    FSharp.Core
+    Serilog.AspNetCore
+    Serilog.Sinks.Console    

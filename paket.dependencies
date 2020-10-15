@@ -1,0 +1,56 @@
+group Client
+    source https://api.nuget.org/v3/index.json
+    framework: auto-detect
+    
+    nuget Fable.FontAwesome.Free
+    nuget Fable.MaterialUI.Icons
+    nuget Feliz
+    nuget Feliz.MaterialUI
+    nuget Feliz.MaterialUI.Pickers
+    nuget Feliz.UseElmish
+    nuget Feliz.Markdown
+    nuget FSharp.Core
+    nuget Fable.Core 
+    nuget Fable.Elmish 
+    nuget Fable.Elmish.Debugger 
+    nuget Fable.Elmish.Hmr 
+    nuget Fable.Elmish.React 
+    nuget Fable.React 
+    nuget Thoth.Fetch 
+    nuget Fable.Remoting.Client
+
+group Server
+    source https://api.nuget.org/v3/index.json
+    framework: auto-detect
+
+    nuget FSharp.Core
+    nuget Saturn 
+    nuget Thoth.Json.Giraffe 
+    nuget Serilog.AspNetCore
+    nuget Serilog.Sinks.Console    
+    nuget Fable.Remoting.Giraffe
+
+group PICELib
+    source https://api.nuget.org/v3/index.json
+    framework: auto-detect
+
+    nuget ExcelDataReader 3.4.1.0
+    nuget ExcelDataReader.DataSet 3.4.1.0
+    nuget ExcelProvider 
+    nuget Newtonsoft.Json
+    nuget FSharp.Core
+    nuget FSharp.Data copy_local: true
+    nuget FSharpComposableQuery copy_local: true
+    nuget FSharp.Data.TypeProviders copy_local: true
+    nuget Markdig
+
+
+group Build
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+
+    nuget FSharp.Core
+    nuget Fake.Core.Target
+    nuget Fake.DotNet.Cli
+    nuget Fake.IO.FileSystem

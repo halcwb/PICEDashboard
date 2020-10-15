@@ -1,0 +1,17 @@
+group Client
+    Fable.Core
+    Fable.Elmish
+    Fable.Elmish.React
+    Fable.Elmish.Debugger
+    Fable.Elmish.Hmr
+    Fable.React
+    Thoth.Fetch
+    FSharp.Core
+    Feliz
+    Fable.Remoting.Client
+    Fable.FontAwesome.Free
+    Feliz.MaterialUI
+    Fable.MaterialUI.Icons
+    Feliz.UseElmish
+    Feliz.MaterialUI.Pickers
+    Feliz.Markdown

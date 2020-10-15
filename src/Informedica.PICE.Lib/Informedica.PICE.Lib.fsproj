@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>net472</TargetFrameworks>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Title>Informedica.PICE.Lib</Title>
+        <Description>Import MRDM PICE export files and generate reports</Description>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <Optimize>true</Optimize>
+        <Tailcalls>true</Tailcalls>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="Scripts/Scripts.fsx" />
+        <Compile Include="AssemblyInfo.fs" />
+        <Compile Include="StartUp.fs" />
+        <Compile Include="NullCheck.fs" />
+        <Compile Include="String.fs" />
+        <Compile Include="StringBuilder.fs" />
+        <Compile Include="File.fs" />
+        <Compile Include="Cache.fs" />
+        <Compile Include="Markdown.fs" />
+        <Compile Include="Result.fs" />
+        <Compile Include="Types.fs" />
+        <Compile Include="Utils.fs" />
+        <Compile Include="Click.fs" />
+        <Compile Include="MRDM.fs" />
+        <Compile Include="PIM.fs" />
+        <Compile Include="PRISM.fs" />
+        <Compile Include="Patient.fs" />
+        <Compile Include="Validation.fs" />
+        <Compile Include="Parsing.fs" />
+        <Compile Include="Statistics.fs" />
+        <Compile Include="Export.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="System.Data.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+    </ItemGroup>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
