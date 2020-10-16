@@ -9,6 +9,8 @@ open Fake.IO
 Target.initEnvironment ()
 
 let serverPath = Path.getFullName "./src/Server"
+let clientPath = Path.getFullName "./src/Client"
+let clientDeployPath = Path.combine clientPath "deploy"
 let deployDir = Path.getFullName "./deploy"
 let serverTestsPath = Path.getFullName "./tests/Server"
 
@@ -34,13 +36,19 @@ let dotnet cmd workingDir =
     let result = DotNet.exec (DotNet.Options.withWorkingDirectory workingDir) cmd ""
     if result.ExitCode <> 0 then failwithf "'dotnet %s' failed in %s" cmd workingDir
 
-Target.create "Clean" (fun _ -> Shell.cleanDir deployDir)
+Target.create "Clean" (fun _ -> Shell.cleanDirs [ deployDir; clientDeployPath] )
 
-Target.create "InstallClient" (fun _ -> npm "install" ".")
+Target.create "InstallClient" (fun _ -> npm "install" __SOURCE_DIRECTORY__)
 
 Target.create "Bundle" (fun _ ->
-    dotnet (sprintf "publish -c Release -o \"%s\"" deployDir) serverPath
+    let serverDir = Path.combine deployDir "Server"
+    let clientDir = Path.combine deployDir "Client"
+    let publicDir = Path.combine clientDir "public"
+
+    dotnet (sprintf "publish -c Release -o \"%s\"" serverDir) serverPath
     npm "run build" "."
+
+    Shell.copyDir publicDir clientDeployPath FileFilter.allFiles
 )
 
 Target.create "Run" (fun _ ->

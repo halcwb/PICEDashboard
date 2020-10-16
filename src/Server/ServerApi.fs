@@ -75,6 +75,8 @@ module ServerApi =
                                     Html = 
                                         stats 
                                         |> Statistics.toString
+//                                        |> fun s -> printfn "%s" s; s
+
                             }
 
                     return Ok stats

@@ -484,23 +484,37 @@ module Statistics =
         [<Literal>]
         let estPRISM = "* Geschatte PRISM4 mortaliteit: {0:F0}"
         [<Literal>]
-        let yearTitle = "### Rapportage van {0}"
+        let yearTitle = "#### Totalen van {0}"
         [<Literal>]
         let monthTitle = "{0:MMMM}"
         [<Literal>]
         let disReason = "* {0}: {1}"
 
     let toString (stats : Statistics) =
+        let calcPerc t n  =
+            try
+                if t > 0 then
+                    StringBuilder.builder ""
+                    |> StringBuilder.appendFormat "{0:F1} ({1:F0}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
+                    |> StringBuilder.toString
+                else
+                    sprintf "%A" n 
+            with 
+            | e -> sprintf "error calcPerc %A %A\n%s" t n (e.ToString())
+                   |> failwith
+
         let printTotals n t (totals : Totals) sb =
+            let calc = calcPerc totals.Patients
             sb
             |> StringBuilder.appendLineFormat t [ n |> box ]
             |> StringBuilder.appendLineFormat Literals.patTot [ totals.Patients |> box ]
             |> StringBuilder.appendLineFormat Literals.adsTot [ totals.Admissions |> box ]
             |> StringBuilder.appendLineFormat Literals.disTot [ totals.Discharged |> box ]
-            |> StringBuilder.appendLineFormat Literals.dthTot [ totals.Deaths |> box ]
-            |> StringBuilder.appendLineFormat Literals.estPIM2 [ totals.PIM2Mortality |> box ]
-            |> StringBuilder.appendLineFormat Literals.estPIM3 [ totals.PIM3Mortality |> box ]
             |> StringBuilder.appendLineFormat Literals.dayTot [ totals.PICUDays |> box ]
+            |> StringBuilder.appendLineFormat Literals.dthTot [ calc (float totals.Deaths) |> box ]
+            |> StringBuilder.appendLineFormat Literals.estPIM2 [ calc totals.PIM2Mortality |> box ]
+            |> StringBuilder.appendLineFormat Literals.estPIM3 [ calc totals.PIM3Mortality |> box ]
+            |> StringBuilder.newLine
             |> StringBuilder.appendLine "#### Ontslag redenen"
             |> fun sb ->
                 totals.DischargeReasons
@@ -519,13 +533,13 @@ module Statistics =
                     "Overleden"
                     "Ligdagen"
                 ]
-                |> List.map (fun s -> "= " + s + " =")
                 |> List.map box
 
             let sb =
                 sb
-                |> StringBuilder.appendLine "#### Per maand"
                 |> StringBuilder.newLine
+                |> StringBuilder.appendLine "#### Per maand"
+//                |> StringBuilder.newLine
                 |> StringBuilder.appendLineFormat Literals.columns6 caps
                 |> StringBuilder.appendLine Literals.headers6
 
@@ -540,8 +554,8 @@ module Statistics =
                         stat.Totals.Patients   |> box
                         stat.Totals.Admissions |> box
                         stat.Totals.Discharged |> box
-                        stat.Totals.Deaths     |> box
                         stat.Totals.PICUDays   |> box
+                        calcPerc stat.Totals.Patients (float stat.Totals.Deaths) |> box
                     ]
         
                 acc
@@ -553,12 +567,12 @@ module Statistics =
             stats.YearTotals
             |> List.fold (fun acc stat ->
                 acc
+                |> StringBuilder.appendLine (sprintf "## Rapportage over %i" stat.Year)
                 |> printTotals stat.Year Literals.yearTitle stat.Totals
                 |> printMonthTabel stat
                 |> fun sb ->
                     sb
                     |> StringBuilder.newLine
-                    |> StringBuilder.appendLine Literals.line
                     |> StringBuilder.newLine
 
             ) ("" |> StringBuilder.builder)
@@ -576,28 +590,33 @@ module Statistics =
                 "PIM3 Mortaliteit"
                 "PRISM4 Mortaliteit"
             ]
-            |> List.map (fun s -> "= " + s + " =")
+//            |> List.map (fun s -> "= " + s + " =")
             |> List.map box
 
         "# PICE Rapport"
         |> StringBuilder.builder
         |> StringBuilder.newLine
-        |> StringBuilder.appendLine "## Validatie"
+        |> StringBuilder.newLine
+        |> StringBuilder.appendLine "#### Validatie"
         |> fun sb ->
             stats.InvalidPatients
             |> List.fold (fun acc (s, c) ->
                 acc
                 |> StringBuilder.appendLineFormat Literals.disReason [ s |> box; c |> box ]
             ) sb
-        |> StringBuilder.appendLine "## Totalen over de hele periode"
+        |> StringBuilder.newLine
+        |> StringBuilder.appendLine "#### Totalen over de hele periode"
         |> StringBuilder.appendLineFormat Literals.patTot [ stats.Totals.Patients |> box ]
         |> StringBuilder.appendLineFormat Literals.adsTot [ stats.Totals.Admissions |> box ]
         |> StringBuilder.appendLineFormat Literals.disTot [ stats.Totals.Discharged |> box ]
-        |> StringBuilder.appendLineFormat Literals.dthTot [ stats.Totals.Deaths |> box ]
         |> StringBuilder.appendLineFormat Literals.dayTot [ stats.Totals.PICUDays |> box ]
-        |> StringBuilder.appendLineFormat Literals.estPIM2 [ stats.Totals.PIM2Mortality |> box ]
-        |> StringBuilder.appendLineFormat Literals.estPIM3 [ stats.Totals.PIM3Mortality |> box ]
-        |> StringBuilder.appendLineFormat Literals.estPRISM [ stats.Totals.PRISM4Mortality |> box ]
+        |> StringBuilder.appendLineFormat Literals.dthTot [ calcPerc stats.Totals.Patients (float stats.Totals.Deaths) |> box ]
+        |> StringBuilder.appendLineFormat Literals.estPIM2 [ calcPerc stats.Totals.Patients stats.Totals.PIM2Mortality |> box ]
+        |> StringBuilder.appendLineFormat Literals.estPIM3 [ calcPerc stats.Totals.Patients stats.Totals.PIM3Mortality |> box ]
+        |> StringBuilder.appendLineFormat Literals.estPRISM [ calcPerc stats.Totals.Patients stats.Totals.PRISM4Mortality |> box ]
+        |> StringBuilder.newLine
+        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de ziekenhuis mortaliteit"
+        |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Ontslag redenen"
         |> fun sb ->
             stats.Totals.DischargeReasons
@@ -605,16 +624,17 @@ module Statistics =
                 acc
                 |> StringBuilder.appendLineFormat Literals.disReason [ s |> box; c |> box ]
             ) sb
+        |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Per jaar"
         |> fun sb ->
             let sb =
                 sb
-                |> StringBuilder.newLine
                 |> StringBuilder.appendLineFormat Literals.columns9 caps
                 |> StringBuilder.appendLine Literals.headers9
 
             stats.YearTotals
             |> List.fold (fun acc stat ->
+                let calc = calcPerc stat.Totals.Patients
                 let vals =
                     [
                         stat.Year              |> box
@@ -622,17 +642,16 @@ module Statistics =
                         stat.Totals.Admissions |> box
                         stat.Totals.Discharged |> box
                         stat.Totals.PICUDays   |> box
-                        stat.Totals.Deaths     |> box
-                        stat.Totals.PIM2Mortality |> box
-                        stat.Totals.PIM3Mortality |> box
-                        stat.Totals.PRISM4Mortality |> box
+                        calc (float stat.Totals.Deaths) |> box
+                        calc stat.Totals.PIM2Mortality |> box
+                        calc stat.Totals.PIM3Mortality |> box
+                        calc stat.Totals.PRISM4Mortality |> box
                     ]
         
                 acc
                 |> StringBuilder.appendLineFormat Literals.columns9 vals
             ) sb
         |> StringBuilder.newLine
-        |> StringBuilder.appendLine Literals.line
         |> StringBuilder.appendLine yrs
         |> StringBuilder.toString
 

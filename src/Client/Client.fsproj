@@ -10,6 +10,7 @@
         <Compile Include="..\Shared\Api.fs" />
         <Compile Include="Extensions.fs" />
         <Compile Include="Server.fs" />
+        <Compile Include="Bindings.fs" />
         <Compile Include="Pages\Statistics.fs" />
         <Compile Include="Components\AppBar.fs" />
         <Compile Include="Components\MenuDrawer.fs" />

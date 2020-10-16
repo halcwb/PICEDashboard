@@ -58,7 +58,7 @@ console.log('Bundling for ' + environment + '...');
 
 module.exports = {
     entry: { app: resolve('./src/Client/Client.fsproj') },
-    output: { path: resolve('./deploy/public') },
+    output: { path: resolve('./deploy/Client/public') },
     resolve: { symlinks: false }, // See https://github.com/fable-compiler/Fable/issues/1490
     mode: isProduction ? 'production' : 'development',
     plugins: isProduction ? [htmlPlugin, copyPlugin] : [htmlPlugin, hmrPlugin],
