@@ -19,6 +19,7 @@ module Types =
             PIM3Mortality : float
             PRISM4Mortality : float
             DischargeReasons : (string * int) list
+            HospitalDischargeReasons : (string * int) list
         }
 
 
@@ -63,7 +64,7 @@ module Statistics =
             PIM3Mortality = 0.
             PRISM4Mortality = 0.
             DischargeReasons = []
-
+            HospitalDischargeReasons = []
         }
 
     let monthTotals = 

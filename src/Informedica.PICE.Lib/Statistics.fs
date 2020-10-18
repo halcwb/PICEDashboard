@@ -17,11 +17,13 @@ module Statistics =
         member val Discharged = 0 with get, set
         member val PICUDays = 0 with get, set
         member val Deaths = 0 with get, set
+        member val HospitalDeaths = 0 with get, set
         member val PICUDeaths = 0 with get, set
         member val PIM2Mortality = 0. with get, set
         member val PIM3Mortality = 0. with get, set
         member val PRISM4Mortality = 0. with get, set
         member val DischargeReasons : (string * int) list = [] with get, set
+        member val HospitalDischargeDestinations : (string * int) list = [] with get, set
 
 
     type MonthTotals () =
@@ -139,7 +141,17 @@ module Statistics =
             |> List.filter (fun p ->
                 notValid
                 |> List.exists ((=) p)
-                |> not
+                |> not &&
+                // exclude current year
+                p.HospitalAdmissions
+                |> List.exists (fun ha ->
+                    ha.PICUAdmissions
+                    |> List.exists (fun pa ->
+                        match pa.AdmissionDate with
+                        | Some dt -> dt.Year < DateTime.Now.Year
+                        | None    -> false
+                    )
+                )
             )
             |> List.distinctBy (fun p -> p.HospitalNumber)
             |> List.collect (fun p ->
@@ -177,7 +189,22 @@ module Statistics =
         stats.Totals.Deaths <-
             pats
             |> List.map (fun p -> p.patient)
-            |> List.filter (fun p -> p.PatientState = Dead)
+            |> List.filter (fun p -> 
+                p.PatientState = Dead || 
+                p.DateOfDeath |> Option.isSome ||
+//                p.DeathMode <> "" ||
+//                p.DeathLocation <> "Niet overleden" ||
+                p.HospitalAdmissions
+                |> List.exists (fun ha ->
+                    ha.DischargeDestination = "Mortuarium" ||
+                    ha.PICUAdmissions
+                    |> List.exists (fun pa ->
+                        pa.AdmissionType = DOA ||
+                        pa.DischargeReason = "Overleden" 
+                    )
+                )
+            )
+            |> List.distinctBy (fun p -> p.HospitalNumber)
             |> List.length
 
         stats.Totals.PIM2Mortality <-
@@ -217,7 +244,20 @@ module Statistics =
             pats
             |> List.countBy (fun p -> p.picuAdmission.DischargeReason)
             |> List.map (fun (k, v) -> if k = "" then "Onbekend", v else k, v)
+
+
+        stats.Totals.HospitalDischargeDestinations <-
+            let unknown = 
+                MRDM.Codes.find "adm-desthospunitid" "99"
+                |> Option.defaultValue ""
+            pats
+            |> List.countBy (fun p -> 
+                if p.hospitalAdmission.DischargeDestination = "" then unknown 
+                else
+                    p.hospitalAdmission.DischargeDestination
+            )
             
+
         stats.Totals.PICUDays <-
             pats
             |> List.map (fun p -> p.picuAdmission)
@@ -268,6 +308,7 @@ module Statistics =
             )
             |> List.map m
             |> List.distinct
+
         // Patient statistics
         yrTots
         |> List.iter (fun tot ->
@@ -488,20 +529,37 @@ module Statistics =
         [<Literal>]
         let monthTitle = "{0:MMMM}"
         [<Literal>]
-        let disReason = "* {0}: {1}"
+        let countItem = "* {0}: {1}"
 
     let toString (stats : Statistics) =
         let calcPerc t n  =
             try
                 if t > 0 then
                     StringBuilder.builder ""
-                    |> StringBuilder.appendFormat "{0:F1} ({1:F0}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
+                    |> StringBuilder.appendFormat "{0:F0} ({1:F0}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
                     |> StringBuilder.toString
                 else
                     sprintf "%A" n 
             with 
             | e -> sprintf "error calcPerc %A %A\n%s" t n (e.ToString())
                    |> failwith
+
+        let printCount title kvs sb =
+            sb
+            |> StringBuilder.appendLine title
+            |> fun sb ->
+                let t =
+                    kvs
+                    |> List.map snd
+                    |> List.sum
+
+                kvs
+                |> List.sortBy fst
+                |> List.fold (fun acc (s, c) ->
+                    let c = calcPerc t (float c)
+                    acc
+                    |> StringBuilder.appendLineFormat Literals.countItem [ s |> box; c |> box ]
+                ) sb
 
         let printTotals n t (totals : Totals) sb =
             let calc = calcPerc totals.Patients
@@ -515,13 +573,11 @@ module Statistics =
             |> StringBuilder.appendLineFormat Literals.estPIM2 [ calc totals.PIM2Mortality |> box ]
             |> StringBuilder.appendLineFormat Literals.estPIM3 [ calc totals.PIM3Mortality |> box ]
             |> StringBuilder.newLine
-            |> StringBuilder.appendLine "#### Ontslag redenen"
-            |> fun sb ->
-                totals.DischargeReasons
-                |> List.fold (fun acc (s, c) ->
-                    acc
-                    |> StringBuilder.appendLineFormat Literals.disReason [ s |> box; c |> box ]
-                ) sb
+            |> StringBuilder.newLine
+            |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de ziekenhuis mortaliteit"
+            |> StringBuilder.newLine
+            |> StringBuilder.newLine
+            |> printCount "#### PICU Ontslag redenen" totals.DischargeReasons 
 
         let printMonthTabel (yrTot : YearTotals) sb =
             let caps =
@@ -530,8 +586,8 @@ module Statistics =
                     "Patienten"
                     "Opnames"
                     "Ontslagen"
-                    "Overleden"
                     "Ligdagen"
+                    "Overleden"
                 ]
                 |> List.map box
 
@@ -539,7 +595,6 @@ module Statistics =
                 sb
                 |> StringBuilder.newLine
                 |> StringBuilder.appendLine "#### Per maand"
-//                |> StringBuilder.newLine
                 |> StringBuilder.appendLineFormat Literals.columns6 caps
                 |> StringBuilder.appendLine Literals.headers6
 
@@ -562,9 +617,9 @@ module Statistics =
                 |> StringBuilder.appendLineFormat Literals.columns6 vals
             ) sb
 
-
         let yrs =
             stats.YearTotals
+            |> List.sortByDescending (fun t -> t.Year)
             |> List.fold (fun acc stat ->
                 acc
                 |> StringBuilder.appendLine (sprintf "## Rapportage over %i" stat.Year)
@@ -597,13 +652,7 @@ module Statistics =
         |> StringBuilder.builder
         |> StringBuilder.newLine
         |> StringBuilder.newLine
-        |> StringBuilder.appendLine "#### Validatie"
-        |> fun sb ->
-            stats.InvalidPatients
-            |> List.fold (fun acc (s, c) ->
-                acc
-                |> StringBuilder.appendLineFormat Literals.disReason [ s |> box; c |> box ]
-            ) sb
+        |> printCount "#### Validatie" stats.InvalidPatients
         |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Totalen over de hele periode"
         |> StringBuilder.appendLineFormat Literals.patTot [ stats.Totals.Patients |> box ]
@@ -615,15 +664,13 @@ module Statistics =
         |> StringBuilder.appendLineFormat Literals.estPIM3 [ calcPerc stats.Totals.Patients stats.Totals.PIM3Mortality |> box ]
         |> StringBuilder.appendLineFormat Literals.estPRISM [ calcPerc stats.Totals.Patients stats.Totals.PRISM4Mortality |> box ]
         |> StringBuilder.newLine
-        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de ziekenhuis mortaliteit"
         |> StringBuilder.newLine
-        |> StringBuilder.appendLine "#### Ontslag redenen"
-        |> fun sb ->
-            stats.Totals.DischargeReasons
-            |> List.fold (fun acc (s, c) ->
-                acc
-                |> StringBuilder.appendLineFormat Literals.disReason [ s |> box; c |> box ]
-            ) sb
+        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de totale mortaliteit"
+        |> StringBuilder.newLine
+        |> StringBuilder.newLine
+        |> printCount "#### Ziekenhuis ontslag bestemming" stats.Totals.HospitalDischargeDestinations
+        |> StringBuilder.newLine
+        |> printCount "#### PICU ontslag redenen" stats.Totals.DischargeReasons
         |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Per jaar"
         |> fun sb ->
@@ -631,8 +678,8 @@ module Statistics =
                 sb
                 |> StringBuilder.appendLineFormat Literals.columns9 caps
                 |> StringBuilder.appendLine Literals.headers9
-
             stats.YearTotals
+            |> List.sortByDescending (fun t -> t.Year)
             |> List.fold (fun acc stat ->
                 let calc = calcPerc stat.Totals.Patients
                 let vals =
@@ -651,6 +698,24 @@ module Statistics =
                 acc
                 |> StringBuilder.appendLineFormat Literals.columns9 vals
             ) sb
+            |> fun sb ->
+                let t = stats.YearTotals |> List.sumBy (fun s -> s.Totals.Patients)
+                let calc = calcPerc t
+                let vals =
+                    [
+                        "Totalen"            |> box
+                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.Patients) |> box
+                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions) |> box
+                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.Discharged) |> box
+                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDays)   |> box
+                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.Deaths) |> float) |> box
+                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM2Mortality)) |> box
+                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM3Mortality)) |> box
+                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PRISM4Mortality)) |> box
+                    ]
+                
+                sb
+                |> StringBuilder.appendLineFormat Literals.columns9 vals
         |> StringBuilder.newLine
         |> StringBuilder.appendLine yrs
         |> StringBuilder.toString

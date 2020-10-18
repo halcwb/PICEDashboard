@@ -147,6 +147,13 @@ module Parsing =
                 | [g;d] -> [ { Id = id; Group = g |> String.trim |> String.toLower; Name = d |> String.trim |> String.toLower} ]
                 | _     -> []
 
+    let findOk n d = 
+        MRDM.Codes.find n d
+        |> function
+        | Some s -> s  |> Result.ok
+        | None   -> "" |> Result.ok
+
+
     let parsePatient (hospData : MRDMHospital.Row[]) (d : MRDMPatient.Row) =
         let getHospNum (data : MRDMHospital.Row[]) =
             let errs, hn =
@@ -180,7 +187,8 @@ module Parsing =
         <*> parseDateOpt d.gebdat
         <*> mapPatientState d.status
         <*> parseDateOpt d.datovl
-        <*> Result.ok d.``adm-deathmodeid``
+        <*> findOk "adm-deathmodeid" d.``adm-deathmodeid``
+        <*> findOk "adm-deceasedwhereid" d.``adm-deceasedwhereid``
 
 
     let parseHospAdm (hospData: MRDMHospital.Row[]) =
@@ -196,6 +204,7 @@ module Parsing =
                 Patient.createHospitalAdmission
                 <!> Result.ok d.``ziekenhuis-episode-upn``
                 <*> parseDateOpt d.``adm-hosp-admdate``
+                <*> (findOk "adm-desthospunitid" d.``adm-desthospunitid``)
                 <*> parseDateOpt d.``adm-hosp-disdate`` 
             )
             |> Result.foldOk 

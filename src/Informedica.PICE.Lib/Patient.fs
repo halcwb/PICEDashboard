@@ -8,21 +8,23 @@ module Patient =
     open Types
     
 
-    let create hn bd ps dd dm =
+    let create hn bd ps dd dm dl =
         {
             HospitalNumber = hn
             BirthDate = bd
             PatientState = ps
             DateOfDeath = dd
             DeathMode = dm
+            DeathLocation = dl
             HospitalAdmissions = []
         }
 
-    let createHospitalAdmission hn adt ddt =
+    let createHospitalAdmission hn adt dest ddt =
         {
             HospitalNumber = hn
             AdmissionDate = adt
             DischargeDate = ddt
+            DischargeDestination = dest
             PICUAdmissions = []
         }
 

@@ -129,6 +129,7 @@ module Types =
             BirthDate : DateTime option
             PatientState : PatientState
             DateOfDeath : DateTime option
+            DeathLocation : string
             DeathMode : string
             HospitalAdmissions : HospitalAdmission list
         }
@@ -138,6 +139,7 @@ module Types =
             HospitalNumber : string
             AdmissionDate : DateTime option
             DischargeDate : DateTime option
+            DischargeDestination : string
             PICUAdmissions : PICUAdmission list
         }
     and PICUAdmission =

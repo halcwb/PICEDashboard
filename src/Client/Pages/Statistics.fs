@@ -64,7 +64,10 @@ module Statistics =
                         | _ -> ()
 //                        typography.paragraph true
                         typography.color.primary
-                        prop.style [ style.marginTop 50 ]
+                        if props.level = 2 then prop.className classes.head
+                        prop.style [ 
+                            style.marginTop 50 
+                        ]
                         typography.children props.children
                         ]
                     )
@@ -115,7 +118,9 @@ module Statistics =
                             listItem.button true
                             let children = 
                                 Mui.typography [
-                                    typography.variant.body2
+                                    typography.variant.body1
+                                    prop.style [ style.fontWeight.bold ]
+                                    typography.color.textSecondary
                                     typography.children props.children
                                 ]
                             listItem.children children
@@ -125,8 +130,13 @@ module Statistics =
                     markdown.renderers.paragraph (fun props ->
                         Browser.Dom.console.log ("paragraph: ", box props)
                         Mui.container [
-                            prop.style [ style.marginBottom 10 ]
-                            container.children props.children
+                            prop.style [ style.marginTop 10; style.paddingLeft 0 ]
+                            let children =
+                                Mui.typography [
+                                    typography.color.textSecondary
+                                    typography.children props.children
+                                ]
+                            container.children children
                         ]
                     )
                 ]
