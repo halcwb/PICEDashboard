@@ -11,3 +11,20 @@ module Utils =
     let calcRiskFromScore score = Math.Exp(score) / (1. + Math.Exp(score))
 
 
+    module DataOption  =
+        
+        open Types
+
+        let create id label = { Id = id; Label = label }
+
+        let toString (d : DataOption) = d.Label
+
+        let optToString = function
+        | Some d -> d |> toString
+        | None   -> ""
+
+        let EqsId id (d : DataOption) = d.Id = id
+
+        let EqsIdOpt id = function
+        | Some d -> d |> EqsId id
+        | None   -> false

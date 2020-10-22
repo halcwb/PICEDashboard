@@ -8,14 +8,27 @@ module Patient =
     open Types
     
 
-    let create hn bd ps dd dm dl =
+    let create id 
+               hosptitalNumber 
+               birthDate 
+               gender 
+               birthWeight
+               gestationAge
+               vitalStatus 
+               dateOfDeath 
+               deathMode 
+               locationOfDeath =
         {
-            HospitalNumber = hn
-            BirthDate = bd
-            PatientState = ps
-            DateOfDeath = dd
-            DeathMode = dm
-            DeathLocation = dl
+            Id = id
+            HospitalNumber = hosptitalNumber
+            BirthDate = birthDate
+            Gender = gender
+            BirthWeight = birthWeight
+            GestationalAge = gestationAge
+            PatientState = vitalStatus
+            DateOfDeath = dateOfDeath
+            DeathMode = deathMode
+            DeathLocation = locationOfDeath
             HospitalAdmissions = []
         }
 
@@ -172,8 +185,8 @@ module Patient =
     let picuAdmissionToString (a : PICUAdmission) =
         sprintf "%A %s %s"
             (a.AdmissionDate)
-            (a.ReferingSpecialism)
-            (a.AdmissionIndication)
+            (a.ReferingSpecialism |> Utils.DataOption.optToString )
+            (a.AdmissionIndication |> Utils.DataOption.optToString)
 
 
     let hospitalAdmissionToString (a : HospitalAdmission) =

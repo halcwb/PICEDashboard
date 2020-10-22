@@ -2405,5 +2405,7 @@ module MRDM =
                     code |> eqs c
                 )
                 |> function
-                | Some (_, _, v) -> Some v
+                | Some (_, id, label) -> 
+                    Utils.DataOption.create id label
+                    |> Some
                 | None -> None

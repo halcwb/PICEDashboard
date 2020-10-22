@@ -102,6 +102,13 @@ module Parsing =
             | s when s = "3" -> DOA
             | _ -> UnknownAdmissionType
 
+
+        let mapGender = function
+            | s when s = "1" -> Male
+            | s when s = "2" -> Female
+            | _ -> UnknownGender
+
+
         //129	Directe opname van buiten eigen UMC
         //103	Volwassen-IC /CCU
         //114	Zorgafdeling via OK
@@ -139,7 +146,7 @@ module Parsing =
             |> function
             | None -> []
             | Some s ->
-                s
+                s.Label
                 |> String.replace "(" ""
                 |> String.replace ")" "|"
                 |> String.split "|"
@@ -147,11 +154,30 @@ module Parsing =
                 | [g;d] -> [ { Id = id; Group = g |> String.trim |> String.toLower; Name = d |> String.trim |> String.toLower} ]
                 | _     -> []
 
+
     let findOk n d = 
         MRDM.Codes.find n d
         |> function
-        | Some s -> s  |> Result.ok
-        | None   -> "" |> Result.ok
+        | Some s -> s |> Some  
+        | None   -> None       
+        |> Result.ok
+
+
+    let parseDateOpt s =
+        if s |> isNullOrWhiteSpace then None |> Result.ok
+        else s |> Result.tryWithOk Parsers.parseDate
+
+    let parseBool = ((=) "1") >> Result.ok
+
+
+    let parseFloat s =
+        if String.IsNullOrWhiteSpace(s) then Result.ok None
+        else Result.okIfNone [| sprintf "couldn't parse float %s" s |] (Parsers.parseFloat s)
+
+
+    let parseInt s =
+        if String.IsNullOrWhiteSpace(s) then Result.ok None
+        else Result.okIfNone [| sprintf "couldn't parse int %s" s |] (Parsers.parseInt s)
 
 
     let parsePatient (hospData : MRDMHospital.Row[]) (d : MRDMPatient.Row) =
@@ -177,14 +203,15 @@ module Parsing =
             if errs |> Array.isEmpty then hn |> Result.ok
             else errs |> Result.error
 
-        let parseDateOpt s =
-            if s |> isNullOrWhiteSpace then None |> Result.ok
-            else s |> Result.tryWithOk Parsers.parseDate
         let mapPatientState = Parsers.mapPatientState >> Result.ok
 
         Patient.create
-        <!> getHospNum hospData
+        <!> Result.ok d.idcode 
+        <*> getHospNum hospData
         <*> parseDateOpt d.gebdat
+        <*> (Parsers.mapGender >> Result.ok) d.geslacht
+        <*> parseFloat d.``pat-weight-of-birth``
+        <*> parseInt d.``pat-zwduur``
         <*> mapPatientState d.status
         <*> parseDateOpt d.datovl
         <*> findOk "adm-deathmodeid" d.``adm-deathmodeid``
@@ -192,10 +219,6 @@ module Parsing =
 
 
     let parseHospAdm (hospData: MRDMHospital.Row[]) =
-        let parseDateOpt s =
-            if s |> isNullOrWhiteSpace then None |> Result.ok
-            else s |> Result.tryWithOk Parsers.parseDate
-
         let fErr msgs = msgs |> Result.Error
         let fOk ((p : Patient), msgs1) =
             hospData
@@ -481,16 +504,6 @@ module Parsing =
 
 
     let parsePICUAdmissions (picuData : MRDMPicu.Row[]) =
-        let parseDateOpt s =
-            if s |> isNullOrWhiteSpace then None |> Result.ok
-            else s |> Result.tryWithOk Parsers.parseDate
-        let parseBool = ((=) "1") >> Result.ok
-        let parseFloat s =
-            if String.IsNullOrWhiteSpace(s) then Result.ok None
-            else Result.okIfNone [| sprintf "couldn't parse float %s" s |] (Parsers.parseFloat s)
-        let parseInt s =
-            if String.IsNullOrWhiteSpace(s) then Result.ok None
-            else Result.okIfNone [| sprintf "couldn't parse int %s" s |] (Parsers.parseInt s)
         let mapAdmType = Parsers.mapAdmissionType >> Result.ok
         let mapUrgency = Parsers.mapUrgency >> Result.ok
         let mapRisk d cprpre cprin leukemia bmt cva card scid hiv neuro hlhs =
@@ -568,10 +581,10 @@ module Parsing =
         picuData
         |> Array.map (fun d ->
             let find n c =
-                if c |> isNullOrWhiteSpace then Result.ok ""
+                if c |> isNullOrWhiteSpace then Result.ok None
                 else
                     match MRDM.Codes.find n c with
-                    | Some v -> Result.ok v
+                    | Some d -> d |> Some |> Result.ok 
                     | None ->
                         [| sprintf "couldn't find code %s with name %s" c n |]
                         |> Result.error

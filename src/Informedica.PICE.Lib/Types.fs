@@ -125,12 +125,16 @@ module Types =
 
     type Patient =
         {
+            Id : string
             HospitalNumber : string
             BirthDate : DateTime option
+            Gender : Gender
+            BirthWeight : float option
+            GestationalAge : int option
             PatientState : PatientState
             DateOfDeath : DateTime option
-            DeathLocation : string
-            DeathMode : string
+            DeathLocation : DataOption option
+            DeathMode : DataOption option
             HospitalAdmissions : HospitalAdmission list
         }
     and PatientState = Alive | Dead | UnknownPatientState
@@ -139,7 +143,7 @@ module Types =
             HospitalNumber : string
             AdmissionDate : DateTime option
             DischargeDate : DateTime option
-            DischargeDestination : string
+            DischargeDestination : DataOption option
             PICUAdmissions : PICUAdmission list
         }
     and PICUAdmission =
@@ -148,10 +152,10 @@ module Types =
             HospitalNumber : string
             AdmissionDate : DateTime option
             DischargeDate : DateTime option
-            DischargeReason : string
+            DischargeReason : DataOption option
             AdmissionType : AdmissionType
-            AdmissionIndication : string
-            ReferingSpecialism : string
+            AdmissionIndication : DataOption option
+            ReferingSpecialism : DataOption option
             PrimaryDiagnosis : Diagnose list
             SecondaryDiagnosis : Diagnose list
             Diagnoses : Diagnose list
@@ -174,6 +178,11 @@ module Types =
             Group : string
             Name : string
         }
+    and Gender = 
+        | Male
+        | Female
+        | UnknownGender
+    and DataOption = { Id : string; Label : string }
 
 
     type ParsingError =

@@ -7,6 +7,7 @@ module Statistics =
     open System.Text
 
     open Types
+    open Utils
     open Validation
 
 
@@ -22,6 +23,8 @@ module Statistics =
         member val PIM2Mortality = 0. with get, set
         member val PIM3Mortality = 0. with get, set
         member val PRISM4Mortality = 0. with get, set
+        member val Gender : (string * int) list = [] with get, set
+        member val AgeGroup : (string * int) list = [] with get, set
         member val DischargeReasons : (string * int) list = [] with get, set
         member val HospitalDischargeDestinations : (string * int) list = [] with get, set
 
@@ -89,7 +92,7 @@ module Statistics =
 
     let dateFilter yr mo adt =
         match yr, mo with
-        | None, None -> true
+        | None,   None -> true
         | Some y, None   -> dateInYear y adt
         | Some y, Some m -> dateInYearMonth y m adt
         | _ -> "not a valid filter" |> failwith
@@ -105,17 +108,55 @@ module Statistics =
             | None, None, Some prism -> prism.PRISM4Mortality
             | _ -> None
 
-        let disReasons =
-            pats
-            |> List.collect (fun p ->
-                p.HospitalAdmissions
-                |> List.collect (fun ha  ->
-                    ha.PICUAdmissions
-                    |> List.map (fun pa -> pa.DischargeReason)
-                )
+        let countBy un (ds : DataOption option list) =
+            ds
+            |> List.countBy id
+            |> List.sortByDescending snd
+            |> List.map (fun (k, v) -> 
+                match k with
+                | Some d -> d.Label, v
+                | None   -> un, v
             )
-            |> List.distinct
 
+        let genderToCount (pats : Patient list) = 
+            pats
+            |> List.distinctBy (fun p -> p.HospitalNumber)
+            |> List.map (fun p -> 
+                match p.Gender with
+                | Male -> "Man"
+                | Female -> "Vrouw"
+                | UnknownGender -> "Onbekend"
+            )
+            |> List.countBy id
+
+        let ageToCount (dts : (DateTime option * DateTime option) list) =
+            dts
+            |> List.map (fun (ad, bd) ->
+                match ad, bd with
+                | Some ad, Some bd ->
+                    match (ad - bd).TotalDays with
+                    | ds when ds < 28.  -> "0 dagen - 4 weken"
+                    | ds when ds < 365. -> "1 maand - 1 jaar"
+                    | ds when ds < (365. * 4.)  -> "1 jaar - 4 jaar"
+                    | ds when ds < (365. * 12.) -> "4 jaar - 12 jaar"
+                    | ds when ds < (365. * 16.) -> "12 jaar - 16 jaar"
+                    | ds when ds < (365. * 18.) -> "16 jaar - 18 jaar"
+                    | _ -> "ouder dan 18 jaar"
+                | _, _ -> "onbekende leeftijd"
+            )
+            |> List.countBy id
+            |> List.sortBy (fun (k, _) ->
+                match k with
+                | s when s = "0 dagen - 4 weken" -> 0
+                | s when s = "1 maand - 1 jaar"  -> 1
+                | s when s = "1 jaar - 4 jaar"   -> 2
+                | s when s = "4 jaar - 12 jaar"  -> 3
+                | s when s = "12 jaar - 16 jaar" -> 4
+                | s when s = "16 jaar - 18 jaar" -> 5
+                | s when s = "ouder dan 18 jaar" -> 6
+                | _ -> 999
+            )
+             
         let pats =
             let notValid =
                 pats
@@ -141,29 +182,27 @@ module Statistics =
             |> List.filter (fun p ->
                 notValid
                 |> List.exists ((=) p)
-                |> not &&
-                // exclude current year
-                p.HospitalAdmissions
-                |> List.exists (fun ha ->
-                    ha.PICUAdmissions
-                    |> List.exists (fun pa ->
-                        match pa.AdmissionDate with
-                        | Some dt -> dt.Year < DateTime.Now.Year
-                        | None    -> false
-                    )
-                )
+                |> not 
             )
             |> List.distinctBy (fun p -> p.HospitalNumber)
             |> List.collect (fun p ->
                 p.HospitalAdmissions
                 |> List.collect (fun ha ->
                     ha.PICUAdmissions
+                    |> List.distinct
                     |> List.map (fun pa ->
                         {|
                             patient = p
                             hospitalAdmission = ha
                             picuAdmission = pa
                         |}
+                    )
+                    // Exclude current year
+                    |> List.filter (fun p ->
+                        match p.picuAdmission.AdmissionDate with
+                        | None -> false
+                        | Some dt when dt.Year = DateTime.Now.Year -> false
+                        | _ -> true
                     )
                 )
             )
@@ -196,11 +235,11 @@ module Statistics =
 //                p.DeathLocation <> "Niet overleden" ||
                 p.HospitalAdmissions
                 |> List.exists (fun ha ->
-                    ha.DischargeDestination = "Mortuarium" ||
+                    (ha.DischargeDestination |> DataOption.EqsIdOpt "128") ||
                     ha.PICUAdmissions
                     |> List.exists (fun pa ->
                         pa.AdmissionType = DOA ||
-                        pa.DischargeReason = "Overleden" 
+                        (pa.DischargeReason |> DataOption.EqsIdOpt "100")
                     )
                 )
             )
@@ -242,21 +281,26 @@ module Statistics =
 
         stats.Totals.DischargeReasons <-
             pats
-            |> List.countBy (fun p -> p.picuAdmission.DischargeReason)
-            |> List.map (fun (k, v) -> if k = "" then "Onbekend", v else k, v)
-
+            |> List.map (fun p  -> p.picuAdmission.DischargeReason)
+            |> countBy "Onbekend"
 
         stats.Totals.HospitalDischargeDestinations <-
             let unknown = 
                 MRDM.Codes.find "adm-desthospunitid" "99"
-                |> Option.defaultValue ""
+                |> function
+                | Some d -> d.Label
+                | None   -> ""
+
             pats
-            |> List.countBy (fun p -> 
-                if p.hospitalAdmission.DischargeDestination = "" then unknown 
-                else
-                    p.hospitalAdmission.DischargeDestination
-            )
-            
+            |> List.map (fun p ->  p.hospitalAdmission.DischargeDestination)
+            |> countBy unknown
+
+        stats.Totals.Gender <- pats |> List.map (fun p -> p.patient) |> genderToCount
+
+        stats.Totals.AgeGroup <-
+            pats
+            |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
+            |> ageToCount
 
         stats.Totals.PICUDays <-
             pats
@@ -270,7 +314,7 @@ module Statistics =
             |> int
 
         let yrTots =
-            [ 2003..DateTime.Now.Year ]
+            [ 2003..DateTime.Now.Year - 1 ]
             |> List.map (fun yr ->
                 let tot = new YearTotals()
                 tot.Year <- yr
@@ -284,36 +328,35 @@ module Statistics =
                 tot
             )
 
-        let inline getAdmitted f m = 
+        let inline filterAdmitted f m = 
             pats
             |> List.filter (fun d -> d.picuAdmission.DischargeDate |> Option.isSome)
             |> List.filter (fun d ->
                 f d.picuAdmission.AdmissionDate d.picuAdmission.DischargeDate
             )
             |> List.map m
-            |> List.distinct
 
-        let inline getAdmissions f m = 
+        let inline filterAdmission f m = 
             pats
             |> List.filter (fun p ->
                 f p.picuAdmission.AdmissionDate
             )
             |> List.map m
-            |> List.distinct
 
-        let inline getDischarged f m =
+        let inline filterDischarged f m =
             pats
             |> List.filter (fun p ->
                 f p.picuAdmission.DischargeDate
             )
             |> List.map m
-            |> List.distinct
 
         // Patient statistics
         yrTots
         |> List.iter (fun tot ->
             let yr = Some tot.Year
-            let admitted = getAdmitted (periodFilter yr None) (fun d -> d.patient)
+            let admitted = 
+                filterAdmitted (periodFilter yr None) (fun d -> d.patient)
+                |> List.distinctBy (fun p -> p.HospitalNumber)
 
             tot.Totals.Patients <-
                 admitted
@@ -327,7 +370,6 @@ module Statistics =
                     | Some dt -> dt.Year = tot.Year
                 )
                 |> List.length
-
 
             tot.Totals.PIM2Mortality <-
                 pats
@@ -364,33 +406,48 @@ module Statistics =
                 |> List.map (fun pa -> pa |> getPRISMMort |> Option.get)
                 |> List.filter (Double.IsNaN >> not)
                 |> List.sum
-
         )
         // PICU admission statistics
         yrTots
         |> List.iter (fun tot ->
             let yr = Some tot.Year
-            let admissions = getAdmissions (dateFilter yr None) (fun d -> d.picuAdmission)
+            let admissions = filterAdmission (dateFilter yr None) (fun d -> d.picuAdmission)
 
             tot.Totals.Admissions <-
                 admissions
                 |> List.length
+
+            tot.Totals.Gender <-
+                filterAdmission (dateFilter yr None) id
+                |> List.map (fun p -> p.patient)
+                |> genderToCount
+
+            tot.Totals.AgeGroup <-
+                filterAdmission (dateFilter yr None) id
+                |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
+                |> ageToCount
+
         )
         // PICU discharge statistics
         yrTots
         |> List.iter (fun tot ->
             let yr = Some tot.Year
-            let discharged = getDischarged (dateFilter yr None) (fun d -> d.picuAdmission)
+            let discharged = filterDischarged (dateFilter yr None) (fun d -> d.picuAdmission)
 
             tot.Totals.Discharged <-
                 discharged
                 |> List.length
+
+            tot.Totals.DischargeReasons <-
+                discharged
+                |> List.map (fun a -> a.DischargeReason )
+                |> countBy "Onbekend"
         )
         // PICU admitted statistics
         yrTots
         |> List.iter (fun tot ->
             let yr = Some tot.Year
-            let admitted = getAdmitted (periodFilter yr None) (fun d -> d.picuAdmission)
+            let admitted = filterAdmitted (periodFilter yr None) (fun d -> d.picuAdmission)
 
             tot.Totals.Admitted <-
                 admitted
@@ -413,11 +470,6 @@ module Statistics =
                 )
                 |> List.sum
                 |> int
-
-            tot.Totals.DischargeReasons <-
-                admitted
-                |> List.groupBy (fun a -> a.DischargeReason )
-                |> List.map (fun (r, xs) -> r, xs |> List.length)
         )
 
         yrTots
@@ -436,28 +488,28 @@ module Statistics =
                     let mo = Some mo
 
                     moTot.Totals.Patients <-
-                        getAdmitted (periodFilter yr mo) (fun d -> d.patient)
+                        filterAdmitted (periodFilter yr mo) (fun d -> d.patient)
                         |> List.length
 
                     moTot.Totals.Deaths <-
-                        getAdmitted (periodFilter yr mo) (fun d -> d.patient)
+                        filterAdmitted (periodFilter yr mo) (fun d -> d.patient)
                         |> List.filter (fun p -> p.DateOfDeath |> Option.isSome)
                         |> List.length
 
                     moTot.Totals.Admissions <-
-                        getAdmissions (dateFilter yr mo) (fun d -> d.picuAdmission)
+                        filterAdmission (dateFilter yr mo) (fun d -> d.picuAdmission)
                         |> List.length
 
                     moTot.Totals.Admitted <-
-                        getAdmitted (periodFilter yr mo) (fun d -> d.picuAdmission)
+                        filterAdmitted (periodFilter yr mo) (fun d -> d.picuAdmission)
                         |> List.length
 
                     moTot.Totals.Discharged <-
-                        getDischarged (dateFilter yr mo) (fun d -> d.picuAdmission)
+                        filterDischarged (dateFilter yr mo) (fun d -> d.picuAdmission)
                         |> List.length
 
                     moTot.Totals.PICUDays <-
-                        getAdmitted (periodFilter yr mo) (fun d -> d.picuAdmission)
+                        filterAdmitted (periodFilter yr mo) (fun d -> d.picuAdmission)
                         |> List.map (fun pa ->
                             let start = DateTime(yrTot.Year, moTot.Month, 1)
                             let stop = start.AddMonths(1)
@@ -544,7 +596,7 @@ module Statistics =
             | e -> sprintf "error calcPerc %A %A\n%s" t n (e.ToString())
                    |> failwith
 
-        let printCount title kvs sb =
+        let printCount title kvs sort sb =
             sb
             |> StringBuilder.appendLine title
             |> fun sb ->
@@ -554,7 +606,7 @@ module Statistics =
                     |> List.sum
 
                 kvs
-                |> List.sortBy fst
+                |> fun xs -> if sort then xs |> List.sortByDescending snd else xs
                 |> List.fold (fun acc (s, c) ->
                     let c = calcPerc t (float c)
                     acc
@@ -577,7 +629,13 @@ module Statistics =
             |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de ziekenhuis mortaliteit"
             |> StringBuilder.newLine
             |> StringBuilder.newLine
-            |> printCount "#### PICU Ontslag redenen" totals.DischargeReasons 
+            |> printCount "#### Geslacht" totals.Gender true
+            |> StringBuilder.newLine
+            |> StringBuilder.newLine
+            |> printCount "#### Leeftijdsgroup" totals.AgeGroup false
+            |> StringBuilder.newLine
+            |> StringBuilder.newLine
+            |> printCount "#### PICU Ontslag redenen" totals.DischargeReasons true
 
         let printMonthTabel (yrTot : YearTotals) sb =
             let caps =
@@ -645,14 +703,13 @@ module Statistics =
                 "PIM3 Mortaliteit"
                 "PRISM4 Mortaliteit"
             ]
-//            |> List.map (fun s -> "= " + s + " =")
             |> List.map box
 
         "# PICE Rapport"
         |> StringBuilder.builder
         |> StringBuilder.newLine
         |> StringBuilder.newLine
-        |> printCount "#### Validatie" stats.InvalidPatients
+        |> printCount "#### Validatie" stats.InvalidPatients true
         |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Totalen over de hele periode"
         |> StringBuilder.appendLineFormat Literals.patTot [ stats.Totals.Patients |> box ]
@@ -668,9 +725,17 @@ module Statistics =
         |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de totale mortaliteit"
         |> StringBuilder.newLine
         |> StringBuilder.newLine
-        |> printCount "#### Ziekenhuis ontslag bestemming" stats.Totals.HospitalDischargeDestinations
+        |> printCount "#### Geslacht" stats.Totals.Gender true
         |> StringBuilder.newLine
-        |> printCount "#### PICU ontslag redenen" stats.Totals.DischargeReasons
+        |> StringBuilder.newLine
+        |> printCount "#### Leeftijdsgroup" stats.Totals.AgeGroup false
+        |> StringBuilder.newLine
+        |> StringBuilder.newLine
+        |> printCount "#### Ziekenhuis ontslag bestemming" stats.Totals.HospitalDischargeDestinations true
+        |> StringBuilder.newLine
+        |> StringBuilder.newLine
+        |> printCount "#### PICU ontslag redenen" stats.Totals.DischargeReasons true
+        |> StringBuilder.newLine
         |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Per jaar"
         |> fun sb ->
