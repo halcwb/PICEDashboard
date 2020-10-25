@@ -6,7 +6,7 @@ module ServerApi =
 
     open Microsoft.Extensions.Logging
     open Microsoft.Extensions.Configuration
-    open Informedica.PICE.Shared
+    open Informedica.PICE.Shared.Types
     open Informedica.PICE.Shared.Api
     open Informedica.PICE.Lib
 
@@ -25,61 +25,68 @@ module ServerApi =
                         return Error error.Message
             }
 
-        member this.GetStatistics () =
-            let mapTotals (totals : Statistics.Totals) =
+        member this.GetReport () =
+            let mapTotals period (totals : Statistics.Totals) =
                 {
-                    Statistics.totals with
-                        Patients = totals.Patients
-                        Admissions = totals.Admissions
-                        Admitted = totals.Admitted
-                        Deaths = totals.Deaths
-                        Discharged = totals.Discharged
-                        DischargeReasons = totals.DischargeReasons
-                        PICUDays = totals.PICUDays
-                        PICUDeaths = totals.PICUDeaths
-                        PIM2Mortality = totals.PIM2Mortality
-                        PIM3Mortality = totals.PIM3Mortality
+                    Period = period
+                    InvalidPatients = totals.InvalidPatients
+                    Patients = totals.Patients
+                    Admissions = totals.Admissions
+                    Admitted = totals.Admitted
+                    Deaths = totals.Deaths
+                    Discharged = totals.Discharged
+                    DischargeReasons = totals.DischargeReasons
+                    HospitalDischargeDestinations = totals.HospitalDischargeDestinations
+                    PICUDays = totals.PICUDays
+                    PICUDeaths = totals.PICUDeaths
+                    PIM2Mortality = totals.PIM2Mortality
+                    PIM3Mortality = totals.PIM3Mortality
+                    PRISM4Mortality = totals.PRISM4Mortality
                 }
 
             async {
                 try 
                     let pats = Parsing.parseMRDM ()
-                    let stats = 
+                    let report = 
                         pats
                         |> Result.valueOrDefault (fun _ -> [||])
                         |> Array.toList
                         |> Statistics.calculate
-                        |> fun stats -> 
+                        |> Report.create
+                        |> fun rep ->
                             {
-                                Statistics.statistics with
-                                    Totals = stats.Totals |> mapTotals
-                                    InvalidPatients = stats.InvalidPatients
-                                    YearTotals = 
-                                        stats.YearTotals
-                                        |> List.map (fun ytot ->
-                                            {
-                                                Statistics.yearTotals with
-                                                    Year = ytot.Year
-                                                    Totals = ytot.Totals |> mapTotals
-                                                    MonthTotals =
-                                                        ytot.MonthTotals
-                                                        |> List.map (fun mtot ->
-                                                            {
-                                                                Statistics.monthTotals with
-                                                                    Month = mtot.Month
-                                                                    Totals = mtot.Totals |> mapTotals
-                                                            }
-                                                        )
-                                            }
-                                        )
-                                    Html = 
-                                        stats 
-                                        |> Statistics.toString
-                                        |> fun s -> printfn "%s" s; s
+                                Sections =
+                                    rep.Sections
+                                    |> List.map (fun s ->
+                                        {
+                                            Title = s.Title
+                                            Groups = 
+                                                s.Groups
+                                                |> List.map (fun g ->
+                                                    { 
+                                                        Title = g.Title
+                                                        Items =
+                                                            g.Items
+                                                            |> List.map (fun i ->
+                                                                {
+                                                                    Title = i.Title
+                                                                    Content = i.Content
+                                                                }
+                                                            )
+                                                    }
+                                                )
+                                            Totals = 
+                                                s.Totals
+                                                |> List.map (fun (p, t) -> 
+                                                    mapTotals p t
+                                                )
 
+                                        }
+                                    )
+                                Markdown = rep.Markdown
                             }
 
-                    return Ok stats
+                    return Ok report
                 with
                 | error ->
                         logger.LogError(error, "Error while trying to say hello world")
@@ -90,5 +97,5 @@ module ServerApi =
         member this.Build() : IServerApi =
             {
                 SayHello = this.SayHello
-                GetStatistics = this.GetStatistics
+                GetReport = this.GetReport
             }

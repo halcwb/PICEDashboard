@@ -1,6 +1,8 @@
 ﻿namespace Feliz.Markdown
 
 open Feliz
+open Fable.Core
+open Fable.Core.JsInterop
 
 type ITextProperties =
     abstract children: string
@@ -38,6 +40,8 @@ type IListProperties =
 type IListItemProperties =
     abstract children : ReactElement []
 
+type IPluginsProperties =
+    abstract children : ReactElement []
 
 
 module markdown =
@@ -76,3 +80,27 @@ module markdown =
 
         static member inline listItem (render : IListProperties -> ReactElement)=
             unbox<IMarkdownRenderer> (Interop.mkAttr "listItem" render)
+
+
+
+type IMarkdownPlugin = interface end
+
+
+type markdown =
+
+    static member inline plugins (plugins : IMarkdownPlugin list) =
+        Interop.mkAttr "plugins" (plugins |> List.toArray)
+
+
+type ITableOfContents = interface end
+
+module TableOfContents =
+    [<ImportDefault("remark-toc")>]
+    let tocObj : ITableOfContents = jsNative
+
+
+type TableOfContents =
+
+    static member inline toc () =
+        Browser.Dom.console.log("toc", TableOfContents.tocObj)
+        unbox<IMarkdownPlugin> (TableOfContents.tocObj)

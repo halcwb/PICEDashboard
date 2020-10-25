@@ -679,3 +679,4 @@ module Parsing =
 
             pats |> Cache.cache cachePath
             pats
+

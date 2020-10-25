@@ -9,6 +9,7 @@ group Client
     nuget Feliz.MaterialUI.Pickers
     nuget Feliz.UseElmish
     nuget Feliz.Markdown
+    nuget Feliz.Recharts
     nuget FSharp.Core
     nuget Fable.Core 
     nuget Fable.Elmish 

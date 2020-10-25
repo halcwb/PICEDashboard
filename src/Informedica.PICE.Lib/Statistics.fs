@@ -10,8 +10,10 @@ module Statistics =
     open Utils
     open Validation
 
+    module Literals = Markdown.Literals
 
     type Totals () =
+        member val InvalidPatients : (string * int) list = [] with get, set
         member val Patients = 0 with get, set
         member val Admissions = 0 with get, set
         member val Admitted = 0 with get, set
@@ -43,7 +45,10 @@ module Statistics =
     type Statistics () =
         member val Totals : Totals = Totals () with get, set
         member val YearTotals : YearTotals list = [] with get, set
-        member val InvalidPatients : (string * int) list = [] with get, set
+//        member val InvalidPatients : (string * int) list = [] with get, set
+
+
+    type MarkdownItem = { Id : string; Group : string; Text : string }
 
 
     let periodInYear yr (from : DateTime option) (until : DateTime option) =
@@ -108,15 +113,23 @@ module Statistics =
             | None, None, Some prism -> prism.PRISM4Mortality
             | _ -> None
 
-        let countBy un (ds : DataOption option list) =
-            ds
-            |> List.countBy id
-            |> List.sortByDescending snd
-            |> List.map (fun (k, v) -> 
-                match k with
-                | Some d -> d.Label, v
-                | None   -> un, v
+        let getCaps xs =
+            xs 
+            |> List.map (fun d -> 
+                match d with
+                | Some d -> d.Label
+                | None   -> "Onbekend"
             )
+            |> List.distinct
+
+        let countBy un caps (ds : DataOption option list) =
+            ds
+            |> List.map (fun d -> 
+                match d with
+                | Some d -> d.Label
+                | None   -> un
+            )
+            |> List.countByList caps
 
         let genderToCount (pats : Patient list) = 
             pats
@@ -128,6 +141,17 @@ module Statistics =
                 | UnknownGender -> "Onbekend"
             )
             |> List.countBy id
+            |> fun xs ->
+                if xs |> List.exists (fst >> ((=) "Onbekend")) then xs
+                else
+                    [ "Onbekend", 0 ]
+                    |> List.append xs
+            |> List.sortBy (fun (k, _) ->
+                match k with
+                | s when s = "Man" -> 1
+                | s when s = "Vrouw" -> 2
+                | _ -> 3
+            )
 
         let ageToCount (dts : (DateTime option * DateTime option) list) =
             dts
@@ -163,7 +187,7 @@ module Statistics =
                 |> List.map validatePat
                 |> List.filter (fun errs -> errs |> List.length > 0)
                 |> fun errs ->
-                    stats.InvalidPatients <-
+                    stats.Totals.InvalidPatients <-
                         errs
                         |> List.collect (fun errs ->
                             errs
@@ -272,17 +296,19 @@ module Statistics =
             pats
             |> List.map (fun p -> p.picuAdmission)
             |> List.filter (fun pa ->
-                pa.DischargeDate |>  Option.isSome &&
+                pa.DischargeDate   |> Option.isSome &&
                 pa |> getPRISMMort |> Option.isSome
             )
             |> List.map (fun pa -> pa |> getPRISMMort |> Option.get)
             |> List.filter (Double.IsNaN >> not)
             |> List.sum
 
-        stats.Totals.DischargeReasons <-
+        stats.Totals.DischargeReasons <-            
             pats
             |> List.map (fun p  -> p.picuAdmission.DischargeReason)
-            |> countBy "Onbekend"
+            |> fun xs ->
+                xs
+                |> countBy "Onbekend" (xs |> getCaps) 
 
         stats.Totals.HospitalDischargeDestinations <-
             let unknown = 
@@ -290,10 +316,12 @@ module Statistics =
                 |> function
                 | Some d -> d.Label
                 | None   -> ""
-
+            
             pats
             |> List.map (fun p ->  p.hospitalAdmission.DischargeDestination)
-            |> countBy unknown
+            |> fun xs -> 
+                xs
+                |> countBy unknown (xs |> getCaps)
 
         stats.Totals.Gender <- pats |> List.map (fun p -> p.patient) |> genderToCount
 
@@ -399,7 +427,7 @@ module Statistics =
                 pats
                 |> List.map (fun p -> p.picuAdmission)
                 |> List.filter (fun pa ->
-                    pa.DischargeDate |>  Option.isSome &&
+                    pa.DischargeDate   |> Option.isSome &&
                     pa |> getPRISMMort |> Option.isSome
                 )
                 |> List.filter (fun pa -> pa.DischargeDate.Value.Year = yr.Value)
@@ -441,7 +469,16 @@ module Statistics =
             tot.Totals.DischargeReasons <-
                 discharged
                 |> List.map (fun a -> a.DischargeReason )
-                |> countBy "Onbekend"
+                |> fun xs ->
+                    xs
+                    |> countBy "Onbekend" (stats.Totals.DischargeReasons |> List.map fst)
+
+            tot.Totals.HospitalDischargeDestinations <-
+                filterDischarged (dateFilter yr None) (fun d -> d.hospitalAdmission)
+                |> List.map (fun a -> a.DischargeDestination )
+                |> fun xs ->
+                    xs
+                    |> countBy "Onbekend" (stats.Totals.HospitalDischargeDestinations |> List.map fst)
         )
         // PICU admitted statistics
         yrTots
@@ -537,28 +574,6 @@ module Statistics =
     module Literals =
 
         [<Literal>]
-        let line = "---"
-        [<Literal>]
-        let headers5 = "|---|:---:|:---:|:---:|:---:|"
-        [<Literal>]
-        let columns5 = "|{0}|{1}|{2}|{3}|{4}|"
-        [<Literal>]
-        let headers6 = "|---|:---:|:---:|:---:|:---:|:---:|"
-        [<Literal>]
-        let columns6 = "|{0}|{1}|{2}|{3}|{4}|{5}|"
-        [<Literal>]
-        let columns6link = "|[{0}]()|{1}|{2}|{3}|{4}|{5}|"
-        [<Literal>]
-        let columns6tick = "|{0}|`{1}`|`{2}`|`{3}`|`{4}`|`{5}`|"
-        [<Literal>]
-        let headers8 = "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
-        [<Literal>]
-        let columns8 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|"
-        [<Literal>]
-        let headers9 = "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
-        [<Literal>]
-        let columns9 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|"
-        [<Literal>]
         let patTot = "* Totaal aantal patienten: {0}"
         [<Literal>]
         let adsTot = "* Totaal aantal opnames: {0}"
@@ -583,7 +598,8 @@ module Statistics =
         [<Literal>]
         let countItem = "* {0}: {1}"
 
-    let toString (stats : Statistics) =
+
+    let toMarkdown (stats : Statistics) =
         let calcPerc t n  =
             try
                 if t > 0 then
@@ -707,9 +723,10 @@ module Statistics =
 
         "# PICE Rapport"
         |> StringBuilder.builder
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
-        |> printCount "#### Validatie" stats.InvalidPatients true
+        |> StringBuilder.newLine2
+        |> StringBuilder.appendLine "## Rapportage Alle Jaren"
+        |> StringBuilder.newLine2
+        |> printCount "#### Validatie" stats.Totals.InvalidPatients true
         |> StringBuilder.newLine
         |> StringBuilder.appendLine "#### Totalen over de hele periode"
         |> StringBuilder.appendLineFormat Literals.patTot [ stats.Totals.Patients |> box ]
@@ -720,23 +737,17 @@ module Statistics =
         |> StringBuilder.appendLineFormat Literals.estPIM2 [ calcPerc stats.Totals.Patients stats.Totals.PIM2Mortality |> box ]
         |> StringBuilder.appendLineFormat Literals.estPIM3 [ calcPerc stats.Totals.Patients stats.Totals.PIM3Mortality |> box ]
         |> StringBuilder.appendLineFormat Literals.estPRISM [ calcPerc stats.Totals.Patients stats.Totals.PRISM4Mortality |> box ]
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
+        |> StringBuilder.newLine2
         |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de totale mortaliteit"
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
+        |> StringBuilder.newLine2
         |> printCount "#### Geslacht" stats.Totals.Gender true
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
+        |> StringBuilder.newLine2
         |> printCount "#### Leeftijdsgroup" stats.Totals.AgeGroup false
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
+        |> StringBuilder.newLine2
         |> printCount "#### Ziekenhuis ontslag bestemming" stats.Totals.HospitalDischargeDestinations true
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
+        |> StringBuilder.newLine2
         |> printCount "#### PICU ontslag redenen" stats.Totals.DischargeReasons true
-        |> StringBuilder.newLine
-        |> StringBuilder.newLine
+        |> StringBuilder.newLine2
         |> StringBuilder.appendLine "#### Per jaar"
         |> fun sb ->
             let sb =
@@ -784,4 +795,3 @@ module Statistics =
         |> StringBuilder.newLine
         |> StringBuilder.appendLine yrs
         |> StringBuilder.toString
-

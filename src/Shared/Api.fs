@@ -12,5 +12,5 @@ module Api =
     /// to learn more, read the docs at https://zaid-ajaj.github.io/Fable.Remoting/src/basics.html
     type IServerApi = {
         SayHello : unit -> Async<Result<string, string>>
-        GetStatistics : unit -> Async<Result<Types.Statistics, string>>
+        GetReport : unit -> Async<Result<Types.Report, string>>
     }  

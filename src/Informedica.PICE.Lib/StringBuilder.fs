@@ -12,6 +12,11 @@ module StringBuilder =
 
     let newLine = appendLine ""
 
+    let newLine2 sb = 
+        sb 
+        |> appendLine ""
+        |> appendLine ""
+    
     let appendFormat (fs : string) vs (sb : StringBuilder) = sb.AppendFormat(fs, (vs |> List.toArray))
 
     let appendLineFormat (fs : string) vs (sb : StringBuilder) = sb.AppendFormat(fs + "\n", (vs |> List.toArray))

@@ -12,6 +12,7 @@ let serverPath = Path.getFullName "./src/Server"
 let clientPath = Path.getFullName "./src/Client"
 let clientDeployPath = Path.combine clientPath "deploy"
 let deployDir = Path.getFullName "./deploy"
+let mrdmPath = Path.getFullName "./src/mrdm"
 let serverTestsPath = Path.getFullName "./tests/Server"
 
 let npm args workingDir =
@@ -43,12 +44,14 @@ Target.create "InstallClient" (fun _ -> npm "install" __SOURCE_DIRECTORY__)
 Target.create "Bundle" (fun _ ->
     let serverDir = Path.combine deployDir "Server"
     let clientDir = Path.combine deployDir "Client"
+    let mrdmDir = Path.combine deployDir "mrdm"
     let publicDir = Path.combine clientDir "public"
 
     dotnet (sprintf "publish -c Release -o \"%s\"" serverDir) serverPath
     npm "run build" "."
 
     Shell.copyDir publicDir clientDeployPath FileFilter.allFiles
+    Shell.copyDir mrdmDir mrdmPath FileFilter.allFiles
 )
 
 Target.create "Run" (fun _ ->

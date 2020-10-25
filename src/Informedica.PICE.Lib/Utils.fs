@@ -28,3 +28,15 @@ module Utils =
         let EqsIdOpt id = function
         | Some d -> d |> EqsId id
         | None   -> false
+
+
+    module List =
+
+        let countByList xs1 xs2 =
+            xs2
+            |> List.append xs1
+            |> List.countBy id
+            |> List.map (fun (k, v) -> k, v - 1)
+            |> List.sortBy (fun (k, _) ->
+                xs1 |> List.findIndex ((=) k)
+            )

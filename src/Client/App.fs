@@ -4,27 +4,48 @@ open Elmish
 open Thoth.Fetch
 open Feliz
 open Feliz.UseElmish
-open Fable.MaterialUI.Icons
+open Fable.MaterialUI
 open Feliz.MaterialUI
 
+open Informedica.PICE.Shared.Types
+open Types
 
-open Informedica.PICE.Shared
-
-type Model = Deferred<Result<Types.Statistics, string>>
+type Model = 
+    {   
+        Report : Deferred<Result<Report, string>>
+        DisplayType : DisplayType
+    }
 
 type Msg =
-    | LoadStatistics of AsyncOperationStatus<Result<Types.Statistics, string>>
+    | DisplayTypeChanged
+    | LoadStatistics of AsyncOperationStatus<Result<Report, string>>
+
 
 let init() =
-    let model : Model = HasNotStartedYet
+    let model : Model = 
+        {
+            Report = HasNotStartedYet
+            DisplayType = Print
+        }
     model, Cmd.ofMsg (LoadStatistics Started)
+
 
 let update msg model =
     match msg with
+    | DisplayTypeChanged ->
+        { model with 
+            DisplayType = 
+                match model.DisplayType with
+                | Print -> Table
+                | Table -> Graph
+                | Graph -> Print
+
+        }, Cmd.none
+
     | LoadStatistics Started ->
         let load = async {
             try
-                let! stats = Server.api.GetStatistics ()
+                let! stats = Server.api.GetReport ()
                 return LoadStatistics(Finished stats)
             with
             | error -> 
@@ -32,10 +53,10 @@ let update msg model =
                 return LoadStatistics (Finished(Error "Error while retrieving stats"))
         }
         
-        InProgress, Cmd.fromAsync load
+        { model with Report = InProgress }, Cmd.fromAsync load
 
-    | LoadStatistics (Finished stats) ->
-        Resolved stats, Cmd.none
+    | LoadStatistics (Finished report) ->
+        { model with Report = Resolved report} , Cmd.none
 
 
 let defaultTheme = 
@@ -55,7 +76,7 @@ let useStyles = Styles.makeStyles(fun styles theme ->
 )
 
 let statsView = 
-    React.functionComponent("statsview", fun (props : {| stats : Deferred<Result<Types.Statistics, string>>; dispatch : Msg -> unit |}) ->
+    React.functionComponent("statsview", fun (props : {| model : Model; dispatch : Msg -> unit |}) ->
         let classes = useStyles ()
 
         let display (s : string) = 
@@ -64,23 +85,33 @@ let statsView =
                 prop.text s
             ]
 
+        let buttons = 
+            [
+                Icons.menuIcon [], (fun _ -> DisplayTypeChanged |> props.dispatch)
+            ]
+
         Mui.themeProvider [
             themeProvider.theme defaultTheme
             themeProvider.children [
                 Mui.container [
                     container.component' "main"
+                    container.disableGutters true
+
                     if Hooks.useMediaQuery defaultTheme.breakpoints.upLg then
-                        container.maxWidth.md
+                        container.maxWidth.lg
                     else
-                        container.maxWidth.sm
+                        container.maxWidth.md
+
                     prop.className classes.page
                     prop.children [
-                        Components.AppBar.render "Informedica PICE dashboard" []
+                        Components.AppBar.render "Informedica PICE dashboard" buttons
 
-                        match props.stats with
+                        match props.model.Report with
                         | HasNotStartedYet -> display "De boel wordt opgestart ..."
-                        | InProgress       -> display "Statistieken worden opgehaald ..."
-                        | Resolved (Ok stats) -> Pages.Statistics.render stats
+                        | InProgress       -> display "Het rapport wordt opgehaald ..."
+                        | Resolved (Ok report) -> 
+                            Pages.Report.render props.model.DisplayType report
+                            // Pages.Graphs.render stats
                         | Resolved (Error err)  ->
                             sprintf "Oeps er ging wat mis:\n%s" err
                             |> display
@@ -91,4 +122,4 @@ let statsView =
     )
 
 
-let render model dispatch = statsView ({| stats = model; dispatch = dispatch |})
+let render model dispatch = statsView ({| model = model; dispatch = dispatch |})

@@ -6,8 +6,26 @@ module Route =
 
 module Types =
 
+    //member val InvalidPatients : (string * int) list = [] with get, set
+    //member val Patients = 0 with get, set
+    //member val Admissions = 0 with get, set
+    //member val Admitted = 0 with get, set
+    //member val Discharged = 0 with get, set
+    //member val PICUDays = 0 with get, set
+    //member val Deaths = 0 with get, set
+    //member val HospitalDeaths = 0 with get, set
+    //member val PICUDeaths = 0 with get, set
+    //member val PIM2Mortality = 0. with get, set
+    //member val PIM3Mortality = 0. with get, set
+    //member val PRISM4Mortality = 0. with get, set
+    //member val Gender : (string * int) list = [] with get, set
+    //member val AgeGroup : (string * int) list = [] with get, set
+    //member val DischargeReasons : (string * int) list = [] with get, set
+    //member val HospitalDischargeDestinations : (string * int) list = [] with get, set
     type Totals =
         {
+            Period : string
+            InvalidPatients : (string * int) list
             Patients : int
             Admissions : int
             Admitted : int
@@ -19,71 +37,30 @@ module Types =
             PIM3Mortality : float
             PRISM4Mortality : float
             DischargeReasons : (string * int) list
-            HospitalDischargeReasons : (string * int) list
+            HospitalDischargeDestinations : (string * int) list
         }
 
 
-    type MonthTotals =
+    type Report =
         {
-            Month : int
-            Totals : Totals
+            Sections : Section list
+            Markdown : string
         }
-
-
-    type YearTotals =
+    and Section = 
         {
-            Year : int
-            Totals : Totals
-            MonthTotals : MonthTotals list
+            Title : string
+            Groups : Group list
+            Totals : Totals list
         }
-
-
-    type Statistics =
+    and Group = 
         {
-            Totals : Totals 
-            YearTotals : YearTotals list 
-            InvalidPatients : (string * int) list 
-            Html : string
+            Title : string
+            Items : Item list
         }
-
-
-module Statistics =
-
-    open Types
-
-    let totals = 
+    and Item =
         {
-            Patients = 0
-            Admissions = 0
-            Admitted = 0
-            Discharged = 0
-            PICUDays = 0
-            Deaths = 0
-            PICUDeaths = 0
-            PIM2Mortality = 0.
-            PIM3Mortality = 0.
-            PRISM4Mortality = 0.
-            DischargeReasons = []
-            HospitalDischargeReasons = []
+            Title : string
+            Content : string
         }
 
-    let monthTotals = 
-        {
-            Month = 0
-            Totals = totals
-        }
 
-    let yearTotals = 
-        {
-            Year = 0
-            Totals = totals
-            MonthTotals = []
-        }
-
-    let statistics =
-        {
-            Totals = totals
-            YearTotals = []
-            InvalidPatients = []
-            Html = ""
-        }

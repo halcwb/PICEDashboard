@@ -11,9 +11,13 @@
         <Compile Include="Extensions.fs" />
         <Compile Include="Server.fs" />
         <Compile Include="Bindings.fs" />
-        <Compile Include="Pages\Statistics.fs" />
+        <Compile Include="Types.fs" />
+        <Compile Include="Components\Markdown.fs" />
         <Compile Include="Components\AppBar.fs" />
+        <Compile Include="Components\ExpansionPanelList.fs" />
         <Compile Include="Components\MenuDrawer.fs" />
+        <Compile Include="Pages\Graphs.fs" />
+        <Compile Include="Pages\Report.fs" />
         <Compile Include="App.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
