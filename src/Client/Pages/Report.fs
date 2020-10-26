@@ -56,7 +56,24 @@ module Report =
 
                             match dt with
                             | Graph when g.Title = "Opnames en Mortaliteit" && i.Title = "Per Jaar" -> 
-                                prop.children (s.Totals |> Pages.Graphs.render)
+                                prop.children [
+                                    "##### Mortaliteit" |> toMd
+                                    s.Totals |> Components.MortalityGraph.render
+                                    "##### Funnelplot " |> toMd
+                                    s.Totals |> Components.FunnelPlot.render
+                                    "##### Opnames/ontslagen en ligdagen" |> toMd
+                                    s.Totals |> Components.AdmissionsGraph.render
+                                ]
+                            | Graph when g.Title = "Geslacht" && i.Title = "Per Jaar" ->
+                                prop.children (s.Totals |> Components.StackedGenderChart.render)
+                            | Graph when g.Title = "Leeftijd" && i.Title = "Per Jaar" ->
+                                prop.children [
+                                    s.Totals |> Components.StackedAgeChart.render
+                                 ]
+                            | Graph when g.Title = "PICU Ontslagreden" && i.Title = "Per Jaar" ->
+                                prop.children [
+                                    s.Totals |> Components.StackedDischargeChart.render
+                                 ]
                             | _ ->
                                 prop.children (i.Content |> toMd)
                         ]
@@ -73,14 +90,14 @@ module Report =
                 summary = title
             |}                    
         )
-        |> Components.ExpansionPanelList.render
+        |> Components.AccordionList.render
 
     let createReport dt toMd (sections : Section list) =
         sections
         |> List.map (fun s ->
             let title = 
                 Mui.typography [
-                    typography.variant.h5
+                    typography.variant.h6
                     prop.text s.Title
                 ]
             {|
@@ -88,7 +105,7 @@ module Report =
                 summary = title
             |}
         )                
-        |> Components.ExpansionPanelList.render 
+        |> Components.AccordionList.render 
 
     let private comp =
         React.functionComponent("statistics", fun (props : {| displayType : DisplayType; report : Report |}) ->

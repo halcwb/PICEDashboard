@@ -3,6 +3,15 @@ namespace Informedica.PICE.Shared
 module Route =
     let hello = "/api/hello"
 
+module Utils =
+
+    module Math =
+
+        open System
+
+        let round (n : int) (c : float) = Math.Round(c, n)
+
+    
 
 module Types =
 
@@ -36,6 +45,8 @@ module Types =
             PIM2Mortality : float
             PIM3Mortality : float
             PRISM4Mortality : float
+            Gender : (string * int) list
+            AgeGroup : (string * int) list
             DischargeReasons : (string * int) list
             HospitalDischargeDestinations : (string * int) list
         }

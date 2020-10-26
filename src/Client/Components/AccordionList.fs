@@ -1,6 +1,6 @@
 ﻿namespace Components
 
-module ExpansionPanelList =
+module AccordionList =
 
     open Feliz
     open Elmish
@@ -8,7 +8,7 @@ module ExpansionPanelList =
     open Feliz.MaterialUI
 
     let comp =
-        React.functionComponent("expansionpanellist", fun (props : {| items : {| summary : ReactElement; details : ReactElement list |} list |}) ->
+        React.functionComponent("accordionlist", fun (props : {| items : {| summary : ReactElement; details : ReactElement list |} list |}) ->
             Mui.container [
                 prop.style [
                     style.display.flex
@@ -17,23 +17,23 @@ module ExpansionPanelList =
                 container.disableGutters true
                 container.children [
                     for item in props.items do
-                        Mui.expansionPanel [
-                            Mui.expansionPanelSummary [
+                        Mui.accordion [
+                            Mui.accordionSummary [
 
-                                expansionPanelSummary.expandIcon (expandMoreIcon "")
+                                accordionSummary.expandIcon (expandMoreIcon "")
 
                                 prop.style [
                                     style.backgroundColor Colors.green.``100``
                                 ]
 
-                                expansionPanelSummary.children [ item.summary ]
+                                accordionSummary.children [ item.summary ]
                             ]
 
-                            Mui.expansionPanelDetails [
+                            Mui.accordionDetails [
                                 prop.style [ 
                                     style.flexDirection.column
                                 ]
-                                expansionPanelDetails.children item.details
+                                accordionDetails.children item.details
                             ]
                         ]
                     ]

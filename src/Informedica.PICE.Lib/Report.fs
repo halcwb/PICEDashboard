@@ -31,122 +31,90 @@ module Report =
             Content : string
         }
 
+    let addItem section group title md report =
+        { report with
+            Sections =
+                report.Sections 
+                |> List.map (fun s ->
+                    if s.Title <> section then s
+                    else 
+                        { s with
+                            Groups =
+                                s.Groups
+                                |> List.map (fun g ->
+                                    if g.Title <> group then g
+                                    else
+                                        { g with
+                                            Items =
+                                                {
+                                                    Title = title
+                                                    Content = md
+                                                }
+                                                |> List.singleton
+                                                |> List.append g.Items            
+                                        }
+                                )
+                        }
+                )
+        }
+
+    let addGroup section title report =
+        { report with
+            Sections =
+                report.Sections 
+                |> List.map (fun s ->
+                    if s.Title <> section then s
+                    else 
+                        { s with
+                            Groups =
+                                {
+                                    Title = title
+                                    Items = []
+                                }
+                                |> List.singleton 
+                                |> List.append s.Groups                            
+                        }
+                )
+        }
+
+    let addSection title totals report =
+        { report with
+            Sections =
+                {
+                    Title = title 
+                    Groups = []
+                    Totals = totals
+                }
+                |> List.singleton
+                |> List.append report.Sections
+        }
+
+
+
     let create (stats : Statistics) =
-        let addItem section group title md report =
-            { report with
-                Sections =
-                    report.Sections 
-                    |> List.map (fun s ->
-                        if s.Title <> section then s
-                        else 
-                            { s with
-                                Groups =
-                                    s.Groups
-                                    |> List.map (fun g ->
-                                        if g.Title <> group then g
-                                        else
-                                            { g with
-                                                Items =
-                                                    {
-                                                        Title = title
-                                                        Content = md
-                                                    }
-                                                    |> List.singleton
-                                                    |> List.append g.Items            
-                                            }
-                                    )
-                            }
-                    )
-            }
+        let calcPerc = Statistics.calcPerc
 
-
-        let addGroup section title report =
-            { report with
-                Sections =
-                    report.Sections 
-                    |> List.map (fun s ->
-                        if s.Title <> section then s
-                        else 
-                            { s with
-                                Groups =
-                                    {
-                                        Title = title
-                                        Items = []
-                                    }
-                                    |> List.singleton 
-                                    |> List.append s.Groups                            
-                            }
-                    )
-            }
-
-        let addSection title totals report =
-            { report with
-                Sections =
-                    {
-                        Title = title 
-                        Groups = []
-                        Totals = totals
-                    }
-                    |> List.singleton
-                    |> List.append report.Sections
-            }
-
-        let calcPerc t n  =
-            try
-                if t > 0 then
-                    StringBuilder.builder ""
-                    |> StringBuilder.appendFormat "{0:F0} ({1:F0}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
-                    |> StringBuilder.toString
-                else
-                    sprintf "%A" n 
-            with 
-            | e -> sprintf "error calcPerc %A %A\n%s" t n (e.ToString())
-                   |> failwith
-
-        let printCount kvs sort =
-            StringBuilder.builder ""
-            |> fun sb ->
-                let t =
-                    kvs
-                    |> List.map snd
-                    |> List.sum
-
-                kvs
-                |> fun xs -> if sort then xs |> List.sortByDescending snd else xs
-                |> List.fold (fun acc (s, c) ->
-                    let c = calcPerc t (float c)
-                    acc
-                    |> StringBuilder.appendLineFormat Literals.countItem [ s |> box; c |> box ]
-                ) sb
+        let printCount kvs sort = 
+            Statistics.printCount "" kvs sort (StringBuilder.builder "")
             |> StringBuilder.toString
 
-        let countToTable title get sb =
-            let sb =
-                sb
-                |> StringBuilder.appendLine title
+        let countToTable tots get1 get2 = 
+            Statistics.countToTable tots get1 get2 (StringBuilder.builder "")
+            |> StringBuilder.toString
 
-            stats.YearTotals
-            |> List.map (fun ytot ->
-                ytot.Year, ytot.Totals |> get
-            )
-            |> List.sortByDescending fst
-            |> List.fold (fun acc (yr, xs) ->
-                let calc c = 
-                    calcPerc (xs |> List.sumBy snd) (c |> float)
-                    |> box
-
-                match acc with
-                | [] -> 
-                    let acc =
-                        [ xs |> List.map (fst >> box) |> List.append [ "Jaar" |> box; ] ]
-                    [  xs |> List.map (snd >> calc) |> List.append  [ yr |> box ] ]
-                    |> List.append acc
-                | _ ->
-                    [  xs |> List.map (snd >> calc) |> List.append  [ yr |> box ] ]
-                    |> List.append acc
-            ) []
-            |> Markdown.createMDTable sb
-            |> StringBuilder.newLine
+        let caps =
+            [
+                "Jaar"
+                "Patienten"
+                "Opnames"
+                "Ontslagen"
+                "Ligdagen"
+                "Overleden"
+                "PIM2 Mortaliteit"
+                "PIM3 Mortaliteit"
+                "PRISM4 Mortaliteit"
+            ]
+            |> List.map box
 
         let allYearTotals =
             StringBuilder.builder ""
@@ -162,20 +130,12 @@ module Report =
             |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de totale mortaliteit"
             |> StringBuilder.toString
 
+        let printTotals totals = 
+            StringBuilder.builder ""
+            |> Statistics.printTotals totals
+            |> StringBuilder.toString
+
         let allYearTabel (stats : Statistics) =
-            let caps =
-                [
-                    "Jaar"
-                    "Patienten"
-                    "Opnames"
-                    "Ontslagen"
-                    "Ligdagen"
-                    "Overleden"
-                    "PIM2 Mortaliteit"
-                    "PIM3 Mortaliteit"
-                    "PRISM4 Mortaliteit"
-                ]
-                |> List.map box
 
             StringBuilder.builder ""
             |> fun sb ->
@@ -223,6 +183,28 @@ module Report =
                     |> StringBuilder.appendLineFormat Literals.columns9 vals
                     |> StringBuilder.toString
 
+        let printMonthTabel ytot = 
+            StringBuilder.builder ""
+            |> Statistics.printMonthTabel ytot
+            |> StringBuilder.toString
+
+        let addYearSection (yTot : YearTotals) report =
+            let sectionTitle = sprintf "Rapportage %i" yTot.Year
+            report
+            |> addSection sectionTitle (yTot.MonthTotals |> List.map (fun mt -> mt.Month |> string, mt.Totals))
+            |> addGroup sectionTitle "Validatie" 
+            |> addItem sectionTitle "Validatie" "Totalen" (printCount yTot.Totals.InvalidPatients true)
+            |> addGroup sectionTitle "Opnames en Mortaliteit"
+            |> addItem sectionTitle "Opnames en Mortaliteit" "Totalen" (printTotals yTot.Totals) 
+            |> addItem sectionTitle "Opnames en Mortaliteit" "Per Maand" (printMonthTabel yTot)
+            |> addGroup sectionTitle "Geslacht"
+            |> addItem sectionTitle "Geslacht" "Totalen"  (printCount yTot.Totals.Gender true)
+            |> addGroup sectionTitle "Leeftijd"
+            |> addItem sectionTitle "Leeftijd" "Totalen"  (printCount yTot.Totals.AgeGroup true)
+            |> addGroup sectionTitle "PICU Ontslagreden"
+            |> addItem sectionTitle "PICU Ontslagreden" "Totalen"  (printCount yTot.Totals.DischargeReasons true)
+
+
         {
             Sections = [] 
             Markdown = stats |> Statistics.toMarkdown
@@ -233,3 +215,19 @@ module Report =
         |> addGroup "Rapportage Alle Jaren" "Opnames en Mortaliteit"
         |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Totalen" allYearTotals 
         |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Per Jaar" (allYearTabel stats)
+        |> addGroup "Rapportage Alle Jaren" "Geslacht"
+        |> addItem "Rapportage Alle Jaren" "Geslacht" "Totalen"  (printCount stats.Totals.Gender true)
+        |> addItem "Rapportage Alle Jaren" "Geslacht" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
+        |> addGroup "Rapportage Alle Jaren" "Leeftijd"
+        |> addItem "Rapportage Alle Jaren" "Leeftijd" "Totalen"  (printCount stats.Totals.AgeGroup true)
+        |> addItem "Rapportage Alle Jaren" "Leeftijd" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
+        |> addGroup "Rapportage Alle Jaren" "PICU Ontslagreden"
+        |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Totalen"  (printCount stats.Totals.DischargeReasons true)
+        |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
+        |> fun report ->
+            stats.YearTotals
+            |> List.sortByDescending (fun ytot -> ytot.Year)
+            |> List.fold (fun report ytot ->
+                addYearSection ytot report
+            ) report
+        

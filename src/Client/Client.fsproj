@@ -14,8 +14,16 @@
         <Compile Include="Types.fs" />
         <Compile Include="Components\Markdown.fs" />
         <Compile Include="Components\AppBar.fs" />
-        <Compile Include="Components\ExpansionPanelList.fs" />
+        <Compile Include="Components\AccordionList.fs" />
         <Compile Include="Components\MenuDrawer.fs" />
+        <Compile Include="Components\MortalityGraph.fs" />
+        <Compile Include="Components\FunnelPlot.fs" />
+        <Compile Include="Components\AdmissionsGraph.fs" />
+        <Compile Include="Components\PieChart.fs" />
+        <Compile Include="Components\StackedGenderChart.fs" />
+        <Compile Include="Components\StackedAgeChart.fs" />
+        <Compile Include="Components\StackedDischargeChart.fs" />
+        <Compile Include="Components\Dialog.fs" />
         <Compile Include="Pages\Graphs.fs" />
         <Compile Include="Pages\Report.fs" />
         <Compile Include="App.fs" />

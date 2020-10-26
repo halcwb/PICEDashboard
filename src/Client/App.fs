@@ -14,10 +14,12 @@ type Model =
     {   
         Report : Deferred<Result<Report, string>>
         DisplayType : DisplayType
+        DisplayTypeAcknowledged : bool
     }
 
 type Msg =
     | DisplayTypeChanged
+    | DisplayTypeAcknowledged
     | LoadStatistics of AsyncOperationStatus<Result<Report, string>>
 
 
@@ -25,10 +27,10 @@ let init() =
     let model : Model = 
         {
             Report = HasNotStartedYet
-            DisplayType = Print
+            DisplayType = Graph
+            DisplayTypeAcknowledged = true
         }
     model, Cmd.ofMsg (LoadStatistics Started)
-
 
 let update msg model =
     match msg with
@@ -36,12 +38,15 @@ let update msg model =
         { model with 
             DisplayType = 
                 match model.DisplayType with
-                | Print -> Table
-                | Table -> Graph
-                | Graph -> Print
-
+                | Print -> Graph
+                | Graph -> Table
+                | Table -> Print
+            DisplayTypeAcknowledged = false
         }, Cmd.none
-
+    | DisplayTypeAcknowledged -> 
+        { model with
+            DisplayTypeAcknowledged = true
+        }, Cmd.none
     | LoadStatistics Started ->
         let load = async {
             try
@@ -110,8 +115,15 @@ let statsView =
                         | HasNotStartedYet -> display "De boel wordt opgestart ..."
                         | InProgress       -> display "Het rapport wordt opgehaald ..."
                         | Resolved (Ok report) -> 
-                            Pages.Report.render props.model.DisplayType report
-                            // Pages.Graphs.render stats
+                            if props.model.DisplayTypeAcknowledged then
+                                Pages.Report.render props.model.DisplayType report
+                            else 
+                                let content =
+                                    match props.model.DisplayType with
+                                    | Print -> "Het rapport toont nu een print versie"
+                                    | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
+                                    | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
+                                Components.Dialog.render "Verandering van rapport" content (fun _ -> DisplayTypeAcknowledged |> props.dispatch)
                         | Resolved (Error err)  ->
                             sprintf "Oeps er ging wat mis:\n%s" err
                             |> display
