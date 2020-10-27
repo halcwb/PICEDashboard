@@ -11,9 +11,9 @@ module Dialog =
                 dialog.open' true
                 dialog.onClose (fun _ -> () |> props.dispatch)
                 dialog.children [
-                    Mui.dialogTitle [ prop.text props.title]
+                    Mui.dialogTitle [ props.title |> Components.Markdown.render ]
                     Mui.dialogContent [ 
-                        prop.text props.content 
+                        props.content |> Components.Markdown.render 
                     ]
                     Mui.dialogActions [
                         Mui.button [

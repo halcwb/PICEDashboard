@@ -24,6 +24,7 @@
         <Compile Include="Components\StackedAgeChart.fs" />
         <Compile Include="Components\StackedDischargeChart.fs" />
         <Compile Include="Components\Dialog.fs" />
+        <Compile Include="Components\TreeViewDrawer.fs" />
         <Compile Include="Pages\Graphs.fs" />
         <Compile Include="Pages\Report.fs" />
         <Compile Include="App.fs" />

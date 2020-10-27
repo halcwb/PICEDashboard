@@ -9,18 +9,21 @@ open Feliz.MaterialUI
 
 open Informedica.PICE.Shared.Types
 open Types
+open Components
 
 type Model = 
     {   
         Report : Deferred<Result<Report, string>>
         DisplayType : DisplayType
         DisplayTypeAcknowledged : bool
+        SelectedTreeItem : string option
     }
 
 type Msg =
     | DisplayTypeChanged
     | DisplayTypeAcknowledged
     | LoadStatistics of AsyncOperationStatus<Result<Report, string>>
+    | TreeItemSelected of string
 
 
 let init() =
@@ -29,6 +32,7 @@ let init() =
             Report = HasNotStartedYet
             DisplayType = Graph
             DisplayTypeAcknowledged = true
+            SelectedTreeItem = None
         }
     model, Cmd.ofMsg (LoadStatistics Started)
 
@@ -46,6 +50,10 @@ let update msg model =
     | DisplayTypeAcknowledged -> 
         { model with
             DisplayTypeAcknowledged = true
+        }, Cmd.none
+    | TreeItemSelected s -> 
+        { model with
+            SelectedTreeItem = Some s
         }, Cmd.none
     | LoadStatistics Started ->
         let load = async {
@@ -109,21 +117,49 @@ let statsView =
 
                     prop.className classes.page
                     prop.children [
-                        Components.AppBar.render "Informedica PICE dashboard" buttons
+                        AppBar.render "Informedica PICE dashboard" buttons
 
                         match props.model.Report with
                         | HasNotStartedYet -> display "De boel wordt opgestart ..."
                         | InProgress       -> display "Het rapport wordt opgehaald ..."
                         | Resolved (Ok report) -> 
+                            let treeData = 
+                                report.Sections
+                                |> List.mapi (fun i1 s ->
+                                    let grps =
+                                        s.Groups
+                                        |> List.mapi (fun i2 g ->
+                                            let items =
+                                                g.Items
+                                                |> List.mapi (fun i3 item ->
+                                                    TreeViewDrawer.createData
+                                                        (sprintf "%i.%i.%i" i1 i2 i3)
+                                                        item.Title
+                                                        []
+                                                )
+                                            TreeViewDrawer.createData
+                                                (sprintf "%i.%i" i1 i2)
+                                                g.Title
+                                                items
+                                        )
+                                    TreeViewDrawer.createData 
+                                        (sprintf "%i" i1) 
+                                        s.Title
+                                        grps
+                                )
+
+                            Browser.Dom.console.log("treedata", treeData)
+                            TreeViewDrawer.render treeData (TreeItemSelected >> props.dispatch)
+
                             if props.model.DisplayTypeAcknowledged then
-                                Pages.Report.render props.model.DisplayType report
+                                Pages.Report.render props.model.DisplayType props.model.SelectedTreeItem report
                             else 
                                 let content =
                                     match props.model.DisplayType with
                                     | Print -> "Het rapport toont nu een print versie"
                                     | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
                                     | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
-                                Components.Dialog.render "Verandering van rapport" content (fun _ -> DisplayTypeAcknowledged |> props.dispatch)
+                                Dialog.render "### Verandering van rapport type" content (fun _ -> DisplayTypeAcknowledged |> props.dispatch)
                         | Resolved (Error err)  ->
                             sprintf "Oeps er ging wat mis:\n%s" err
                             |> display
