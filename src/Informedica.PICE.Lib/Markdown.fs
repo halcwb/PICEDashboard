@@ -44,6 +44,14 @@ module Markdown =
         let headers9 = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
         [<Literal>]
         let columns9 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|"
+        [<Literal>]
+        let headers16 = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+        [<Literal>]
+        let columns16 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|{9}|{10}|{11}|{12}|{13}|{14}|{15:F0}|"
+        [<Literal>]
+        let headers17 = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+        [<Literal>]
+        let columns17 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|{9}|{10}|{11}|{12}|{13}|{14}|{15:F0}|{16:F0}|"
 
 
 
@@ -60,6 +68,8 @@ module Markdown =
                 | _ when h |> List.length = 7 -> Literals.headers7, Literals.columns7
                 | _ when h |> List.length = 8 -> Literals.headers8, Literals.columns8
                 | _ when h |> List.length = 9 -> Literals.headers9, Literals.columns9
+                | _ when h |> List.length = 16 -> Literals.headers17, Literals.columns16
+                | _ when h |> List.length = 17 -> Literals.headers17, Literals.columns17
                 | _ ->
                     h 
                     |> List.length

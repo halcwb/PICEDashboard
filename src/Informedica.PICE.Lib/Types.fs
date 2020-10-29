@@ -140,6 +140,7 @@ module Types =
     and PatientState = Alive | Dead | UnknownPatientState
     and HospitalAdmission =
         {
+            Id : string
             HospitalNumber : string
             AdmissionDate : DateTime option
             DischargeDate : DateTime option
@@ -148,6 +149,8 @@ module Types =
         }
     and PICUAdmission =
         {
+            Id : string
+            HospitalAdmissionId : string
             ClickId : string
             HospitalNumber : string
             AdmissionDate : DateTime option

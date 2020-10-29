@@ -13,13 +13,13 @@ module MRDM =
 
     type MRDMPatient = ExcelFile<path, SheetName = "patient", HasHeaders = true, ForceString = true>
     type MRDMHospital = ExcelFile<path, SheetName = "ziekenhuis-episode", HasHeaders = true, ForceString = true>
-    type MRDMPicu = ExcelFile<path, SheetName = "pat-zkh-episode-picu-episode", HasHeaders = true, ForceString = true>
-    type MRDMDiagnos = ExcelFile<path, SheetName = "pat-zkh-epi-picu-epi-bijk-diagn", HasHeaders = true, ForceString = true>
+    type MRDMPicu = ExcelFile<path, SheetName = "picu-episode", HasHeaders = true, ForceString = true>
+    type MRDMDiagnose = ExcelFile<path, SheetName = "bijkomendediagnoses", HasHeaders = true, ForceString = true>
 
     let mrdmPatient = MRDMPatient path
     let mrdmHospital = MRDMHospital path
     let mrdmPicu = MRDMPicu path
-    let mrdmDiagnos = MRDMDiagnos path
+    let mrdmDiagnose = MRDMDiagnose path
 
 
     module Codes =

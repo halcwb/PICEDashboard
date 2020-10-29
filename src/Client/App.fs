@@ -32,7 +32,7 @@ let init() =
             Report = HasNotStartedYet
             DisplayType = Graph
             DisplayTypeAcknowledged = true
-            SelectedTreeItem = None
+            SelectedTreeItem = Some "0"
         }
     model, Cmd.ofMsg (LoadStatistics Started)
 
@@ -92,10 +92,16 @@ let statsView =
     React.functionComponent("statsview", fun (props : {| model : Model; dispatch : Msg -> unit |}) ->
         let classes = useStyles ()
 
-        let display (s : string) = 
-            Mui.typography [
-                typography.variant.h4 
-                prop.text s
+        let display (s : string) =
+            Html.div [
+                Mui.typography [
+                    prop.style [
+                        style.padding 50
+                    ]
+                    prop.text s
+                    typography.variant.h4 
+                ]
+                Mui.linearProgress []
             ]
 
         let buttons = 

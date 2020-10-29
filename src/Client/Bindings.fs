@@ -263,3 +263,23 @@ type tooltip =
         Interop.mkAttr "cursor" cursor
     static member inline active (value: bool) = Interop.mkAttr "active" value
     static member inline content (render: ITooltipProperty list -> ReactElement) = Interop.mkAttr "content" render
+
+
+namespace Feliz.Recharts
+
+open System
+open Feliz
+open Fable.Core
+
+type yAxis =
+
+    static member inline minTickGap(value : int) = Interop.mkAttr "minTickGap" value
+
+
+open System
+open Feliz
+open Fable.Core
+
+type line =
+
+    static member inline strokeWidth(value : int) = Interop.mkAttr "strokeWidth" value

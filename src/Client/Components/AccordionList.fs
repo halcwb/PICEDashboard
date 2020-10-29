@@ -20,9 +20,11 @@ module AccordionList =
                     for item in props.items do
                         Mui.accordion [
                             accordion.defaultExpanded true
+                            accordion.square true
+                            accordion.elevation 0
                             accordion.children [
                                 Mui.accordionSummary [
-                                    accordionSummary.expandIcon (expandMoreIcon "")
+//                                    accordionSummary.expandIcon (expandMoreIcon "")
                                     item.summary |> fst |> prop.className 
                                     accordionSummary.children [ 
                                         item.summary |> snd

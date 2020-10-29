@@ -18,7 +18,9 @@ module Report =
         {
             Title : string
             Groups : Group list
-            Totals : (string * Totals) list
+            Totals : Totals
+            // string = period to which totals belong
+            PeriodTotals : (string * Totals) list
         }
     and Group = 
         {
@@ -77,18 +79,35 @@ module Report =
                 )
         }
 
-    let addSection title totals report =
+    let addSection title totals ptotals report =
         { report with
             Sections =
                 {
                     Title = title 
                     Groups = []
                     Totals = totals
+                    PeriodTotals = ptotals
                 }
                 |> List.singleton
                 |> List.append report.Sections
         }
 
+
+    let totalsTabel (tots : Totals) =
+        [
+            [ "Patienten" |> box; tots.Patients |> box  ]
+            [ "Opnames" |> box; tots.Admissions |> box ]
+            [ "Ontslagen" |> box; tots.Discharged |> box ]
+            [ "Verpleegdagen" |> box; tots.PICUDays |> box ]
+            [ "Mortaliteit" |> box; calcPerc tots.Patients (float tots.Deaths) |> box ]
+            [ "PIM-2" |> box; calcPerc tots.Patients tots.PIM2Mortality |> box ]
+            [ "PIM-3" |> box; calcPerc tots.Patients tots.PIM3Mortality |> box ]
+            [ "PRISM-IV" |> box; calcPerc tots.Patients tots.PRISM4Mortality |> box ]
+
+        ]
+        |> List.append [ [ "" |> box; "Aantal" ] ]
+        |> Markdown.createMDTable (StringBuilder.builder "")
+        |> StringBuilder.toString
 
 
     let create (stats : Statistics) =
@@ -115,20 +134,6 @@ module Report =
                 "PRISM4 Mortaliteit"
             ]
             |> List.map box
-
-        let allYearTotals =
-            StringBuilder.builder ""
-            |> StringBuilder.appendLineFormat Literals.patTot [ stats.Totals.Patients |> box ]
-            |> StringBuilder.appendLineFormat Literals.adsTot [ stats.Totals.Admissions |> box ]
-            |> StringBuilder.appendLineFormat Literals.disTot [ stats.Totals.Discharged |> box ]
-            |> StringBuilder.appendLineFormat Literals.dayTot [ stats.Totals.PICUDays |> box ]
-            |> StringBuilder.appendLineFormat Literals.dthTot [ calcPerc stats.Totals.Patients (float stats.Totals.Deaths) |> box ]
-            |> StringBuilder.appendLineFormat Literals.estPIM2 [ calcPerc stats.Totals.Patients stats.Totals.PIM2Mortality |> box ]
-            |> StringBuilder.appendLineFormat Literals.estPIM3 [ calcPerc stats.Totals.Patients stats.Totals.PIM3Mortality |> box ]
-            |> StringBuilder.appendLineFormat Literals.estPRISM [ calcPerc stats.Totals.Patients stats.Totals.PRISM4Mortality |> box ]
-            |> StringBuilder.newLine2
-            |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de totale mortaliteit"
-            |> StringBuilder.toString
 
         let printTotals totals = 
             StringBuilder.builder ""
@@ -191,11 +196,9 @@ module Report =
         let addYearSection (yTot : YearTotals) report =
             let sectionTitle = sprintf "Rapportage %i" yTot.Year
             report
-            |> addSection sectionTitle (yTot.MonthTotals |> List.map (fun mt -> mt.Month |> string, mt.Totals))
-            |> addGroup sectionTitle "Validatie" 
-            |> addItem sectionTitle "Validatie" "Totalen" (printCount yTot.Totals.InvalidPatients true)
+            |> addSection sectionTitle yTot.Totals (yTot.MonthTotals |> List.map (fun mt -> mt.Month |> string, mt.Totals))
             |> addGroup sectionTitle "Opnames en Mortaliteit"
-            |> addItem sectionTitle "Opnames en Mortaliteit" "Totalen" (printTotals yTot.Totals) 
+            |> addItem sectionTitle "Opnames en Mortaliteit" "Totalen" (totalsTabel yTot.Totals) 
             |> addItem sectionTitle "Opnames en Mortaliteit" "Per Maand" (printMonthTabel yTot)
             |> addGroup sectionTitle "Geslacht"
             |> addItem sectionTitle "Geslacht" "Totalen"  (printCount yTot.Totals.Gender true)
@@ -203,17 +206,19 @@ module Report =
             |> addItem sectionTitle "Leeftijd" "Totalen"  (printCount yTot.Totals.AgeGroup true)
             |> addGroup sectionTitle "PICU Ontslagreden"
             |> addItem sectionTitle "PICU Ontslagreden" "Totalen"  (printCount yTot.Totals.DischargeReasons true)
+            |> addGroup sectionTitle "Diagnose Groepen"
+            |> addItem sectionTitle "Diagnose Groepen" "Totalen"  (printCount yTot.Totals.DiagnoseGroups true)
 
 
         {
             Sections = [] 
             Markdown = stats |> Statistics.toMarkdown
         }
-        |> addSection "Rapportage Alle Jaren" (stats.YearTotals |> List.map (fun yt -> yt.Year |> string, yt.Totals))
+        |> addSection "Rapportage Alle Jaren" stats.Totals (stats.YearTotals |> List.map (fun yt -> yt.Year |> string, yt.Totals))
         |> addGroup "Rapportage Alle Jaren" "Validatie" 
         |> addItem "Rapportage Alle Jaren" "Validatie" "Totalen" (printCount stats.Totals.InvalidPatients true)
         |> addGroup "Rapportage Alle Jaren" "Opnames en Mortaliteit"
-        |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Totalen" allYearTotals 
+        |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Totalen" (stats.Totals |> totalsTabel) 
         |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Per Jaar" (allYearTabel stats)
         |> addGroup "Rapportage Alle Jaren" "Geslacht"
         |> addItem "Rapportage Alle Jaren" "Geslacht" "Totalen"  (printCount stats.Totals.Gender true)
@@ -224,6 +229,9 @@ module Report =
         |> addGroup "Rapportage Alle Jaren" "PICU Ontslagreden"
         |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Totalen"  (printCount stats.Totals.DischargeReasons true)
         |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
+        |> addGroup "Rapportage Alle Jaren" "Diagnose Groepen" 
+        |> addItem "Rapportage Alle Jaren" "Diagnose Groepen" "Totalen" (printCount stats.Totals.DiagnoseGroups true)
+        |> addItem "Rapportage Alle Jaren" "Diagnose Groepen" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
         |> fun report ->
             stats.YearTotals
             |> List.sortByDescending (fun ytot -> ytot.Year)

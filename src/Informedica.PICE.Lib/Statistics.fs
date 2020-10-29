@@ -29,6 +29,7 @@ module Statistics =
         member val AgeGroup : (string * int) list = [] with get, set
         member val DischargeReasons : (string * int) list = [] with get, set
         member val HospitalDischargeDestinations : (string * int) list = [] with get, set
+        member val DiagnoseGroups : (string * int) list = [] with get, set
 
 
     type MonthTotals () =
@@ -330,6 +331,14 @@ module Statistics =
             |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
             |> ageToCount
 
+        stats.Totals.DiagnoseGroups <-
+            pats
+            |> List.collect (fun p -> 
+                p.picuAdmission.PrimaryDiagnosis
+                |> List.map (fun d -> d.Group)
+            )
+            |> List.countBy id
+
         stats.Totals.PICUDays <-
             pats
             |> List.map (fun p -> p.picuAdmission)
@@ -454,6 +463,17 @@ module Statistics =
                 filterAdmission (dateFilter yr None) id
                 |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
                 |> ageToCount
+
+            tot.Totals.DiagnoseGroups <-
+                let grps = 
+                    stats.Totals.DiagnoseGroups
+                    |> List.map fst
+                filterAdmission (dateFilter yr None) id
+                |> List.collect (fun p -> 
+                    p.picuAdmission.PrimaryDiagnosis
+                    |> List.map (fun d -> d.Group)
+                )
+                |> List.countByList grps
 
         )
         // PICU discharge statistics

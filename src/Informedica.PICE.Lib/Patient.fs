@@ -32,8 +32,9 @@ module Patient =
             HospitalAdmissions = []
         }
 
-    let createHospitalAdmission hn adt dest ddt =
+    let createHospitalAdmission id hn adt dest ddt =
         {
+            Id = id
             HospitalNumber = hn
             AdmissionDate = adt
             DischargeDate = ddt
@@ -143,8 +144,10 @@ module Patient =
 
 
     let createPICUAdmission
-        hospitalNumber
+        id 
+        hospitalAdmissionId
         clickId
+        hospitalNumber
         admissionDate
         dischargeDate
         dischargeReason
@@ -162,6 +165,8 @@ module Patient =
         prism4
         =
         {
+            Id = id
+            HospitalAdmissionId = hospitalAdmissionId
             ClickId = clickId
             HospitalNumber = hospitalNumber
             AdmissionDate = admissionDate

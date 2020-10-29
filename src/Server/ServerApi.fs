@@ -23,6 +23,7 @@ module ServerApi =
             HospitalDischargeDestinations = totals.HospitalDischargeDestinations
             Gender =totals.Gender
             AgeGroup = totals.AgeGroup
+            DiagnoseGroups = totals.DiagnoseGroups
             PICUDays = totals.PICUDays
             PICUDeaths = totals.PICUDeaths
             PIM2Mortality = totals.PIM2Mortality
@@ -63,8 +64,9 @@ module ServerApi =
                                                 )
                                         }
                                     )
-                                Totals = 
-                                    s.Totals
+                                Totals = s.Totals |> mapTotals ""
+                                PeriodTotals = 
+                                    s.PeriodTotals
                                     |> List.map (fun (p, t) -> 
                                         mapTotals p t
                                     )

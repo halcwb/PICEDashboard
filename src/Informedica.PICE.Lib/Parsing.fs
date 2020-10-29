@@ -184,7 +184,7 @@ module Parsing =
         let getHospNum (data : MRDMHospital.Row[]) =
             let errs, hn =
                 data
-                |> Array.filter (fun hd -> hd.idcode = d.idcode)
+                |> Array.filter (fun hd -> hd.patient_uri = d.patient_uri)
                 |> Array.map (fun hd -> hd.``ziekenhuis-episode-upn``)
                 |> Array.distinct
                 |> function
@@ -206,7 +206,7 @@ module Parsing =
         let mapPatientState = Parsers.mapPatientState >> Result.ok
 
         Patient.create
-        <!> Result.ok d.idcode 
+        <!> Result.ok d.patient_uri 
         <*> getHospNum hospData
         <*> parseDateOpt d.gebdat
         <*> (Parsers.mapGender >> Result.ok) d.geslacht
@@ -222,10 +222,11 @@ module Parsing =
         let fErr msgs = msgs |> Result.Error
         let fOk ((p : Patient), msgs1) =
             hospData
-            |> Array.filter (fun d -> d.``ziekenhuis-episode-upn`` = p.HospitalNumber)
+            |> Array.filter (fun d -> d.patient_uri = p.Id)
             |> Array.map (fun d ->
                 Patient.createHospitalAdmission
-                <!> Result.ok d.``ziekenhuis-episode-upn``
+                <!> Result.ok d.``ziekenhuis-episode_uri``
+                <*> Result.ok d.``ziekenhuis-episode-upn``
                 <*> parseDateOpt d.``adm-hosp-admdate``
                 <*> (findOk "adm-desthospunitid" d.``adm-desthospunitid``)
                 <*> parseDateOpt d.``adm-hosp-disdate`` 
@@ -240,13 +241,7 @@ module Parsing =
 
 
     let addPICUAdmissions (admissions : Result<PICUAdmission[] * string[], _>)
-                          (diagnoses : {| hn : string; ad: DateTime option; dd : DateTime option; dn : string |}[]) =
-        let inPeriod dt1 dt2 dt3 dt4 =
-            match dt1, dt2, dt3, dt4 with
-            | Some d1, Some d2, Some d3, Some d4 -> d1 <= d3 && d2 >= d4
-            | Some d1, _      , Some d3, None
-            | Some d1, None   , Some d3, _  -> d1 <= d3
-            | _ -> false
+                          (diagnoses : {| pi : string; dn : string |}[]) =
 
         let calcPRISM bdt adt prism =
             match prism with
@@ -280,17 +275,13 @@ module Parsing =
                                         PICUAdmissions =
                                             xs
                                             |> Array.filter (fun pa ->
-                                                
-                                                pa.HospitalNumber = ha.HospitalNumber &&
-                                                inPeriod ha.AdmissionDate ha.DischargeDate pa.AdmissionDate pa.DischargeDate  
+                                                ha.Id = pa.HospitalAdmissionId
                                             )
                                             |> Array.map (fun pa ->
                                                 let diagnoses =
                                                     diagnoses
                                                     |> Array.filter (fun d ->
-                                                        d.hn = pa.HospitalNumber &&
-                                                        d.ad = pa.AdmissionDate &&
-                                                        d.dd = pa.DischargeDate
+                                                        d.pi = pa.Id
                                                     )
                                                 { pa with
                                                     PRISM24 =
@@ -590,8 +581,10 @@ module Parsing =
                         |> Result.error
 
             Patient.createPICUAdmission
-            <!> Result.ok d.``ziekenhuis-episode-upn``
+            <!> Result.ok d.``picu-episode_uri``
+            <*> Result.ok d.``ziekenhuis-episode_uri``
             <*> Result.ok d.``adm-ic-id`` 
+            <*> Result.ok "" //d.``ziekenhuis-episode-upn``
             <*> parseDateOpt d.``adm-ic-admdate``
             <*> parseDateOpt d.``adm-ic-disdate``
             <*> find "adm-disreasonid" d.``adm-disreasonid``
@@ -630,13 +623,11 @@ module Parsing =
                 let clickData = Click.pimprismHist.Data |> Seq.toArray
 
                 let diagnoses =
-                    mrdmDiagnos.Data
+                    mrdmDiagnose.Data
                     |> Seq.toArray
                     |> Array.map (fun r ->
                         {|
-                            hn = r.``ziekenhuis-episode-upn``
-                            ad = r.``adm-ic-admdate`` |> Parsers.parseDateOpt
-                            dd = r.``adm-ic-disdate`` |> Parsers.parseDateOpt
+                            pi = r.``picu-episode_uri``
                             dn = r.``bijkomende-diagnose``
                         |}
                     )

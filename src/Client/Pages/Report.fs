@@ -31,9 +31,14 @@ module Report =
             ]
 
             section = styles.create [
-                style.color theme.palette.primary.main
+                style.backgroundColor theme.palette.primary.main
+                style.color color.white
             ]
 
+            group = styles.create [
+                style.backgroundColor Colors.lightBlue.``50``
+                style.color theme.palette.primary.main
+            ]
         |}
     )
 
@@ -87,7 +92,7 @@ module Report =
             }
         | _ -> report
 
-    let layoutDetails (dt : DisplayType) (s : Section) =
+    let layoutDetails section (dt : DisplayType) (s : Section) =
         s.Groups
         |> List.map (fun g ->
             let details =
@@ -96,31 +101,64 @@ module Report =
                     [
                         i.Title |> sprintf "#### %s" |> Markdown.render
                         Html.div [
-                            prop.style [
-                                //style.backgroundColor Colors.blueGrey.``50``
-                                style.paddingBottom 20
-                            ]
+                            prop.style [ style.paddingBottom 20 ]
 
                             match dt with
                             | Graph when g.Title = "Opnames en Mortaliteit" && i.Title = "Per Jaar" -> 
                                 prop.children [
                                     "##### Mortaliteit" |> Markdown.render
-                                    s.Totals |> Components.MortalityGraph.render
+                                    s.PeriodTotals |> Components.MortalityGraph.render
                                     "##### Funnelplot " |> Markdown.render
-                                    s.Totals |> Components.FunnelPlot.render
+                                    s.PeriodTotals |> Components.FunnelPlot.render
                                     "##### Opnames/ontslagen en ligdagen" |> Markdown.render
-                                    s.Totals |> Components.AdmissionsGraph.render
+                                    s.PeriodTotals |> Components.AdmissionsGraph.render
                                 ]
                             | Graph when g.Title = "Geslacht" && i.Title = "Per Jaar" ->
-                                prop.children (s.Totals |> Components.StackedGenderChart.render)
+                                prop.children (s.PeriodTotals |> Components.StackedGenderChart.render)
+
                             | Graph when g.Title = "Leeftijd" && i.Title = "Per Jaar" ->
                                 prop.children [
-                                    s.Totals |> Components.StackedAgeChart.render
+                                    s.PeriodTotals |> Components.StackedAgeChart.render
                                  ]
+
+                            | Graph when s.Title.Contains("20") && g.Title = "Leeftijd" && i.Title = "Totalen" ->
+                                prop.children [
+                                    Mui.grid [
+                                        grid.container true
+                                        grid.justify.spaceEvenly
+                                        grid.alignItems.stretch
+                                        grid.direction.row
+                                        grid.children [
+                                            i.Content |> Markdown.render
+                                            s.Totals.AgeGroup |> PieChart.render
+                                        ]
+                                    ]
+                                 ]
+
                             | Graph when g.Title = "PICU Ontslagreden" && i.Title = "Per Jaar" ->
                                 prop.children [
-                                    s.Totals |> Components.StackedDischargeChart.render
+                                    s.PeriodTotals |> Components.StackedDischargeChart.render
                                  ]
+
+                            | Graph when s.Title.Contains("20") && g.Title = "Diagnose Groepen" && i.Title = "Totalen" ->
+                                prop.children [
+                                    Mui.grid [
+                                        grid.container true
+                                        grid.justify.spaceEvenly
+                                        grid.alignItems.stretch
+                                        grid.direction.row
+                                        grid.children [
+                                            i.Content |> Markdown.render
+                                            s.Totals.DiagnoseGroups |> PieChart.render
+                                        ]
+                                    ]
+                                 ]
+
+                            | Graph when g.Title = "Diagnose Groepen" && i.Title = "Per Jaar" ->
+                                prop.children [
+                                    s.PeriodTotals |> Components.StackedDiagnoseChart.render
+                                 ]
+
                             | _ ->
                                 prop.children (i.Content |> Markdown.render)
                         ]
@@ -134,12 +172,12 @@ module Report =
                 ]
             {|
                 details = details
-                summary = ("", title)
+                summary = (section, title)
             |}                    
         )
         |> Components.AccordionList.render
 
-    let layoutReport dt (section : string) (sections : Section list) =
+    let layoutReport dt (sectionCls : string) (groupCls : string) (sections : Section list) =
         sections
         |> List.map (fun s ->
             let title = 
@@ -148,8 +186,8 @@ module Report =
                     prop.text s.Title
                 ]
             {|
-                details = [ s |> layoutDetails dt ]
-                summary = (section, title)
+                details = [ s |> layoutDetails groupCls dt ]
+                summary = (sectionCls, title)
             |}
         )                
         |> Components.AccordionList.render 
@@ -171,20 +209,8 @@ module Report =
                     match props.displayType with
                     | Print -> report.Markdown |> Markdown.render 
                     | _ ->
-                        Html.div [
-                            prop.className classes.div
-                            prop.style [
-                                style.backgroundColor classes.div
-                                style.padding 10
-                            ]
-                            prop.children [
-                                "## PICE Rapportage"
-                                |> Markdown.render 
-                            ]
-                        ]
-
                         report.Sections
-                        |> layoutReport props.displayType classes.section
+                        |> layoutReport props.displayType classes.section classes.group
                 ]
             ]
         )

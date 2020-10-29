@@ -52,7 +52,7 @@ module FunnelPlot =
                 )
 
             Recharts.scatterChart [
-                scatterChart.width 1000
+                scatterChart.width 1100
                 scatterChart.height 600
                 
                 scatterChart.children [

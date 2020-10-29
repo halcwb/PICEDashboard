@@ -49,6 +49,7 @@ module Types =
             AgeGroup : (string * int) list
             DischargeReasons : (string * int) list
             HospitalDischargeDestinations : (string * int) list
+            DiagnoseGroups : (string * int) list
         }
 
 
@@ -61,7 +62,8 @@ module Types =
         {
             Title : string
             Groups : Group list
-            Totals : Totals list
+            Totals : Totals
+            PeriodTotals : Totals list
         }
     and Group = 
         {
