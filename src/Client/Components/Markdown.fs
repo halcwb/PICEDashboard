@@ -112,4 +112,7 @@ module Markdown =
 
         )
 
+    
     let render text = comp({| text = text |})
+
+    

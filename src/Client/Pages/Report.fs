@@ -113,26 +113,26 @@ module Report =
                                     "##### Opnames/ontslagen en ligdagen" |> Markdown.render
                                     s.PeriodTotals |> Components.AdmissionsGraph.render
                                 ]
+
+                            | Graph when g.Title = "Geslacht" && i.Title = "Totalen" ->
+                                prop.children [ s.Totals.Gender |> Components.PieChart.render ]
+
                             | Graph when g.Title = "Geslacht" && i.Title = "Per Jaar" ->
                                 prop.children (s.PeriodTotals |> Components.StackedGenderChart.render)
+
+                            | Graph when g.Title = "Leeftijd" && i.Title = "Totalen" ->
+                                prop.children [
+                                    s.Totals.AgeGroup |> Components.PieChart.render
+                                 ]
 
                             | Graph when g.Title = "Leeftijd" && i.Title = "Per Jaar" ->
                                 prop.children [
                                     s.PeriodTotals |> Components.StackedAgeChart.render
                                  ]
 
-                            | Graph when s.Title.Contains("20") && g.Title = "Leeftijd" && i.Title = "Totalen" ->
+                            | Graph when g.Title = "PICU Ontslagreden" && i.Title = "Totalen" ->
                                 prop.children [
-                                    Mui.grid [
-                                        grid.container true
-                                        grid.justify.spaceEvenly
-                                        grid.alignItems.stretch
-                                        grid.direction.row
-                                        grid.children [
-                                            i.Content |> Markdown.render
-                                            s.Totals.AgeGroup |> PieChart.render
-                                        ]
-                                    ]
+                                    s.Totals.DischargeReasons |> PieChart.render
                                  ]
 
                             | Graph when g.Title = "PICU Ontslagreden" && i.Title = "Per Jaar" ->
@@ -140,19 +140,8 @@ module Report =
                                     s.PeriodTotals |> Components.StackedDischargeChart.render
                                  ]
 
-                            | Graph when s.Title.Contains("20") && g.Title = "Diagnose Groepen" && i.Title = "Totalen" ->
-                                prop.children [
-                                    Mui.grid [
-                                        grid.container true
-                                        grid.justify.spaceEvenly
-                                        grid.alignItems.stretch
-                                        grid.direction.row
-                                        grid.children [
-                                            i.Content |> Markdown.render
-                                            s.Totals.DiagnoseGroups |> PieChart.render
-                                        ]
-                                    ]
-                                 ]
+                            | Graph when g.Title = "Diagnose Groepen" && i.Title = "Totalen" ->
+                                prop.children [ s.Totals.DiagnoseGroups  |> PieChart.render ]
 
                             | Graph when g.Title = "Diagnose Groepen" && i.Title = "Per Jaar" ->
                                 prop.children [

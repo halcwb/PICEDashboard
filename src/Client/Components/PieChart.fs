@@ -10,26 +10,19 @@ module PieChart =
     open System
     open Types
 
-    type PieSlice = { name : string; value : int }
 
-    let bgColors = [|
-        color.darkBlue
-        color.darkGreen
-        color.darkCyan
-        color.darkGoldenRod
-        color.darkViolet
-        color.darkGray
-        color.darkOliveGreen
-        color.darkKhaki
-        color.darkMagenta
-        color.darkOrange
-        color.darkOrchid
-        color.darkSalmon
-        color.darkSlateBlue
-        color.darkSlateGray
-        color.darkTurqouise
-    |]
+    type PieSlice = { name : string; value : int; color : string }
 
+
+    let createPieSlice name value color = { name = name; value = value; color = color }
+
+
+    let colorKeyValueList xs =
+        xs
+        |> List.mapi (fun i (k, v) ->
+            createPieSlice k v (Utils.getColor i)
+        )
+    
 
     let renderCustomLabel (input: IPieLabelProperties) =
         let radius = input.innerRadius + (input.outerRadius - input.innerRadius) * 0.5;
@@ -50,36 +43,47 @@ module PieChart =
 
 
     let private comp =
-        React.functionComponent("piechart", fun (props: {| data: (string * int) list |}) ->
-            let data =
-                props.data
-                |> List.map (fun (k, v)  ->
-                    { name = k; value = v }
-                )
-                
-            let cells =
-                data
-                |> List.mapi (fun index _ ->
-                    Recharts.cell [
-                        cell.fill bgColors.[ index % bgColors.Length ]
-                    ])
+        React.functionComponent("piechart", fun (props: {| data: (string * int) list |}) -> 
 
-            Recharts.pieChart [
-                pieChart.width  500
-                pieChart.height 500
-                pieChart.children [
-                    Recharts.tooltip []
-                    Recharts.pie [
-                        pie.data data
-                        pie.labelLine false
-                        pie.label false
-                        pie.dataKey (fun p -> p.value)
-                        pie.children cells
+            let createPieChart data =
+                let cells =
+                    data
+                    |> List.map (fun d ->
+                        Recharts.cell [
+                            cell.fill d.color
+                        ])
+
+                Recharts.pieChart [
+                    pieChart.width  500
+                    pieChart.height 500
+                    pieChart.children [
+                        Recharts.tooltip []
+                        Recharts.pie [
+                            pie.data data
+                            pie.labelLine false
+                            pie.label false
+                            pie.dataKey (fun p -> p.value)
+                            pie.children cells
+                        ]
                     ]
+            ]
+
+            Mui.grid [
+                grid.container true
+                grid.justify.spaceEvenly
+                grid.alignItems.center
+                grid.direction.row
+                grid.children [
+                    props.data
+                    |> ColoredList.keyValueListToColoredItems
+                    |> ColoredList.render
+
+                    props.data 
+                    |> colorKeyValueList
+                    |> createPieChart
                 ]
             ]
-        
         )
 
 
-    let render data = comp ({| data = data |})
+    let render kvs = comp ({| data = kvs |})

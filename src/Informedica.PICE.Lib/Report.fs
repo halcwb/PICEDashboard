@@ -203,7 +203,7 @@ module Report =
             |> addGroup sectionTitle "Geslacht"
             |> addItem sectionTitle "Geslacht" "Totalen"  (printCount yTot.Totals.Gender true)
             |> addGroup sectionTitle "Leeftijd"
-            |> addItem sectionTitle "Leeftijd" "Totalen"  (printCount yTot.Totals.AgeGroup true)
+            |> addItem sectionTitle "Leeftijd" "Totalen"  (printCount yTot.Totals.AgeGroup false)
             |> addGroup sectionTitle "PICU Ontslagreden"
             |> addItem sectionTitle "PICU Ontslagreden" "Totalen"  (printCount yTot.Totals.DischargeReasons true)
             |> addGroup sectionTitle "Diagnose Groepen"
@@ -224,7 +224,7 @@ module Report =
         |> addItem "Rapportage Alle Jaren" "Geslacht" "Totalen"  (printCount stats.Totals.Gender true)
         |> addItem "Rapportage Alle Jaren" "Geslacht" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
         |> addGroup "Rapportage Alle Jaren" "Leeftijd"
-        |> addItem "Rapportage Alle Jaren" "Leeftijd" "Totalen"  (printCount stats.Totals.AgeGroup true)
+        |> addItem "Rapportage Alle Jaren" "Leeftijd" "Totalen"  (printCount stats.Totals.AgeGroup false)
         |> addItem "Rapportage Alle Jaren" "Leeftijd" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
         |> addGroup "Rapportage Alle Jaren" "PICU Ontslagreden"
         |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Totalen"  (printCount stats.Totals.DischargeReasons true)
