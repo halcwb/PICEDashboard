@@ -16,9 +16,10 @@ module MortalityGraph =
             pim2 : float
             pim3: float 
             prism : float
-            smrPRISM : float
-            smrPIM2 : float
-            smrPIM3 : float
+            average : float
+            averagePIM2 : float
+            averagePIM3 : float
+            averagePRISM : float
         }
 
     //let useStyles = Styles.makeStyles(fun styles theme ->
@@ -31,9 +32,14 @@ module MortalityGraph =
         React.functionComponent(fun (props : {| totals : Totals list |}) ->
 //            let classes = useStyles ()
 //            Browser.Dom.console.log("color", classes.barColor)
-            let round (n : int) (c : float) = Math.Round(c, n)
+
+            let calcAverage get = 
+                props.totals
+                |> Utils.calcAverage (fun t -> t.Admissions) get
+                |> fun x -> x * 100. |> Utils.round 2
 
             let data =
+
                 props.totals
                 |> List.map (fun tot ->
                     let perc c = 
@@ -45,73 +51,82 @@ module MortalityGraph =
                         pim2 = tot.PIM2Mortality |> perc
                         pim3 = tot.PIM3Mortality |> perc
                         prism = tot.PRISM4Mortality |> perc
-                        smrPRISM = (tot.Deaths |> float) / tot.PRISM4Mortality |> round 2
-                        smrPIM2 = (tot.Deaths |> float) / tot.PIM2Mortality |> round 2
-                        smrPIM3 = (tot.Deaths |> float) / tot.PIM3Mortality |> round 2
+                        average = calcAverage (fun t -> t.Deaths |> float)
+                        averagePIM2 = calcAverage (fun t -> t.PIM2Mortality)
+                        averagePIM3 = calcAverage (fun t -> t.PIM3Mortality)
+                        averagePRISM = calcAverage (fun t -> t.PRISM4Mortality)
                     }
                 )
 
             Recharts.composedChart [
-                barChart.width 1150
+                barChart.width 1100
                 barChart.height 700
                 barChart.data data
                 barChart.children [
                     Recharts.cartesianGrid [ cartesianGrid.strokeDasharray(1, 1)]
                     Recharts.xAxis [ xAxis.dataKey (fun p -> p.name ) ]
-                    Recharts.yAxis [ yAxis.yAxisId "left"; yAxis.minTickGap 10 ]
-                    Recharts.yAxis [ yAxis.yAxisId "right"; yAxis.orientation.right; yAxis.tickCount 5 ]
+                    Recharts.yAxis [ yAxis.minTickGap 10 ]
+//                    Recharts.yAxis [ yAxis.yAxisId "right"; yAxis.orientation.right; yAxis.tickCount 5 ]
                     Recharts.tooltip []
                     Recharts.bar [
                         bar.name "Mortaliteit"
-                        bar.yAxisId "left"
                         bar.dataKey (fun p -> p.mortality)
                         bar.fill color.darkBlue
-                        bar.fillOpacity 0.5
+//                        bar.fillOpacity 0.5
                     ]
                     Recharts.bar [
                         bar.name "PIM-2"
-                        bar.yAxisId "left"
                         bar.dataKey (fun p -> p.pim2)
                         bar.fill color.darkGreen
-                        bar.fillOpacity 0.5
+//                        bar.fillOpacity 0.5
                     ]
                     Recharts.bar [
                         bar.name "PIM-3"
-                        bar.yAxisId "left"
                         bar.dataKey (fun p -> p.pim3)
                         bar.fill color.darkMagenta
-                        bar.fillOpacity 0.5
+//                        bar.fillOpacity 0.5
                     ]
                     Recharts.bar [
                         bar.name "PRISM-4"
-                        bar.yAxisId "left"
                         bar.dataKey (fun p -> p.prism)
                         bar.fill color.darkCyan
-                        bar.fillOpacity 0.5
+//                        bar.fillOpacity 0.5
                     ]
                     Recharts.line [
-                        line.name "SMR-PRISM"
-                        line.yAxisId "right"
+                        line.name "gemiddelde"
                         line.monotone
-                        line.dataKey (fun p -> p.smrPRISM)
+                        line.dot false
+                        line.dataKey (fun p -> p.average)
                         line.strokeWidth 4
-                        line.stroke color.darkCyan
+                        line.strokeDasharray [| 10; 10 |]
+                        line.stroke color.darkBlue
                     ]
                     Recharts.line [
-                        line.name "SMR-PIM2"
-                        line.yAxisId "right"
+                        line.name "gem. PIM2"
                         line.monotone
-                        line.dataKey (fun p -> p.smrPIM2)
+                        line.dot false
+                        line.dataKey (fun p -> p.averagePIM2)
                         line.strokeWidth 4
+                        line.strokeDasharray [| 10; 10 |]
                         line.stroke color.darkGreen
                     ]
                     Recharts.line [
-                        line.name "SMR-PIM3"
-                        line.yAxisId "right"
+                        line.name "gem. PIM3"
                         line.monotone
-                        line.dataKey (fun p -> p.smrPIM3)
+                        line.dot false
+                        line.dataKey (fun p -> p.averagePIM3)
                         line.strokeWidth 4
+                        line.strokeDasharray [| 10; 10 |]
                         line.stroke color.darkMagenta
+                    ]
+                    Recharts.line [
+                        line.name "gem. PRISM"
+                        line.monotone
+                        line.dot false
+                        line.dataKey (fun p -> p.averagePRISM)
+                        line.strokeWidth 4
+                        line.strokeDasharray [| 10; 10 |]
+                        line.stroke color.darkCyan
                     ]
 
                     Recharts.legend [ legend.verticalAlign.top ]

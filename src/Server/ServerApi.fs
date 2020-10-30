@@ -49,13 +49,13 @@ module ServerApi =
                         |> List.map (fun s ->
                             {
                                 Title = s.Title
-                                Groups = 
-                                    s.Groups
+                                Chapters = 
+                                    s.Chapters
                                     |> List.map (fun g ->
                                         { 
                                             Title = g.Title
-                                            Items =
-                                                g.Items
+                                            Paragraphs =
+                                                g.Paragraphs
                                                 |> List.map (fun i ->
                                                     {
                                                         Title = i.Title

@@ -13,6 +13,7 @@ module Report =
     open Fable.Core.JsInterop
     open Feliz.Markdown
     
+    open Informedica.PICE.Shared
     open Informedica.PICE.Shared.Types
     open Types
     open Components
@@ -65,8 +66,8 @@ module Report =
                     |> fun section -> 
                         {
                             section with 
-                                Groups = 
-                                    section.Groups.[id2]
+                                Chapters = 
+                                    section.Chapters.[id2]
                                     |> List.singleton
                         }
                     |> List.singleton
@@ -78,12 +79,12 @@ module Report =
                     |> fun section -> 
                         {
                             section with 
-                                Groups = 
-                                    section.Groups.[id2]
+                                Chapters = 
+                                    section.Chapters.[id2]
                                     |> fun group -> 
                                         { group with
-                                            Items = 
-                                                group.Items.[id3]
+                                            Paragraphs = 
+                                                group.Paragraphs.[id3]
                                                 |> List.singleton
                                         }
                                     |> List.singleton
@@ -93,10 +94,10 @@ module Report =
         | _ -> report
 
     let layoutDetails section (dt : DisplayType) (s : Section) =
-        s.Groups
+        s.Chapters
         |> List.map (fun g ->
             let details =
-                g.Items
+                g.Paragraphs
                 |> List.collect (fun i ->
                     [
                         i.Title |> sprintf "#### %s" |> Markdown.render
@@ -104,46 +105,48 @@ module Report =
                             prop.style [ style.paddingBottom 20 ]
 
                             match dt with
-                            | Graph when g.Title = "Opnames en Mortaliteit" && i.Title = "Per Jaar" -> 
+                            | Graph when g.Title = Literals.groupOverview && i.Title = Literals.paragraphPerYear -> 
                                 prop.children [
                                     "##### Mortaliteit" |> Markdown.render
                                     s.PeriodTotals |> Components.MortalityGraph.render
-                                    "##### Funnelplot " |> Markdown.render
+                                    "##### SMR" |> Markdown.render
+                                    s.PeriodTotals |> Components.SMRGraph.render
+                                    "##### SMR Funnelplot " |> Markdown.render
                                     s.PeriodTotals |> Components.FunnelPlot.render
                                     "##### Opnames/ontslagen en ligdagen" |> Markdown.render
                                     s.PeriodTotals |> Components.AdmissionsGraph.render
                                 ]
 
-                            | Graph when g.Title = "Geslacht" && i.Title = "Totalen" ->
+                            | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphTotals ->
                                 prop.children [ s.Totals.Gender |> Components.PieChart.render ]
 
-                            | Graph when g.Title = "Geslacht" && i.Title = "Per Jaar" ->
+                            | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphPerYear ->
                                 prop.children (s.PeriodTotals |> Components.StackedGenderChart.render)
 
-                            | Graph when g.Title = "Leeftijd" && i.Title = "Totalen" ->
+                            | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphTotals ->
                                 prop.children [
                                     s.Totals.AgeGroup |> Components.PieChart.render
                                  ]
 
-                            | Graph when g.Title = "Leeftijd" && i.Title = "Per Jaar" ->
+                            | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     s.PeriodTotals |> Components.StackedAgeChart.render
                                  ]
 
-                            | Graph when g.Title = "PICU Ontslagreden" && i.Title = "Totalen" ->
+                            | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphTotals ->
                                 prop.children [
                                     s.Totals.DischargeReasons |> PieChart.render
                                  ]
 
-                            | Graph when g.Title = "PICU Ontslagreden" && i.Title = "Per Jaar" ->
+                            | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     s.PeriodTotals |> Components.StackedDischargeChart.render
                                  ]
 
-                            | Graph when g.Title = "Diagnose Groepen" && i.Title = "Totalen" ->
+                            | Graph when g.Title = Literals.groupDiagnoseGroup && i.Title = Literals.paragraphTotals ->
                                 prop.children [ s.Totals.DiagnoseGroups  |> PieChart.render ]
 
-                            | Graph when g.Title = "Diagnose Groepen" && i.Title = "Per Jaar" ->
+                            | Graph when g.Title = Literals.groupDiagnoseGroup  && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     s.PeriodTotals |> Components.StackedDiagnoseChart.render
                                  ]

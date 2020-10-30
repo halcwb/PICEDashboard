@@ -19,6 +19,7 @@
         <Compile Include="Components\AccordionList.fs" />
         <Compile Include="Components\MenuDrawer.fs" />
         <Compile Include="Components\MortalityGraph.fs" />
+        <Compile Include="Components\SMRGraph.fs" />
         <Compile Include="Components\FunnelPlot.fs" />
         <Compile Include="Components\AdmissionsGraph.fs" />
         <Compile Include="Components\PieChart.fs" />

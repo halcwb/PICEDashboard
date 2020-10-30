@@ -9,6 +9,49 @@ module Report =
     
     module Literals = Markdown.Literals
 
+    module Literals =
+
+        [<Literal>]
+        let sectionAll = "Rapportage Alle Jaren"
+        [<Literal>]
+        let groupValidation = "Validatie"
+        [<Literal>]
+        let groupOverview = "Opnames en Mortaliteit"
+        [<Literal>]
+        let groupGender = "Geslacht"
+        [<Literal>]
+        let groupAge = "Leeftijd"
+        [<Literal>]
+        let groupDischargeReason = "PICU Ontslagreden"
+        [<Literal>]
+        let groupDiagnoseGroup = "Diagnose Groep"
+        [<Literal>]
+        let paragraphTotals = "Totalen"
+        [<Literal>]
+        let paragraphPerYear = "Per Jaar"
+        [<Literal>]
+        let paragraphPerMonth = "Per Maand"
+        [<Literal>]
+        let capYear = "Jaar"
+        [<Literal>]
+        let capPatient = "Patienten"
+        [<Literal>]
+        let capAdmission = "Opnames"
+        [<Literal>]
+        let capDischarge = "Ontslagen"
+        [<Literal>]
+        let capBedDays = "Ligdagen"
+        [<Literal>]
+        let capMortality = "Mortaliteit"
+        [<Literal>]
+        let capPIM2 = "PIM-2"
+        [<Literal>]
+        let capPIM3 = "PIM-3"
+        [<Literal>]
+        let capPRISM = "PRISM-IV"
+
+
+
     type Report =
         {
             Sections : Section list
@@ -17,23 +60,23 @@ module Report =
     and Section = 
         {
             Title : string
-            Groups : Group list
+            Chapters : Chapter list
             Totals : Totals
             // string = period to which totals belong
             PeriodTotals : (string * Totals) list
         }
-    and Group = 
+    and Chapter = 
         {
             Title : string
-            Items : Item list
+            Paragraphs : Paragraph list
         }
-    and Item =
+    and Paragraph =
         {
             Title : string
             Content : string
         }
 
-    let addItem section group title md report =
+    let addParagraph section chapter title md report =
         { report with
             Sections =
                 report.Sections 
@@ -41,26 +84,26 @@ module Report =
                     if s.Title <> section then s
                     else 
                         { s with
-                            Groups =
-                                s.Groups
+                            Chapters =
+                                s.Chapters
                                 |> List.map (fun g ->
-                                    if g.Title <> group then g
+                                    if g.Title <> chapter then g
                                     else
                                         { g with
-                                            Items =
+                                            Paragraphs =
                                                 {
                                                     Title = title
                                                     Content = md
                                                 }
                                                 |> List.singleton
-                                                |> List.append g.Items            
+                                                |> List.append g.Paragraphs            
                                         }
                                 )
                         }
                 )
         }
 
-    let addGroup section title report =
+    let addChapter section title report =
         { report with
             Sections =
                 report.Sections 
@@ -68,13 +111,13 @@ module Report =
                     if s.Title <> section then s
                     else 
                         { s with
-                            Groups =
+                            Chapters =
                                 {
                                     Title = title
-                                    Items = []
+                                    Paragraphs = []
                                 }
                                 |> List.singleton 
-                                |> List.append s.Groups                            
+                                |> List.append s.Chapters                            
                         }
                 )
         }
@@ -84,7 +127,7 @@ module Report =
             Sections =
                 {
                     Title = title 
-                    Groups = []
+                    Chapters = []
                     Totals = totals
                     PeriodTotals = ptotals
                 }
@@ -95,17 +138,17 @@ module Report =
 
     let totalsTabel (tots : Totals) =
         [
-            [ "Patienten" |> box; tots.Patients |> box  ]
-            [ "Opnames" |> box; tots.Admissions |> box ]
-            [ "Ontslagen" |> box; tots.Discharged |> box ]
-            [ "Verpleegdagen" |> box; tots.PICUDays |> box ]
-            [ "Mortaliteit" |> box; calcPerc tots.Patients (float tots.Deaths) |> box ]
-            [ "PIM-2" |> box; calcPerc tots.Patients tots.PIM2Mortality |> box ]
-            [ "PIM-3" |> box; calcPerc tots.Patients tots.PIM3Mortality |> box ]
-            [ "PRISM-IV" |> box; calcPerc tots.Patients tots.PRISM4Mortality |> box ]
+            [ Literals.capPatient |> box; tots.Patients |> box  ]
+            [ Literals.capAdmission |> box; tots.Admissions |> box ]
+            [ Literals.capDischarge |> box; tots.Discharged |> box ]
+            [ Literals.capBedDays |> box; tots.PICUDays |> box ]
+            [ Literals.capMortality |> box; calcPerc tots.Patients (float tots.Deaths) |> box ]
+            [ Literals.capPIM2 |> box; calcPerc tots.Patients tots.PIM2Mortality |> box ]
+            [ Literals.capPIM3 |> box; calcPerc tots.Patients tots.PIM3Mortality |> box ]
+            [ Literals.capPRISM |> box; calcPerc tots.Patients tots.PRISM4Mortality |> box ]
 
         ]
-        |> List.append [ [ "" |> box; "Aantal" ] ]
+        |> List.append [ [ "Parameter" |> box; "Aantal" ] ]
         |> Markdown.createMDTable (StringBuilder.builder "")
         |> StringBuilder.toString
 
@@ -123,15 +166,15 @@ module Report =
 
         let caps =
             [
-                "Jaar"
-                "Patienten"
-                "Opnames"
-                "Ontslagen"
-                "Ligdagen"
-                "Overleden"
-                "PIM2 Mortaliteit"
-                "PIM3 Mortaliteit"
-                "PRISM4 Mortaliteit"
+                Literals.capYear
+                Literals.capPatient
+                Literals.capAdmission
+                Literals.capDischarge
+                Literals.capBedDays
+                Literals.capMortality
+                Literals.capPIM2
+                Literals.capPIM3
+                Literals.capPRISM
             ]
             |> List.map box
 
@@ -173,7 +216,7 @@ module Report =
                     let calc = calcPerc t
                     let vals =
                         [
-                            "Totalen"            |> box
+                            Literals.paragraphTotals            |> box
                             stats.YearTotals |> List.sumBy (fun s -> s.Totals.Patients) |> box
                             stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions) |> box
                             stats.YearTotals |> List.sumBy (fun s -> s.Totals.Discharged) |> box
@@ -197,41 +240,41 @@ module Report =
             let sectionTitle = sprintf "Rapportage %i" yTot.Year
             report
             |> addSection sectionTitle yTot.Totals (yTot.MonthTotals |> List.map (fun mt -> mt.Month |> string, mt.Totals))
-            |> addGroup sectionTitle "Opnames en Mortaliteit"
-            |> addItem sectionTitle "Opnames en Mortaliteit" "Totalen" (totalsTabel yTot.Totals) 
-            |> addItem sectionTitle "Opnames en Mortaliteit" "Per Maand" (printMonthTabel yTot)
-            |> addGroup sectionTitle "Geslacht"
-            |> addItem sectionTitle "Geslacht" "Totalen"  (printCount yTot.Totals.Gender true)
-            |> addGroup sectionTitle "Leeftijd"
-            |> addItem sectionTitle "Leeftijd" "Totalen"  (printCount yTot.Totals.AgeGroup false)
-            |> addGroup sectionTitle "PICU Ontslagreden"
-            |> addItem sectionTitle "PICU Ontslagreden" "Totalen"  (printCount yTot.Totals.DischargeReasons true)
-            |> addGroup sectionTitle "Diagnose Groepen"
-            |> addItem sectionTitle "Diagnose Groepen" "Totalen"  (printCount yTot.Totals.DiagnoseGroups true)
+            |> addChapter sectionTitle Literals.groupOverview
+            |> addParagraph sectionTitle Literals.groupOverview Literals.paragraphTotals (totalsTabel yTot.Totals) 
+            |> addParagraph sectionTitle Literals.groupOverview Literals.paragraphPerMonth (printMonthTabel yTot)
+            |> addChapter sectionTitle Literals.groupGender
+            |> addParagraph sectionTitle Literals.groupGender Literals.paragraphTotals  (printCount yTot.Totals.Gender true)
+            |> addChapter sectionTitle Literals.groupAge
+            |> addParagraph sectionTitle Literals.groupAge Literals.paragraphTotals  (printCount yTot.Totals.AgeGroup false)
+            |> addChapter sectionTitle Literals.groupDischargeReason
+            |> addParagraph sectionTitle Literals.groupDischargeReason Literals.paragraphTotals  (printCount yTot.Totals.DischargeReasons true)
+            |> addChapter sectionTitle Literals.groupDiagnoseGroup
+            |> addParagraph sectionTitle Literals.groupDiagnoseGroup Literals.paragraphTotals  (printCount yTot.Totals.DiagnoseGroups true)
 
 
         {
             Sections = [] 
             Markdown = stats |> Statistics.toMarkdown
         }
-        |> addSection "Rapportage Alle Jaren" stats.Totals (stats.YearTotals |> List.map (fun yt -> yt.Year |> string, yt.Totals))
-        |> addGroup "Rapportage Alle Jaren" "Validatie" 
-        |> addItem "Rapportage Alle Jaren" "Validatie" "Totalen" (printCount stats.Totals.InvalidPatients true)
-        |> addGroup "Rapportage Alle Jaren" "Opnames en Mortaliteit"
-        |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Totalen" (stats.Totals |> totalsTabel) 
-        |> addItem "Rapportage Alle Jaren" "Opnames en Mortaliteit" "Per Jaar" (allYearTabel stats)
-        |> addGroup "Rapportage Alle Jaren" "Geslacht"
-        |> addItem "Rapportage Alle Jaren" "Geslacht" "Totalen"  (printCount stats.Totals.Gender true)
-        |> addItem "Rapportage Alle Jaren" "Geslacht" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
-        |> addGroup "Rapportage Alle Jaren" "Leeftijd"
-        |> addItem "Rapportage Alle Jaren" "Leeftijd" "Totalen"  (printCount stats.Totals.AgeGroup false)
-        |> addItem "Rapportage Alle Jaren" "Leeftijd" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
-        |> addGroup "Rapportage Alle Jaren" "PICU Ontslagreden"
-        |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Totalen"  (printCount stats.Totals.DischargeReasons true)
-        |> addItem "Rapportage Alle Jaren" "PICU Ontslagreden" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
-        |> addGroup "Rapportage Alle Jaren" "Diagnose Groepen" 
-        |> addItem "Rapportage Alle Jaren" "Diagnose Groepen" "Totalen" (printCount stats.Totals.DiagnoseGroups true)
-        |> addItem "Rapportage Alle Jaren" "Diagnose Groepen" "Per Jaar" (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
+        |> addSection Literals.sectionAll stats.Totals (stats.YearTotals |> List.map (fun yt -> yt.Year |> string, yt.Totals))
+        |> addChapter Literals.sectionAll Literals.groupValidation 
+        |> addParagraph Literals.sectionAll Literals.groupValidation Literals.paragraphTotals (printCount stats.Totals.InvalidPatients true)
+        |> addChapter Literals.sectionAll Literals.groupOverview
+        |> addParagraph Literals.sectionAll Literals.groupOverview Literals.paragraphTotals (stats.Totals |> totalsTabel) 
+        |> addParagraph Literals.sectionAll Literals.groupOverview Literals.paragraphPerYear (allYearTabel stats)
+        |> addChapter Literals.sectionAll Literals.groupGender
+        |> addParagraph Literals.sectionAll Literals.groupGender Literals.paragraphTotals  (printCount stats.Totals.Gender true)
+        |> addParagraph Literals.sectionAll Literals.groupGender Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
+        |> addChapter Literals.sectionAll Literals.groupAge
+        |> addParagraph Literals.sectionAll Literals.groupAge Literals.paragraphTotals  (printCount stats.Totals.AgeGroup false)
+        |> addParagraph Literals.sectionAll Literals.groupAge Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
+        |> addChapter Literals.sectionAll Literals.groupDischargeReason
+        |> addParagraph Literals.sectionAll Literals.groupDischargeReason Literals.paragraphTotals  (printCount stats.Totals.DischargeReasons true)
+        |> addParagraph Literals.sectionAll Literals.groupDischargeReason Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
+        |> addChapter Literals.sectionAll Literals.groupDiagnoseGroup 
+        |> addParagraph Literals.sectionAll Literals.groupDiagnoseGroup Literals.paragraphTotals (printCount stats.Totals.DiagnoseGroups true)
+        |> addParagraph Literals.sectionAll Literals.groupDiagnoseGroup Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
         |> fun report ->
             stats.YearTotals
             |> List.sortByDescending (fun ytot -> ytot.Year)

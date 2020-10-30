@@ -24,4 +24,15 @@ let bgColors = [|
 
 let getColor i = bgColors.[i % bgColors.Length]
 
+open System
+open Informedica.PICE.Shared.Types
+
+let round (n : int) (c : float) = Math.Round(c, n)
+
+let calcAverage getTotal getCount tots =
+    let t =
+        tots
+        |> List.sumBy (fun t -> (t |> getCount) / (t |> getTotal |> float))
+        |> float
+    t / (tots |> List.length |> float) 
     

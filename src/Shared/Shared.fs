@@ -3,6 +3,7 @@ namespace Informedica.PICE.Shared
 module Route =
     let hello = "/api/hello"
 
+
 module Utils =
 
     module Math =
@@ -10,8 +11,31 @@ module Utils =
         open System
 
         let round (n : int) (c : float) = Math.Round(c, n)
-
     
+
+module Literals =
+
+    [<Literal>]
+    let sectionAll = "Rapportage Alle Jaren"
+    [<Literal>]
+    let groupValidation = "Validatie"
+    [<Literal>]
+    let groupOverview = "Opnames en Mortaliteit"
+    [<Literal>]
+    let groupGender = "Geslacht"
+    [<Literal>]
+    let groupAge = "Leeftijd"
+    [<Literal>]
+    let groupDischargeReason = "PICU Ontslagreden"
+    [<Literal>]
+    let groupDiagnoseGroup = "Diagnose Groep"
+    [<Literal>]
+    let paragraphTotals = "Totalen"
+    [<Literal>]
+    let paragraphPerYear = "Per Jaar"
+    [<Literal>]
+    let paragraphPerMonth = "Per Maand"
+
 
 module Types =
 
@@ -61,16 +85,16 @@ module Types =
     and Section = 
         {
             Title : string
-            Groups : Group list
+            Chapters : Chapter list
             Totals : Totals
             PeriodTotals : Totals list
         }
-    and Group = 
+    and Chapter = 
         {
             Title : string
-            Items : Item list
+            Paragraphs : Paragraph list
         }
-    and Item =
+    and Paragraph =
         {
             Title : string
             Content : string

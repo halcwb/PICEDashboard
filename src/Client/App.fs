@@ -133,10 +133,10 @@ let statsView =
                                 report.Sections
                                 |> List.mapi (fun i1 s ->
                                     let grps =
-                                        s.Groups
+                                        s.Chapters
                                         |> List.mapi (fun i2 g ->
                                             let items =
-                                                g.Items
+                                                g.Paragraphs
                                                 |> List.mapi (fun i3 item ->
                                                     TreeViewDrawer.createData
                                                         (sprintf "%i.%i.%i" i1 i2 i3)
