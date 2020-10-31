@@ -3,13 +3,43 @@
 module PieChart =
 
     open Feliz
+    open Feliz.UseElmish
+    open Elmish
     open Feliz.MaterialUI
+    open Fable.MaterialUI
     open Feliz.Recharts
     open Informedica.PICE.Shared
 
     open System
     open Types
 
+    type State = { period : int option }
+
+
+    type Msg = | SkipNext | SkipPrevious | Replay
+
+
+    let init () = { period = None }, Cmd.none
+
+    
+    let update msg state =
+        match msg with
+        | Replay -> { state with period = None }, Cmd.none
+        | SkipNext -> 
+            { state with 
+                period = 
+                    match state.period with
+                    | Some  i -> i + 1
+                    | None    -> 0
+                    |> Some
+            }, Cmd.none
+        | SkipPrevious ->
+            { state with
+                period = 
+                    match state.period with
+                    | Some i when i > 1 -> i - 1 |> Some
+                    | _ -> None
+            }, Cmd.none
 
     type PieSlice = { name : string; value : int; color : string }
 
@@ -23,7 +53,6 @@ module PieChart =
             createPieSlice k v (Utils.getColor i)
         )
     
-
     let renderCustomLabel (input: IPieLabelProperties) =
         let radius = input.innerRadius + (input.outerRadius - input.innerRadius) * 0.5;
         let radian = System.Math.PI / 180.
@@ -43,7 +72,16 @@ module PieChart =
 
 
     let private comp =
-        React.functionComponent("piechart", fun (props: {| data: (string * int) list |}) -> 
+        React.functionComponent("piechart", fun (props: {| title : string; data: (string * int) list; periods : (string * (string * int) list) list |}) -> 
+            let state, dispatch = React.useElmish(init, update, [||])
+            Browser.Dom.console.log("pie-state", state)
+            let p, data =
+                match state.period with
+                | None   -> 
+                    let start, end' = 
+                        props.periods |> List.head |> fst, props.periods |> List.rev |> List.head |> fst
+                    sprintf "%s - %s" start end', props.data
+                | Some i -> props.periods.[ i % (props.periods |> List.length) ]
 
             let createPieChart data =
                 let cells =
@@ -63,27 +101,59 @@ module PieChart =
                             pie.labelLine false
                             pie.label false
                             pie.dataKey (fun p -> p.value)
+                            pie.isAnimationActive false
                             pie.children cells
                         ]
                     ]
             ]
 
-            Mui.grid [
-                grid.container true
-                grid.justify.spaceEvenly
-                grid.alignItems.center
-                grid.direction.row
-                grid.children [
-                    props.data
-                    |> ColoredList.keyValueListToColoredItems
-                    |> ColoredList.render
+            Html.div [
+                Mui.toolbar [
+                    toolbar.disableGutters true
+                    toolbar.children [
+                        Mui.typography [
+                            prop.style [ style.flexGrow 1]
+                            typography.color.primary
+                            typography.variant.h6
+                            prop.text (sprintf "%s %s" props.title p)
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> SkipPrevious |> dispatch)
+                            iconButton.children [
+                                Icons.skipPreviousIcon []
+                            ]
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> SkipNext |> dispatch)
+                            iconButton.children [
+                                Icons.skipNextIcon []
+                            ]
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> Replay |> dispatch)
+                            iconButton.children [
+                                Icons.replay10Icon []
+                            ]
+                        ]
+                    ]
+                ]
 
-                    props.data 
-                    |> colorKeyValueList
-                    |> createPieChart
+                Mui.grid [
+                    grid.container true
+                    grid.justify.spaceEvenly
+                    grid.alignItems.center
+                    grid.direction.row
+                    grid.children [
+                        data
+                        |> ColoredList.keyValueListToColoredItems
+                        |> ColoredList.render
+
+                        data 
+                        |> colorKeyValueList
+                        |> createPieChart
+                    ]
                 ]
             ]
         )
 
-
-    let render kvs = comp ({| data = kvs |})
+    let render title kvs periods = comp ({| title = title; data = kvs; periods = periods |})

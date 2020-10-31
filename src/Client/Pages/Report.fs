@@ -100,13 +100,13 @@ module Report =
                 g.Paragraphs
                 |> List.collect (fun i ->
                     [
-                        i.Title |> sprintf "#### %s" |> Markdown.render
                         Html.div [
                             prop.style [ style.paddingBottom 20 ]
 
                             match dt with
                             | Graph when g.Title = Literals.groupOverview && i.Title = Literals.paragraphPerYear -> 
                                 prop.children [
+                                    i.Title |> sprintf "#### %s" |> Markdown.render
                                     "##### Mortaliteit" |> Markdown.render
                                     s.PeriodTotals |> Components.MortalityGraph.render
                                     "##### SMR" |> Markdown.render
@@ -118,41 +118,67 @@ module Report =
                                 ]
 
                             | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphTotals ->
-                                prop.children [ s.Totals.Gender |> Components.PieChart.render ]
+                                prop.children [ 
+                                    s.PeriodTotals
+                                    |> List.map (fun t ->
+                                        t.Period, t.Gender
+                                    )
+                                    |> Components.PieChart.render i.Title s.Totals.Gender
+                                ]
 
                             | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphPerYear ->
                                 prop.children (s.PeriodTotals |> Components.StackedGenderChart.render)
 
                             | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphTotals ->
-                                prop.children [
-                                    s.Totals.AgeGroup |> Components.PieChart.render
-                                 ]
+                                prop.children [ 
+                                    s.PeriodTotals
+                                    |> List.map (fun t ->
+                                        t.Period, t.AgeGroup
+                                    )
+                                    |> Components.PieChart.render i.Title s.Totals.AgeGroup
+                                ]
 
                             | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
+                                    i.Title |> sprintf "#### %s" |> Markdown.render
                                     s.PeriodTotals |> Components.StackedAgeChart.render
                                  ]
 
                             | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphTotals ->
-                                prop.children [
-                                    s.Totals.DischargeReasons |> PieChart.render
-                                 ]
+                                prop.children [ 
+                                    s.PeriodTotals
+                                    |> List.map (fun t ->
+                                        t.Period, t.DischargeReasons
+                                    )
+                                    |> Components.PieChart.render i.Title s.Totals.DischargeReasons
+                                ]
 
                             | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
+                                    i.Title |> sprintf "#### %s" |> Markdown.render
                                     s.PeriodTotals |> Components.StackedDischargeChart.render
                                  ]
 
                             | Graph when g.Title = Literals.groupDiagnoseGroup && i.Title = Literals.paragraphTotals ->
-                                prop.children [ s.Totals.DiagnoseGroups  |> PieChart.render ]
+                                prop.children [ 
+                                    s.PeriodTotals
+                                    |> List.map (fun t ->
+                                        t.Period, t.DiagnoseGroups
+                                    )
+                                    |> Components.PieChart.render i.Title s.Totals.DiagnoseGroups
+                                ]
 
                             | Graph when g.Title = Literals.groupDiagnoseGroup  && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
+                                    i.Title |> sprintf "#### %s" |> Markdown.render
                                     s.PeriodTotals |> Components.StackedDiagnoseChart.render
                                  ]
 
                             | _ ->
-                                prop.children (i.Content |> Markdown.render)
+                                prop.children [
+                                    i.Title |> sprintf "#### %s" |> Markdown.render
+                                    i.Content |> Markdown.render
+                                ]
                         ]
                     ]
                 )

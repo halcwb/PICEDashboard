@@ -16,7 +16,7 @@ module Report =
         [<Literal>]
         let groupValidation = "Validatie"
         [<Literal>]
-        let groupOverview = "Opnames en Mortaliteit"
+        let groupOverview = "Overzicht"
         [<Literal>]
         let groupGender = "Geslacht"
         [<Literal>]
@@ -69,6 +69,12 @@ module Report =
         {
             Title : string
             Paragraphs : Paragraph list
+            SubChapters : SubChapter list
+        }
+    and SubChapter = 
+        {
+            Title : string
+            Paragraphs : Paragraph list
         }
     and Paragraph =
         {
@@ -76,27 +82,93 @@ module Report =
             Content : string
         }
 
-    let addParagraph section chapter title md report =
+    let addSubParagraph sectionTitle chapterTitle subTitle title md report =
         { report with
             Sections =
                 report.Sections 
                 |> List.map (fun s ->
-                    if s.Title <> section then s
+                    if s.Title <> sectionTitle then s
                     else 
                         { s with
                             Chapters =
                                 s.Chapters
-                                |> List.map (fun g ->
-                                    if g.Title <> chapter then g
+                                |> List.map (fun c ->
+                                    if c.Title <> chapterTitle then c
                                     else
-                                        { g with
+                                        { c with
+                                            SubChapters =
+                                                c.SubChapters
+                                                |> List.map (fun sc ->
+                                                    if sc.Title <> subTitle then sc
+                                                    else 
+                                                        { sc with
+                                                            Paragraphs =
+                                                                {
+                                                                    Title = title
+                                                                    Content = md
+                                                                }
+                                                                |> List.singleton
+                                                                |> List.append sc.Paragraphs            
+                                                        }
+
+                                                )
+                                        }
+                                )
+                        }
+                )
+        }
+
+    let addParagraph sectionTitle chapterTitle title md report =
+        { report with
+            Sections =
+                report.Sections 
+                |> List.map (fun s ->
+                    if s.Title <> sectionTitle then s
+                    else 
+                        { s with
+                            Chapters =
+                                s.Chapters
+                                |> List.map (fun c ->
+                                    if c.Title <> chapterTitle then c
+                                    else
+                                        { c with
                                             Paragraphs =
                                                 {
                                                     Title = title
                                                     Content = md
                                                 }
                                                 |> List.singleton
-                                                |> List.append g.Paragraphs            
+                                                |> List.append c.Paragraphs    
+                                        }
+                                )
+                        }
+                )
+        }
+
+
+    let addSubChapter sectionTitle chapterTitle title report =
+        { report with
+            Sections =
+                report.Sections 
+                |> List.map (fun c ->
+                    if c.Title <> sectionTitle then c
+                    else 
+                        { c with
+                            Chapters =
+                                c.Chapters
+                                |> List.map (fun c ->
+                                    if c.Title <> chapterTitle then c
+                                    else 
+                                        {
+                                            c with
+                                                SubChapters =
+                                                    {
+                                                        Title = title
+                                                        Paragraphs = []
+                                                    }
+                                                    |> List.singleton 
+                                                    |> List.append c.SubChapters                            
+
                                         }
                                 )
                         }
@@ -115,6 +187,7 @@ module Report =
                                 {
                                     Title = title
                                     Paragraphs = []
+                                    SubChapters = []
                                 }
                                 |> List.singleton 
                                 |> List.append s.Chapters                            
