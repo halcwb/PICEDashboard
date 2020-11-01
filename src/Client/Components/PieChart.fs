@@ -8,38 +8,42 @@ module PieChart =
     open Feliz.MaterialUI
     open Fable.MaterialUI
     open Feliz.Recharts
-    open Informedica.PICE.Shared
+//    open Informedica.PICE.Shared
 
     open System
     open Types
 
-    type State = { period : int option }
+    type State = { period : Position }
+    and Position = | Position of int | First | Last | Paused
 
 
-    type Msg = | SkipNext | SkipPrevious | Replay
+    type Msg = | SkipLast | SkipFirst | Play | Pause
 
 
-    let init () = { period = None }, Cmd.none
+    let init () = { period = Paused }, Cmd.none
 
     
     let update msg state =
         match msg with
-        | Replay -> { state with period = None }, Cmd.none
-        | SkipNext -> 
+        | Pause -> { state with period = Paused }, Cmd.none
+        | Play -> 
             { state with 
                 period = 
                     match state.period with
-                    | Some  i -> i + 1
-                    | None    -> 0
-                    |> Some
+                    | Position  i  -> i + 1 
+                    | Paused       -> 0 
+                    | First | Last -> 1
+                    |> Position
             }, Cmd.none
-        | SkipPrevious ->
+        | SkipFirst ->
             { state with
-                period = 
-                    match state.period with
-                    | Some i when i > 1 -> i - 1 |> Some
-                    | _ -> None
+                period = First
             }, Cmd.none
+        | SkipLast ->
+            { state with
+                period = Last
+            }, Cmd.none
+
 
     type PieSlice = { name : string; value : int; color : string }
 
@@ -74,14 +78,21 @@ module PieChart =
     let private comp =
         React.functionComponent("piechart", fun (props: {| title : string; data: (string * int) list; periods : (string * (string * int) list) list |}) -> 
             let state, dispatch = React.useElmish(init, update, [||])
-            Browser.Dom.console.log("pie-state", state)
+
             let p, data =
                 match state.period with
-                | None   -> 
+                | Paused   -> 
                     let start, end' = 
                         props.periods |> List.head |> fst, props.periods |> List.rev |> List.head |> fst
                     sprintf "%s - %s" start end', props.data
-                | Some i -> props.periods.[ i % (props.periods |> List.length) ]
+                | _ -> 
+                    let i = 
+                        match state.period with
+                        | Position i -> i
+                        | Last       -> (props.periods |> List.length) - 1
+                        | _          -> 0
+
+                    props.periods.[ i % (props.periods |> List.length) ]
 
             let createPieChart data =
                 let cells =
@@ -118,21 +129,27 @@ module PieChart =
                             prop.text (sprintf "%s %s" props.title p)
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> SkipPrevious |> dispatch)
+                            prop.onClick (fun _ -> SkipFirst |> dispatch)
                             iconButton.children [
                                 Icons.skipPreviousIcon []
                             ]
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> SkipNext |> dispatch)
+                            prop.onClick (fun _ -> Play |> dispatch)
+                            iconButton.children [
+                                Icons.playArrowIcon []
+                            ]
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> SkipLast |> dispatch)
                             iconButton.children [
                                 Icons.skipNextIcon []
                             ]
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> Replay |> dispatch)
+                            prop.onClick (fun _ -> Pause |> dispatch)
                             iconButton.children [
-                                Icons.replay10Icon []
+                                Icons.pauseIcon []
                             ]
                         ]
                     ]

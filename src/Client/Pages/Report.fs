@@ -93,7 +93,25 @@ module Report =
             }
         | _ -> report
 
-    let layoutDetails section (dt : DisplayType) (s : Section) =
+    let getStackedBarChart s title get =
+        let perYr =
+            s.YearTotals
+            |> List.map (fun t ->
+                t.Period, t |> get
+            )
+        let perMo = 
+            s.MonthTotals
+            |> List.map (fun (yr, xs) ->
+                yr, 
+                xs
+                |> List.map(fun t -> 
+                    t.Period, t |> get
+                )
+            )
+
+        Components.StackedBarChart.render title perYr perMo
+
+    let layoutDetails className (dt : DisplayType) (s : Section) =
         s.Chapters
         |> List.map (fun g ->
             let details =
@@ -104,22 +122,30 @@ module Report =
                             prop.style [ style.paddingBottom 20 ]
 
                             match dt with
-                            | Graph when g.Title = Literals.groupOverview && i.Title = Literals.paragraphPerYear -> 
+                            | Graph when g.Title = Literals.groupMortality && i.Title = Literals.paragraphPerYear -> 
                                 prop.children [
                                     i.Title |> sprintf "#### %s" |> Markdown.render
                                     "##### Mortaliteit" |> Markdown.render
-                                    s.PeriodTotals |> Components.MortalityGraph.render
+                                    s.YearTotals |> Components.MortalityGraph.render
                                     "##### SMR" |> Markdown.render
-                                    s.PeriodTotals |> Components.SMRGraph.render
+                                    s.YearTotals |> Components.SMRGraph.render
                                     "##### SMR Funnelplot " |> Markdown.render
-                                    s.PeriodTotals |> Components.FunnelPlot.render
-                                    "##### Opnames/ontslagen en ligdagen" |> Markdown.render
-                                    s.PeriodTotals |> Components.AdmissionsGraph.render
+                                    s.YearTotals |> Components.FunnelPlot.render
                                 ]
+
+                            | Graph when g.Title = Literals.groupAdmission && i.Title = Literals.paragraphPerYear ->
+                                prop.children [
+                                    "#### Opnames/ontslagen en ligdagen" |> Markdown.render
+                                    s.YearTotals |> Components.AdmissionsGraph.render
+
+                                    (fun t -> t.Urgency)
+                                    |> getStackedBarChart s "Opname Urgentie"
+                                ]
+
 
                             | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphTotals ->
                                 prop.children [ 
-                                    s.PeriodTotals
+                                    s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.Gender
                                     )
@@ -127,11 +153,15 @@ module Report =
                                 ]
 
                             | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphPerYear ->
-                                prop.children (s.PeriodTotals |> Components.StackedGenderChart.render)
+                                //prop.children (s.YearTotals |> Components.StackedGenderChart.render)
+                                prop.children [
+                                    (fun t -> t.Gender)
+                                    |> getStackedBarChart s i.Title
+                                ]
 
                             | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphTotals ->
                                 prop.children [ 
-                                    s.PeriodTotals
+                                    s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.AgeGroup
                                     )
@@ -140,13 +170,13 @@ module Report =
 
                             | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
-                                    i.Title |> sprintf "#### %s" |> Markdown.render
-                                    s.PeriodTotals |> Components.StackedAgeChart.render
+                                    (fun t -> t.AgeGroup)
+                                    |> getStackedBarChart s i.Title
                                  ]
 
                             | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphTotals ->
                                 prop.children [ 
-                                    s.PeriodTotals
+                                    s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.DischargeReasons
                                     )
@@ -155,13 +185,13 @@ module Report =
 
                             | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
-                                    i.Title |> sprintf "#### %s" |> Markdown.render
-                                    s.PeriodTotals |> Components.StackedDischargeChart.render
+                                    (fun t -> t.DischargeReasons)
+                                    |> getStackedBarChart s i.Title
                                  ]
 
                             | Graph when g.Title = Literals.groupDiagnoseGroup && i.Title = Literals.paragraphTotals ->
                                 prop.children [ 
-                                    s.PeriodTotals
+                                    s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.DiagnoseGroups
                                     )
@@ -170,8 +200,8 @@ module Report =
 
                             | Graph when g.Title = Literals.groupDiagnoseGroup  && i.Title = Literals.paragraphPerYear ->
                                 prop.children [
-                                    i.Title |> sprintf "#### %s" |> Markdown.render
-                                    s.PeriodTotals |> Components.StackedDiagnoseChart.render
+                                    (fun t -> t.DiagnoseGroups)
+                                    |> getStackedBarChart s i.Title
                                  ]
 
                             | _ ->
@@ -190,25 +220,15 @@ module Report =
                 ]
             {|
                 details = details
-                summary = (section, title)
+                summary = (className, title)
             |}                    
         )
         |> Components.AccordionList.render
 
-    let layoutReport dt (sectionCls : string) (groupCls : string) (sections : Section list) =
+    let layoutReport dt (className : string) (sections : Section list) =
         sections
-        |> List.map (fun s ->
-            let title = 
-                Mui.typography [
-                    typography.variant.h6
-                    prop.text s.Title
-                ]
-            {|
-                details = [ s |> layoutDetails groupCls dt ]
-                summary = (sectionCls, title)
-            |}
-        )                
-        |> Components.AccordionList.render 
+        |> List.map (layoutDetails className dt)
+        |> Html.div
 
     let private comp =
         React.functionComponent("statistics", fun (props : {| displayType : DisplayType; selected : string option; report : Report |}) ->
@@ -228,7 +248,7 @@ module Report =
                     | Print -> report.Markdown |> Markdown.render 
                     | _ ->
                         report.Sections
-                        |> layoutReport props.displayType classes.section classes.group
+                        |> layoutReport props.displayType classes.group
                 ]
             ]
         )

@@ -10,9 +10,9 @@ module ServerApi =
     open Informedica.PICE.Shared.Api
     open Informedica.PICE.Lib
 
-    let mapTotals period (totals : Statistics.Totals) =
+    let mapTotals (totals : Statistics.Totals) =
         {
-            Period = period
+            Period = totals.Period
             InvalidPatients = totals.InvalidPatients
             Patients = totals.Patients
             Admissions = totals.Admissions
@@ -21,6 +21,7 @@ module ServerApi =
             Discharged = totals.Discharged
             DischargeReasons = totals.DischargeReasons
             HospitalDischargeDestinations = totals.HospitalDischargeDestinations
+            Urgency = totals.Urgency
             Gender =totals.Gender
             AgeGroup = totals.AgeGroup
             DiagnoseGroups = totals.DiagnoseGroups
@@ -64,13 +65,17 @@ module ServerApi =
                                                 )
                                         }
                                     )
-                                Totals = s.Totals |> mapTotals ""
-                                PeriodTotals = 
-                                    s.PeriodTotals
-                                    |> List.map (fun (p, t) -> 
-                                        mapTotals p t
+                                Totals = s.Totals |> mapTotals
+                                YearTotals = 
+                                    s.YearTotals
+                                    |> List.map mapTotals
+                                MonthTotals =
+                                    s.MonthTotals
+                                    |> List.map (fun (yr, tots) ->
+                                        yr, 
+                                        tots
+                                        |> List.map mapTotals
                                     )
-
                             }
                         )
                     Markdown = rep.Markdown

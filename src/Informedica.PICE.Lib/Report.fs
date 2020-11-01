@@ -12,17 +12,21 @@ module Report =
     module Literals =
 
         [<Literal>]
-        let sectionAll = "Rapportage Alle Jaren"
+        let sectionPICE = "PICE Rapport"
         [<Literal>]
         let groupValidation = "Validatie"
         [<Literal>]
         let groupOverview = "Overzicht"
         [<Literal>]
+        let groupMortality = "Mortaliteit"
+        [<Literal>]
+        let groupAdmission = "Opname"
+        [<Literal>]
         let groupGender = "Geslacht"
         [<Literal>]
         let groupAge = "Leeftijd"
         [<Literal>]
-        let groupDischargeReason = "PICU Ontslagreden"
+        let groupDischargeReason = "Ontslagreden"
         [<Literal>]
         let groupDiagnoseGroup = "Diagnose Groep"
         [<Literal>]
@@ -62,8 +66,9 @@ module Report =
             Title : string
             Chapters : Chapter list
             Totals : Totals
-            // string = period to which totals belong
-            PeriodTotals : (string * Totals) list
+            YearTotals : Totals list
+            // string = year to which totals belong
+            MonthTotals : (string * (Totals list)) list
         }
     and Chapter = 
         {
@@ -195,14 +200,15 @@ module Report =
                 )
         }
 
-    let addSection title totals ptotals report =
+    let addSection title totals yrTots moTots report =
         { report with
             Sections =
                 {
                     Title = title 
                     Chapters = []
                     Totals = totals
-                    PeriodTotals = ptotals
+                    YearTotals = yrTots
+                    MonthTotals = moTots
                 }
                 |> List.singleton
                 |> List.append report.Sections
@@ -312,7 +318,7 @@ module Report =
         let addYearSection (yTot : YearTotals) report =
             let sectionTitle = sprintf "Rapportage %i" yTot.Year
             report
-            |> addSection sectionTitle yTot.Totals (yTot.MonthTotals |> List.map (fun mt -> mt.Month |> string, mt.Totals))
+            |> addSection sectionTitle yTot.Totals (yTot.MonthTotals |> List.map (fun mt -> mt.Totals)) []
             |> addChapter sectionTitle Literals.groupOverview
             |> addParagraph sectionTitle Literals.groupOverview Literals.paragraphTotals (totalsTabel yTot.Totals) 
             |> addParagraph sectionTitle Literals.groupOverview Literals.paragraphPerMonth (printMonthTabel yTot)
@@ -325,33 +331,37 @@ module Report =
             |> addChapter sectionTitle Literals.groupDiagnoseGroup
             |> addParagraph sectionTitle Literals.groupDiagnoseGroup Literals.paragraphTotals  (printCount yTot.Totals.DiagnoseGroups true)
 
+        let yrTots, moTots =
+            stats.YearTotals
+            |> List.map (fun yt -> yt.Totals) ,
+            stats.YearTotals
+            |> List.map (fun yt -> yt.Year |> string, yt.MonthTotals |> List.map (fun mt -> mt.Totals))
+
 
         {
             Sections = [] 
             Markdown = stats |> Statistics.toMarkdown
         }
-        |> addSection Literals.sectionAll stats.Totals (stats.YearTotals |> List.map (fun yt -> yt.Year |> string, yt.Totals))
-        |> addChapter Literals.sectionAll Literals.groupValidation 
-        |> addParagraph Literals.sectionAll Literals.groupValidation Literals.paragraphTotals (printCount stats.Totals.InvalidPatients true)
-        |> addChapter Literals.sectionAll Literals.groupOverview
-        |> addParagraph Literals.sectionAll Literals.groupOverview Literals.paragraphTotals (stats.Totals |> totalsTabel) 
-        |> addParagraph Literals.sectionAll Literals.groupOverview Literals.paragraphPerYear (allYearTabel stats)
-        |> addChapter Literals.sectionAll Literals.groupGender
-        |> addParagraph Literals.sectionAll Literals.groupGender Literals.paragraphTotals  (printCount stats.Totals.Gender true)
-        |> addParagraph Literals.sectionAll Literals.groupGender Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
-        |> addChapter Literals.sectionAll Literals.groupAge
-        |> addParagraph Literals.sectionAll Literals.groupAge Literals.paragraphTotals  (printCount stats.Totals.AgeGroup false)
-        |> addParagraph Literals.sectionAll Literals.groupAge Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
-        |> addChapter Literals.sectionAll Literals.groupDischargeReason
-        |> addParagraph Literals.sectionAll Literals.groupDischargeReason Literals.paragraphTotals  (printCount stats.Totals.DischargeReasons true)
-        |> addParagraph Literals.sectionAll Literals.groupDischargeReason Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
-        |> addChapter Literals.sectionAll Literals.groupDiagnoseGroup 
-        |> addParagraph Literals.sectionAll Literals.groupDiagnoseGroup Literals.paragraphTotals (printCount stats.Totals.DiagnoseGroups true)
-        |> addParagraph Literals.sectionAll Literals.groupDiagnoseGroup Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
-        |> fun report ->
-            stats.YearTotals
-            |> List.sortByDescending (fun ytot -> ytot.Year)
-            |> List.fold (fun report ytot ->
-                addYearSection ytot report
-            ) report
+        |> addSection Literals.sectionPICE stats.Totals yrTots moTots
+        |> addChapter Literals.sectionPICE Literals.groupValidation 
+        |> addParagraph Literals.sectionPICE Literals.groupValidation Literals.paragraphTotals (printCount stats.Totals.InvalidPatients true)
+        |> addChapter Literals.sectionPICE Literals.groupOverview
+        |> addParagraph Literals.sectionPICE Literals.groupOverview Literals.paragraphTotals (stats.Totals |> totalsTabel) 
+        |> addParagraph Literals.sectionPICE Literals.groupOverview Literals.paragraphPerYear (allYearTabel stats)
+        |> addChapter Literals.sectionPICE Literals.groupMortality
+        |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphPerYear ""
+        |> addChapter Literals.sectionPICE Literals.groupAdmission
+        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphPerYear ""
+        |> addChapter Literals.sectionPICE Literals.groupGender
+        |> addParagraph Literals.sectionPICE Literals.groupGender Literals.paragraphTotals  (printCount stats.Totals.Gender true)
+        |> addParagraph Literals.sectionPICE Literals.groupGender Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
+        |> addChapter Literals.sectionPICE Literals.groupAge
+        |> addParagraph Literals.sectionPICE Literals.groupAge Literals.paragraphTotals  (printCount stats.Totals.AgeGroup false)
+        |> addParagraph Literals.sectionPICE Literals.groupAge Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
+        |> addChapter Literals.sectionPICE Literals.groupDischargeReason
+        |> addParagraph Literals.sectionPICE Literals.groupDischargeReason Literals.paragraphTotals  (printCount stats.Totals.DischargeReasons true)
+        |> addParagraph Literals.sectionPICE Literals.groupDischargeReason Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
+        |> addChapter Literals.sectionPICE Literals.groupDiagnoseGroup 
+        |> addParagraph Literals.sectionPICE Literals.groupDiagnoseGroup Literals.paragraphTotals (printCount stats.Totals.DiagnoseGroups true)
+        |> addParagraph Literals.sectionPICE Literals.groupDiagnoseGroup Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
         

@@ -11,6 +11,22 @@ module Utils =
     let calcRiskFromScore score = Math.Exp(score) / (1. + Math.Exp(score))
 
 
+    let intToMonth i = 
+        [
+            "jan"
+            "feb"
+            "mrt"
+            "apr"
+            "mei"
+            "jun"
+            "jul"
+            "aug"
+            "sep"
+            "okt"
+            "nov"
+            "dec"
+        ] |> List.item (i - 1)
+
     module DataOption  =
         
         open Types

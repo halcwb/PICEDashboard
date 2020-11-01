@@ -3,12 +3,12 @@
 open Feliz
 
 let bgColors = [|
+    color.darkBlue
+    color.darkGreen
     color.darkRed
     color.darkOrange
     color.darkOrchid
     color.darkSeaGreen
-    color.darkBlue
-    color.darkGreen
     color.darkCyan
     color.darkGoldenRod
     color.darkViolet

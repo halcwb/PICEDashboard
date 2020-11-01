@@ -15,27 +15,30 @@ module Utils =
 
 module Literals =
 
-    [<Literal>]
-    let sectionAll = "Rapportage Alle Jaren"
-    [<Literal>]
-    let groupValidation = "Validatie"
-    [<Literal>]
-    let groupOverview = "Opnames en Mortaliteit"
-    [<Literal>]
-    let groupGender = "Geslacht"
-    [<Literal>]
-    let groupAge = "Leeftijd"
-    [<Literal>]
-    let groupDischargeReason = "PICU Ontslagreden"
-    [<Literal>]
-    let groupDiagnoseGroup = "Diagnose Groep"
-    [<Literal>]
-    let paragraphTotals = "Totalen"
-    [<Literal>]
-    let paragraphPerYear = "Per Jaar"
-    [<Literal>]
-    let paragraphPerMonth = "Per Maand"
-
+        [<Literal>]
+        let sectionPICE = "PICE Rapport"
+        [<Literal>]
+        let groupValidation = "Validatie"
+        [<Literal>]
+        let groupOverview = "Overzicht"
+        [<Literal>]
+        let groupMortality = "Mortaliteit"
+        [<Literal>]
+        let groupAdmission = "Opname"
+        [<Literal>]
+        let groupGender = "Geslacht"
+        [<Literal>]
+        let groupAge = "Leeftijd"
+        [<Literal>]
+        let groupDischargeReason = "Ontslagreden"
+        [<Literal>]
+        let groupDiagnoseGroup = "Diagnose Groep"
+        [<Literal>]
+        let paragraphTotals = "Totalen"
+        [<Literal>]
+        let paragraphPerYear = "Per Jaar"
+        [<Literal>]
+        let paragraphPerMonth = "Per Maand"
 
 module Types =
 
@@ -69,6 +72,7 @@ module Types =
             PIM2Mortality : float
             PIM3Mortality : float
             PRISM4Mortality : float
+            Urgency : (string * int) list
             Gender : (string * int) list
             AgeGroup : (string * int) list
             DischargeReasons : (string * int) list
@@ -87,7 +91,9 @@ module Types =
             Title : string
             Chapters : Chapter list
             Totals : Totals
-            PeriodTotals : Totals list
+            YearTotals : Totals list
+            // string = year to which totals belong
+            MonthTotals : (string * (Totals list)) list
         }
     and Chapter = 
         {

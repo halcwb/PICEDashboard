@@ -13,6 +13,7 @@ module Statistics =
     module Literals = Markdown.Literals
 
     type Totals () =
+        member val Period : string = "" with get, set
         member val InvalidPatients : (string * int) list = [] with get, set
         member val Patients = 0 with get, set
         member val Admissions = 0 with get, set
@@ -25,6 +26,7 @@ module Statistics =
         member val PIM2Mortality = 0. with get, set
         member val PIM3Mortality = 0. with get, set
         member val PRISM4Mortality = 0. with get, set
+        member val Urgency : (string * int) list = [] with get, set
         member val Gender : (string * int) list = [] with get, set
         member val AgeGroup : (string * int) list = [] with get, set
         member val DischargeReasons : (string * int) list = [] with get, set
@@ -132,6 +134,7 @@ module Statistics =
             )
             |> List.countByList caps
 
+
         let genderToCount (pats : Patient list) = 
             pats
             |> List.distinctBy (fun p -> p.HospitalNumber)
@@ -155,6 +158,17 @@ module Statistics =
             )
 
         let ageToCount (dts : (DateTime option * DateTime option) list) =
+            let ageList = [
+                "0 dagen - 4 weken"
+                "1 maand - 1 jaar"
+                "1 jaar - 4 jaar"
+                "4 jaar - 12 jaar"
+                "12 jaar - 16 jaar"
+                "16 jaar - 18 jaar"
+                "ouder dan 18 jaar"
+                "onbekende leeftijd"            
+            ]
+
             dts
             |> List.map (fun (ad, bd) ->
                 match ad, bd with
@@ -169,7 +183,7 @@ module Statistics =
                     | _ -> "ouder dan 18 jaar"
                 | _, _ -> "onbekende leeftijd"
             )
-            |> List.countBy id
+            |> List.countByList ageList
             |> List.sortBy (fun (k, _) ->
                 match k with
                 | s when s = "0 dagen - 4 weken" -> 0
@@ -319,10 +333,26 @@ module Statistics =
                 | None   -> ""
             
             pats
-            |> List.map (fun p ->  p.hospitalAdmission.DischargeDestination)
+            |> List.map (fun p -> p.hospitalAdmission.DischargeDestination)
             |> fun xs -> 
                 xs
                 |> countBy unknown (xs |> getCaps)
+
+        stats.Totals.Urgency <-
+            pats
+            |> List.map (fun p -> p.picuAdmission.PIM.Urgency)
+            |> fun xs ->
+                let data =
+                    xs 
+                    |> List.map (fun x ->
+                        match x with
+                        | PIM.Elective -> "Gepland"
+                        | PIM.NotElective -> "Ongepland"
+                        | PIM.UnknownUrgency  -> "Onbekend"
+                    )
+                let caps = data |> List.distinct
+                data
+                |> List.countByList caps 
 
         stats.Totals.Gender <- pats |> List.map (fun p -> p.patient) |> genderToCount
 
@@ -355,11 +385,13 @@ module Statistics =
             |> List.map (fun yr ->
                 let tot = new YearTotals()
                 tot.Year <- yr
+                tot.Totals.Period <- yr |> string
                 tot.MonthTotals <-
                     [1..12]
                     |> List.map (fun m ->
                         let stat = new MonthTotals ()
                         stat.Month <- m
+                        stat.Totals.Period <- m |> string
                         stat
                     )
                 tot
@@ -474,6 +506,22 @@ module Statistics =
                     |> List.map (fun d -> d.Group)
                 )
                 |> List.countByList grps
+            tot.Totals.Urgency <-
+                admissions
+                |> List.map (fun pa -> pa.PIM.Urgency)
+                |> fun xs ->
+                    let data =
+                        xs 
+                        |> List.map (fun x ->
+                            match x with
+                            | PIM.Elective -> "Gepland"
+                            | PIM.NotElective -> "Ongepland"
+                            | PIM.UnknownUrgency  -> "Onbekend"
+                        )
+                    let caps = stats.Totals.Urgency |> List.map fst
+
+                    data
+                    |> List.countByList caps 
 
         )
         // PICU discharge statistics
@@ -540,7 +588,7 @@ module Statistics =
                     let moTot = MonthTotals()
 
                     moTot.Month <- mo
-
+                    moTot.Totals.Period <- mo |> Utils.intToMonth
                     let yr = Some yrTot.Year
                     let mo = Some mo
 
@@ -584,7 +632,54 @@ module Statistics =
                         |> List.sum
                         |> int
 
+                    moTot.Totals.Urgency <-
+                        filterAdmission(dateFilter yr mo) (fun d -> d.picuAdmission)
+                        |> List.map (fun pa -> pa.PIM.Urgency)
+                        |> fun xs ->
+                            let data =
+                                xs 
+                                |> List.map (fun x ->
+                                    match x with
+                                    | PIM.Elective -> "Gepland"
+                                    | PIM.NotElective -> "Ongepland"
+                                    | PIM.UnknownUrgency  -> "Onbekend"
+                                )
+                            let caps = stats.Totals.Urgency |> List.map fst
+
+                            data
+                            |> List.countByList caps 
+
+
+                    moTot.Totals.Gender <-
+                        filterAdmission (dateFilter yr mo) (fun d -> d.patient)
+                        |> genderToCount
+
+                    moTot.Totals.AgeGroup <-
+                        filterAdmission (dateFilter yr mo) id
+                        |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
+                        |> ageToCount
+
+                    moTot.Totals.DiagnoseGroups <-
+                        let grps = 
+                            stats.Totals.DiagnoseGroups
+                            |> List.map fst
+                        filterAdmission (dateFilter yr mo) id
+                        |> List.collect (fun p -> 
+                            p.picuAdmission.PrimaryDiagnosis
+                            |> List.map (fun d -> d.Group)
+                        )
+                        |> List.countByList grps
+                    
+                    moTot.Totals.DischargeReasons <- 
+                        filterDischarged (dateFilter yr mo) (fun p -> p.picuAdmission)
+                        |> List.map (fun a -> a.DischargeReason )
+                        |> fun xs ->
+                            xs
+                            |> countBy "Onbekend" (stats.Totals.DischargeReasons |> List.map fst)
+
+
                     moTot
+
                 )
         )
 
