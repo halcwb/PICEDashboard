@@ -13,37 +13,48 @@ module PieChart =
     open System
     open Types
 
-    type State = { period : Position }
-    and Position = | Position of int | First | Last | Paused
+
+    type State = { position : Position; last : int; showPercentage : bool }
+    and Position = | Position of int | First | Last | Stopped
 
 
-    type Msg = | SkipLast | SkipFirst | Play | Pause
+    type Msg = | SkipLast | SkipFirst | SkipPrevious | SkipNext | Stop
 
 
-    let init () = { period = Paused }, Cmd.none
+    let init last =
+        fun () -> { position = Stopped; last = last; showPercentage = true }, Cmd.none
 
     
     let update msg state =
         match msg with
-        | Pause -> { state with period = Paused }, Cmd.none
-        | Play -> 
+        | Stop -> { state with position = Stopped }, Cmd.none
+        | SkipPrevious -> 
             { state with 
-                period = 
-                    match state.period with
-                    | Position  i  -> i + 1 
-                    | Paused       -> 0 
-                    | First | Last -> 1
+                position = 
+                    match state.position with
+                    | Position  i  when i > 1 -> i - 1 |> Position
+                    | Position _ -> First
+                    | Stopped    -> 0 |> Position
+                    | Last       -> state.last - 1 |> Position
+                    | First      -> Last
+            }, Cmd.none
+        | SkipNext -> 
+            { state with 
+                position = 
+                    match state.position with
+                    | Position  i    -> i + 1 
+                    | Stopped | Last -> 0 
+                    | First          -> 1
                     |> Position
             }, Cmd.none
         | SkipFirst ->
             { state with
-                period = First
+                position = First
             }, Cmd.none
         | SkipLast ->
             { state with
-                period = Last
+                position = Last
             }, Cmd.none
-
 
     type PieSlice = { name : string; value : int; color : string }
 
@@ -77,17 +88,18 @@ module PieChart =
 
     let private comp =
         React.functionComponent("piechart", fun (props: {| title : string; data: (string * int) list; periods : (string * (string * int) list) list |}) -> 
-            let state, dispatch = React.useElmish(init, update, [||])
+            let last = (props.periods |> List.length) - 1
+            let state, dispatch = React.useElmish(init last, update, [||])
 
             let p, data =
-                match state.period with
-                | Paused   -> 
+                match state.position with
+                | Stopped   -> 
                     let start, end' = 
                         props.periods |> List.head |> fst, props.periods |> List.rev |> List.head |> fst
                     sprintf "%s - %s" start end', props.data
                 | _ -> 
                     let i = 
-                        match state.period with
+                        match state.position with
                         | Position i -> i
                         | Last       -> (props.periods |> List.length) - 1
                         | _          -> 0
@@ -131,28 +143,33 @@ module PieChart =
                         Mui.iconButton [
                             prop.onClick (fun _ -> SkipFirst |> dispatch)
                             iconButton.children [
+                                Icons.firstPageIcon []
+                            ]
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> SkipPrevious |> dispatch)
+                            iconButton.children [
                                 Icons.skipPreviousIcon []
                             ]
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> Play |> dispatch)
-                            iconButton.children [
-                                Icons.playArrowIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> SkipLast |> dispatch)
+                            prop.onClick (fun _ -> SkipNext |> dispatch)
                             iconButton.children [
                                 Icons.skipNextIcon []
                             ]
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> Pause |> dispatch)
+                            prop.onClick (fun _ -> SkipLast |> dispatch)
                             iconButton.children [
-                                Icons.pauseIcon []
+                                Icons.lastPageIcon []
                             ]
                         ]
-                    ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> Stop |> dispatch)
+                            iconButton.children [
+                                Icons.stopIcon []
+                            ]
+                        ]                    ]
                 ]
 
                 Mui.grid [

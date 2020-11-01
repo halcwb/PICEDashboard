@@ -2,6 +2,7 @@
 
 module StackedBarChart =
 
+    open System
     open Feliz
     open Feliz.UseElmish
     open Elmish
@@ -10,35 +11,46 @@ module StackedBarChart =
     open Feliz.Recharts
 
 
-    type State = { period : Position; showPercentage : bool }
-    and Position = | Position of int | First | Last | Paused
+    type State = { position : Position; last : int; showPercentage : bool }
+    and Position = | Position of int | First | Last | Stopped
 
 
-    type Msg = | SkipLast | SkipFirst | Play | Pause | ShowPercentage
+    type Msg = | SkipLast | SkipFirst | SkipPrevious | SkipNext | Stop | ShowPercentage
 
 
-    let init () = { period = Paused; showPercentage = true }, Cmd.none
+    let init last =
+        fun () -> { position = Stopped; last = last; showPercentage = true }, Cmd.none
 
     
     let update msg state =
         match msg with
-        | Pause -> { state with period = Paused }, Cmd.none
-        | Play -> 
+        | Stop -> { state with position = Stopped }, Cmd.none
+        | SkipPrevious -> 
             { state with 
-                period = 
-                    match state.period with
-                    | Position  i  -> i + 1 
-                    | Paused       -> 0 
-                    | First | Last -> 1
+                position = 
+                    match state.position with
+                    | Position  i  when i > 1 -> i - 1 |> Position
+                    | Position _ -> First
+                    | Stopped    -> 0 |> Position
+                    | Last       -> state.last - 1 |> Position
+                    | First      -> Last
+            }, Cmd.none
+        | SkipNext -> 
+            { state with 
+                position = 
+                    match state.position with
+                    | Position  i    -> i + 1 
+                    | Stopped | Last -> 0 
+                    | First          -> 1
                     |> Position
             }, Cmd.none
         | SkipFirst ->
             { state with
-                period = First
+                position = First
             }, Cmd.none
         | SkipLast ->
             { state with
-                period = Last
+                position = Last
             }, Cmd.none
         | ShowPercentage ->
             { state with
@@ -61,8 +73,9 @@ module StackedBarChart =
 
     let private comp =
         React.functionComponent("stacked-chart", fun (props: {| title : string; perYear : (string * (string * int) list) list; perMonth : (string * (string * ((string * int) list)) list) list |}) ->
-            let state, dispatch = React.useElmish(init, update, [||])
- 
+            let last = (props.perMonth |> List.length) - 1
+            let state, dispatch = React.useElmish(init last, update, [||])
+            Browser.Dom.console.log("index", state.position)
             let p, data =
                 let total xs = 
                     xs
@@ -83,16 +96,19 @@ module StackedBarChart =
                         )
                     )
 
-                match state.period with
-                | Paused -> "", props.perYear |> map
+                match state.position with
+                | Stopped -> "", props.perYear |> map
                 | _ ->
                     let i = 
-                        match state.period with
+                        match state.position with
                         | Position i -> i
                         | Last       -> (props.perMonth |> List.length) - 1
                         | _          -> 0
 
-                    let xs = props.perMonth |> List.item (i % (props.perMonth |> List.length))
+                    let xs = 
+                        props.perMonth 
+                        |> List.item (i % (props.perMonth |> List.length))
+
                     xs |> fst,
                     xs
                     |> snd
@@ -125,25 +141,31 @@ module StackedBarChart =
                         Mui.iconButton [
                             prop.onClick (fun _ -> SkipFirst |> dispatch)
                             iconButton.children [
+                                Icons.firstPageIcon []
+                            ]
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> SkipPrevious |> dispatch)
+                            iconButton.children [
                                 Icons.skipPreviousIcon []
                             ]
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> Play |> dispatch)
-                            iconButton.children [
-                                Icons.playArrowIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> SkipLast |> dispatch)
+                            prop.onClick (fun _ -> SkipNext |> dispatch)
                             iconButton.children [
                                 Icons.skipNextIcon []
                             ]
                         ]
                         Mui.iconButton [
-                            prop.onClick (fun _ -> Pause |> dispatch)
+                            prop.onClick (fun _ -> SkipLast |> dispatch)
                             iconButton.children [
-                                Icons.pauseIcon []
+                                Icons.lastPageIcon []
+                            ]
+                        ]
+                        Mui.iconButton [
+                            prop.onClick (fun _ -> Stop |> dispatch)
+                            iconButton.children [
+                                Icons.stopIcon []
                             ]
                         ]
                     ]
