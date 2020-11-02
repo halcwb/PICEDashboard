@@ -29,7 +29,7 @@ module MortalityGraph =
     //)
 
     let private comp =
-        React.functionComponent(fun (props : {| totals : Totals list |}) ->
+        React.functionComponent(fun (props : {| totals : Totals list; content : string |}) ->
 //            let classes = useStyles ()
 //            Browser.Dom.console.log("color", classes.barColor)
 
@@ -58,81 +58,85 @@ module MortalityGraph =
                     }
                 )
 
-            Recharts.composedChart [
-                barChart.width 1100
-                barChart.height 700
-                barChart.data data
-                barChart.children [
-                    Recharts.cartesianGrid [ cartesianGrid.strokeDasharray(1, 1)]
-                    Recharts.xAxis [ xAxis.dataKey (fun p -> p.name ) ]
-                    Recharts.yAxis [ yAxis.minTickGap 10 ]
-//                    Recharts.yAxis [ yAxis.yAxisId "right"; yAxis.orientation.right; yAxis.tickCount 5 ]
-                    Recharts.tooltip []
-                    Recharts.bar [
-                        bar.name "Mortaliteit"
-                        bar.dataKey (fun p -> p.mortality)
-                        bar.fill color.darkBlue
-//                        bar.fillOpacity 0.5
-                    ]
-                    Recharts.bar [
-                        bar.name "PIM-2"
-                        bar.dataKey (fun p -> p.pim2)
-                        bar.fill color.darkGreen
-//                        bar.fillOpacity 0.5
-                    ]
-                    Recharts.bar [
-                        bar.name "PIM-3"
-                        bar.dataKey (fun p -> p.pim3)
-                        bar.fill color.darkMagenta
-//                        bar.fillOpacity 0.5
-                    ]
-                    Recharts.bar [
-                        bar.name "PRISM-4"
-                        bar.dataKey (fun p -> p.prism)
-                        bar.fill color.darkCyan
-//                        bar.fillOpacity 0.5
-                    ]
-                    Recharts.line [
-                        line.name "gemiddelde"
-                        line.monotone
-                        line.dot false
-                        line.dataKey (fun p -> p.average)
-                        line.strokeWidth 4
-                        line.strokeDasharray [| 10; 10 |]
-                        line.stroke color.darkBlue
-                    ]
-                    Recharts.line [
-                        line.name "gem. PIM2"
-                        line.monotone
-                        line.dot false
-                        line.dataKey (fun p -> p.averagePIM2)
-                        line.strokeWidth 4
-                        line.strokeDasharray [| 10; 10 |]
-                        line.stroke color.darkGreen
-                    ]
-                    Recharts.line [
-                        line.name "gem. PIM3"
-                        line.monotone
-                        line.dot false
-                        line.dataKey (fun p -> p.averagePIM3)
-                        line.strokeWidth 4
-                        line.strokeDasharray [| 10; 10 |]
-                        line.stroke color.darkMagenta
-                    ]
-                    Recharts.line [
-                        line.name "gem. PRISM"
-                        line.monotone
-                        line.dot false
-                        line.dataKey (fun p -> p.averagePRISM)
-                        line.strokeWidth 4
-                        line.strokeDasharray [| 10; 10 |]
-                        line.stroke color.darkCyan
-                    ]
+            Html.div [
+                Recharts.composedChart [
+                    barChart.width 1100
+                    barChart.height 700
+                    barChart.data data
+                    barChart.children [
+                        Recharts.cartesianGrid [ cartesianGrid.strokeDasharray(1, 1)]
+                        Recharts.xAxis [ xAxis.dataKey (fun p -> p.name ) ]
+                        Recharts.yAxis [ yAxis.minTickGap 10 ]
+    //                    Recharts.yAxis [ yAxis.yAxisId "right"; yAxis.orientation.right; yAxis.tickCount 5 ]
+                        Recharts.tooltip []
+                        Recharts.bar [
+                            bar.name "Mortaliteit"
+                            bar.dataKey (fun p -> p.mortality)
+                            bar.fill color.darkBlue
+    //                        bar.fillOpacity 0.5
+                        ]
+                        Recharts.bar [
+                            bar.name "PIM-2"
+                            bar.dataKey (fun p -> p.pim2)
+                            bar.fill color.darkGreen
+    //                        bar.fillOpacity 0.5
+                        ]
+                        Recharts.bar [
+                            bar.name "PIM-3"
+                            bar.dataKey (fun p -> p.pim3)
+                            bar.fill color.darkMagenta
+    //                        bar.fillOpacity 0.5
+                        ]
+                        Recharts.bar [
+                            bar.name "PRISM-4"
+                            bar.dataKey (fun p -> p.prism)
+                            bar.fill color.darkCyan
+    //                        bar.fillOpacity 0.5
+                        ]
+                        Recharts.line [
+                            line.name "gemiddelde"
+                            line.monotone
+                            line.dot false
+                            line.dataKey (fun p -> p.average)
+                            line.strokeWidth 4
+                            line.strokeDasharray [| 10; 10 |]
+                            line.stroke color.darkBlue
+                        ]
+                        Recharts.line [
+                            line.name "gem. PIM2"
+                            line.monotone
+                            line.dot false
+                            line.dataKey (fun p -> p.averagePIM2)
+                            line.strokeWidth 4
+                            line.strokeDasharray [| 10; 10 |]
+                            line.stroke color.darkGreen
+                        ]
+                        Recharts.line [
+                            line.name "gem. PIM3"
+                            line.monotone
+                            line.dot false
+                            line.dataKey (fun p -> p.averagePIM3)
+                            line.strokeWidth 4
+                            line.strokeDasharray [| 10; 10 |]
+                            line.stroke color.darkMagenta
+                        ]
+                        Recharts.line [
+                            line.name "gem. PRISM"
+                            line.monotone
+                            line.dot false
+                            line.dataKey (fun p -> p.averagePRISM)
+                            line.strokeWidth 4
+                            line.strokeDasharray [| 10; 10 |]
+                            line.stroke color.darkCyan
+                        ]
 
-                    Recharts.legend [ legend.verticalAlign.top ]
+                        Recharts.legend [ legend.verticalAlign.top ]
 
+                    ]
                 ]
+
+                props.content |> Markdown.render
             ]
     )
 
-    let render totals = comp ({| totals = totals |})
+    let render content totals = comp ({| totals = totals; content = content |})

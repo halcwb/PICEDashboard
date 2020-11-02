@@ -24,6 +24,7 @@
         <Compile Include="Components\AdmissionsGraph.fs" />
         <Compile Include="Components\PieChart.fs" />
         <Compile Include="Components\StackedBarChart.fs" />
+        <Compile Include="Components\OccupancyGraph.fs" />
         <Compile Include="Components\StackedGenderChart.fs" />
         <Compile Include="Components\StackedAgeChart.fs" />
         <Compile Include="Components\StackedDischargeChart.fs" />

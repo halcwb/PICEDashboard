@@ -113,101 +113,124 @@ module Report =
 
     let layoutDetails className (dt : DisplayType) (s : Section) =
         s.Chapters
-        |> List.map (fun g ->
+        |> List.map (fun chapter ->
             let details =
-                g.Paragraphs
-                |> List.collect (fun i ->
+                chapter.Paragraphs
+                |> List.collect (fun paragraph ->
                     [
                         Html.div [
                             prop.style [ style.paddingBottom 20 ]
 
                             match dt with
-                            | Graph when g.Title = Literals.groupMortality && i.Title = Literals.paragraphPerYear -> 
+                            | Graph when chapter.Title = Literals.groupMortality && 
+                                         paragraph.Title = Literals.paragraphPIMandPRISM -> 
                                 prop.children [
-                                    i.Title |> sprintf "#### %s" |> Markdown.render
+                                    paragraph.Title |> sprintf "#### %s" |> Markdown.render
                                     "##### Mortaliteit" |> Markdown.render
-                                    s.YearTotals |> Components.MortalityGraph.render
-                                    "##### SMR" |> Markdown.render
+                                    s.YearTotals |> Components.MortalityGraph.render paragraph.Content
+                                ]
+
+                            | Graph when chapter.Title = Literals.groupMortality && 
+                                         paragraph.Title = Literals.paragraphSMR -> 
+                                prop.children [
+                                    paragraph.Title |> sprintf "#### %s" |> Markdown.render
+                                    "##### SMR per Jaar" |> Markdown.render
                                     s.YearTotals |> Components.SMRGraph.render
                                     "##### SMR Funnelplot " |> Markdown.render
                                     s.YearTotals |> Components.FunnelPlot.render
                                 ]
 
-                            | Graph when g.Title = Literals.groupAdmission && i.Title = Literals.paragraphPerYear ->
+                            | Graph when chapter.Title = Literals.groupAdmission && 
+                                         paragraph.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     "#### Opnames/ontslagen en ligdagen" |> Markdown.render
                                     s.YearTotals |> Components.AdmissionsGraph.render
+                                    
+//                                    "#### Bed Bezetting" |> Markdown.render
+                                    s.YearTotals 
+                                    |> List.map (fun ytot ->
+                                        ytot.Period
+                                        , ytot.Occupancy
+                                    )
+                                    |> OccupancyGraph.render
 
                                     (fun t -> t.Urgency)
                                     |> getStackedBarChart s "Opname Urgentie"
                                 ]
 
 
-                            | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphTotals ->
+                            | Graph when chapter.Title = Literals.groupGender && 
+                                         paragraph.Title = Literals.paragraphTotals ->
                                 prop.children [ 
                                     s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.Gender
                                     )
-                                    |> Components.PieChart.render i.Title s.Totals.Gender
+                                    |> Components.PieChart.render paragraph.Title s.Totals.Gender
                                 ]
 
-                            | Graph when g.Title = Literals.groupGender && i.Title = Literals.paragraphPerYear ->
-                                //prop.children (s.YearTotals |> Components.StackedGenderChart.render)
+                            | Graph when chapter.Title = Literals.groupGender && 
+                                         paragraph.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     (fun t -> t.Gender)
-                                    |> getStackedBarChart s i.Title
+                                    |> getStackedBarChart s paragraph.Title
                                 ]
 
-                            | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphTotals ->
+                            | Graph when chapter.Title = Literals.groupAge && 
+                                         paragraph.Title = Literals.paragraphTotals ->
                                 prop.children [ 
                                     s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.AgeGroup
                                     )
-                                    |> Components.PieChart.render i.Title s.Totals.AgeGroup
+                                    |> Components.PieChart.render paragraph.Title s.Totals.AgeGroup
                                 ]
 
-                            | Graph when g.Title = Literals.groupAge && i.Title = Literals.paragraphPerYear ->
+                            | Graph when chapter.Title = Literals.groupAge && 
+                                         paragraph.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     (fun t -> t.AgeGroup)
-                                    |> getStackedBarChart s i.Title
+                                    |> getStackedBarChart s paragraph.Title
                                  ]
 
-                            | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphTotals ->
+                            | Graph when chapter.Title = Literals.groupDischargeReason && 
+                                         paragraph.Title = Literals.paragraphTotals ->
                                 prop.children [ 
                                     s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.DischargeReasons
                                     )
-                                    |> Components.PieChart.render i.Title s.Totals.DischargeReasons
+                                    |> Components.PieChart.render paragraph.Title s.Totals.DischargeReasons
                                 ]
 
-                            | Graph when g.Title = Literals.groupDischargeReason && i.Title = Literals.paragraphPerYear ->
+                            | Graph when chapter.Title = Literals.groupDischargeReason && 
+                                         paragraph.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     (fun t -> t.DischargeReasons)
-                                    |> getStackedBarChart s i.Title
+                                    |> getStackedBarChart s paragraph.Title
                                  ]
 
-                            | Graph when g.Title = Literals.groupDiagnoseGroup && i.Title = Literals.paragraphTotals ->
+                            | Graph when chapter.Title = Literals.groupDiagnoseGroup && 
+                                         paragraph.Title = Literals.paragraphTotals ->
                                 prop.children [ 
                                     s.YearTotals
                                     |> List.map (fun t ->
                                         t.Period, t.DiagnoseGroups
                                     )
-                                    |> Components.PieChart.render i.Title s.Totals.DiagnoseGroups
+                                    |> Components.PieChart.render paragraph.Title s.Totals.DiagnoseGroups
                                 ]
 
-                            | Graph when g.Title = Literals.groupDiagnoseGroup  && i.Title = Literals.paragraphPerYear ->
+                            | Graph when chapter.Title = Literals.groupDiagnoseGroup  && 
+                                         paragraph.Title = Literals.paragraphPerYear ->
                                 prop.children [
                                     (fun t -> t.DiagnoseGroups)
-                                    |> getStackedBarChart s i.Title
+                                    |> getStackedBarChart s paragraph.Title
                                  ]
 
                             | _ ->
                                 prop.children [
-                                    i.Title |> sprintf "#### %s" |> Markdown.render
-                                    i.Content |> Markdown.render
+                                    paragraph.Title |> sprintf "#### %s" |> Markdown.render
+                                    paragraph.Content |> Markdown.render
                                 ]
                         ]
                     ]
@@ -216,7 +239,7 @@ module Report =
             let title = 
                 Mui.typography [
                     typography.variant.h6 
-                    prop.text g.Title
+                    prop.text chapter.Title
                 ]
             {|
                 details = details

@@ -39,25 +39,15 @@ module Literals =
         let paragraphPerYear = "Per Jaar"
         [<Literal>]
         let paragraphPerMonth = "Per Maand"
+        [<Literal>]
+        let paragraphPIMandPRISM = "PIM en PRISM"
+        [<Literal>]
+        let paragraphSMR = "Standardized Mortality Ratio"
 
 module Types =
 
-    //member val InvalidPatients : (string * int) list = [] with get, set
-    //member val Patients = 0 with get, set
-    //member val Admissions = 0 with get, set
-    //member val Admitted = 0 with get, set
-    //member val Discharged = 0 with get, set
-    //member val PICUDays = 0 with get, set
-    //member val Deaths = 0 with get, set
-    //member val HospitalDeaths = 0 with get, set
-    //member val PICUDeaths = 0 with get, set
-    //member val PIM2Mortality = 0. with get, set
-    //member val PIM3Mortality = 0. with get, set
-    //member val PRISM4Mortality = 0. with get, set
-    //member val Gender : (string * int) list = [] with get, set
-    //member val AgeGroup : (string * int) list = [] with get, set
-    //member val DischargeReasons : (string * int) list = [] with get, set
-    //member val HospitalDischargeDestinations : (string * int) list = [] with get, set
+    open System
+
     type Totals =
         {
             Period : string
@@ -78,6 +68,7 @@ module Types =
             DischargeReasons : (string * int) list
             HospitalDischargeDestinations : (string * int) list
             DiagnoseGroups : (string * int) list
+            Occupancy : (DateTime * int) list
         }
 
 

@@ -25,6 +25,7 @@ module ServerApi =
             Gender =totals.Gender
             AgeGroup = totals.AgeGroup
             DiagnoseGroups = totals.DiagnoseGroups
+            Occupancy = totals.Occupancy
             PICUDays = totals.PICUDays
             PICUDeaths = totals.PICUDeaths
             PIM2Mortality = totals.PIM2Mortality

@@ -36,6 +36,10 @@ module Report =
         [<Literal>]
         let paragraphPerMonth = "Per Maand"
         [<Literal>]
+        let paragraphPIMandPRISM = "PIM en PRISM"
+        [<Literal>]
+        let paragraphSMR = "Standardized Mortality Ratio"
+        [<Literal>]
         let capYear = "Jaar"
         [<Literal>]
         let capPatient = "Patienten"
@@ -349,7 +353,8 @@ module Report =
         |> addParagraph Literals.sectionPICE Literals.groupOverview Literals.paragraphTotals (stats.Totals |> totalsTabel) 
         |> addParagraph Literals.sectionPICE Literals.groupOverview Literals.paragraphPerYear (allYearTabel stats)
         |> addChapter Literals.sectionPICE Literals.groupMortality
-        |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphPerYear ""
+        |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphPIMandPRISM "Op de x-as staan de actuele en geschatte mortaliteit"
+        |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphSMR ""
         |> addChapter Literals.sectionPICE Literals.groupAdmission
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphPerYear ""
         |> addChapter Literals.sectionPICE Literals.groupGender

@@ -32,6 +32,7 @@ module Statistics =
         member val DischargeReasons : (string * int) list = [] with get, set
         member val HospitalDischargeDestinations : (string * int) list = [] with get, set
         member val DiagnoseGroups : (string * int) list = [] with get, set
+        member val Occupancy : (DateTime * int) list = [] with get, set
 
 
     type MonthTotals () =
@@ -134,6 +135,23 @@ module Statistics =
             )
             |> List.countByList caps
 
+
+        let calculateOccupancey yr (pas : PICUAdmission list) =
+            let start = DateTime(yr, 1, 1)
+
+            [1..365]
+            |> List.map (fun d ->
+                let dt = start.AddDays(d |> float)
+                
+                dt, 
+                pas
+                |> List.filter (fun pa ->
+                    match pa.AdmissionDate, pa.DischargeDate with
+                    | Some dt1, Some dt2 -> dt >= dt1 && dt <= dt2
+                    | _ -> false
+                )
+                |> List.length
+            )
 
         let genderToCount (pats : Patient list) = 
             pats
@@ -475,6 +493,11 @@ module Statistics =
                 |> List.map (fun pa -> pa |> getPRISMMort |> Option.get)
                 |> List.filter (Double.IsNaN >> not)
                 |> List.sum
+
+            tot.Totals.Occupancy <- 
+                pats
+                |> List.map (fun p -> p.picuAdmission)
+                |> calculateOccupancey tot.Year
         )
         // PICU admission statistics
         yrTots
@@ -506,6 +529,7 @@ module Statistics =
                     |> List.map (fun d -> d.Group)
                 )
                 |> List.countByList grps
+
             tot.Totals.Urgency <-
                 admissions
                 |> List.map (fun pa -> pa.PIM.Urgency)

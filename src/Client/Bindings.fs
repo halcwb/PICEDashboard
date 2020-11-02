@@ -271,15 +271,19 @@ open System
 open Feliz
 open Fable.Core
 
+[<Erase>]
 type yAxis =
 
     static member inline minTickGap(value : int) = Interop.mkAttr "minTickGap" value
 
 
-open System
-open Feliz
-open Fable.Core
-
 type line =
 
     static member inline strokeWidth(value : int) = Interop.mkAttr "strokeWidth" value
+    /// The source data, in which each element is an object.
+    static member inline data (values: seq<'a>) = Interop.mkAttr "data" (Seq.toArray values)
+    /// The source data, in which each element is an object.
+    static member inline data (values: 'a list) = Interop.mkAttr "data" (List.toArray values)
+    /// The source data, in which each element is an object.
+    static member inline data (values: 'a array) = Interop.mkAttr "data" values
+

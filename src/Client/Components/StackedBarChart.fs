@@ -75,7 +75,7 @@ module StackedBarChart =
         React.functionComponent("stacked-chart", fun (props: {| title : string; perYear : (string * (string * int) list) list; perMonth : (string * (string * ((string * int) list)) list) list |}) ->
             let last = (props.perMonth |> List.length) - 1
             let state, dispatch = React.useElmish(init last, update, [||])
-            Browser.Dom.console.log("index", state.position)
+
             let p, data =
                 let total xs = 
                     xs
@@ -170,7 +170,6 @@ module StackedBarChart =
                         ]
                     ]
                 ]
-
 
                 Recharts.barChart [
                     barChart.width 1100
