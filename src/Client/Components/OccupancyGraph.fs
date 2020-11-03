@@ -109,6 +109,11 @@ module OccupancyGraph =
                 line.stroke (color.green)
                 line.strokeWidth 4
                 bar.strokeOpacity 0.5
+            | _ when label = "mean" ->
+                line.strokeDasharray [| 15; 5 |]
+                line.stroke (color.gray)
+                line.strokeWidth 4
+                bar.strokeOpacity 0.5
             | false -> 
                 bar.strokeOpacity 0.2
                 line.stroke (color.darkBlue)
@@ -118,7 +123,7 @@ module OccupancyGraph =
         ]
 
     let comp =
-        React.functionComponent("line-chart", fun (props : {| data : (string * ((DateTime * int) list)) list |}) ->
+        React.functionComponent("line-chart", fun (props : {| title : string; data : (string * ((DateTime * int) list)) list |}) ->
             let last = (props.data |> List.length) - 1
             let state, dispatch = React.useElmish(init last, update, [||])
 
@@ -178,6 +183,11 @@ module OccupancyGraph =
                             |> List.map (fun (k, _) ->
                                 k, xs |> List.map snd |> List.max
                             )
+                            "mean" ,
+                            xs
+                            |> List.map (fun (k, _) ->
+                                k, xs |> List.map (snd >> float) |> List.average |> int
+                            )
                             label, xs
                             "min" ,
                             xs
@@ -211,20 +221,21 @@ module OccupancyGraph =
                     props.data
                     |> List.item (i % (props.data |> List.length))
                     |> fst
-                    |> sprintf "Bed Bezetting %s"
+                    |> sprintf "%s"
                 | Stopped ->
                     match state.legend with
-                    | Some s -> sprintf "Bed Bezetting %s" s
+                    | Some s -> sprintf "%s" s
                     | None ->
-                        sprintf "Bed Bezetting %s - %s"
+                        sprintf "%s - %s"
                             (props.data |> List.head |> fst)
                             (props.data |> List.rev |> List.head |> fst)
                 | First ->
-                    sprintf "Bed Bezetting %s"
+                    sprintf "%s"
                         (props.data |> List.head |> fst)
                 | Last ->
-                    sprintf "Bed Bezetting %s"
+                    sprintf "%s"
                         (props.data |> List.rev |> List.head |> fst)
+                |> sprintf "%s %s" props.title
 
 
             Html.div [
@@ -297,11 +308,11 @@ module OccupancyGraph =
 
                 """Ga met de muis over de labels onderaan om de x-as om
                 het gemiddelde of een jaar uit te lichten. Gebruik de bovenste 
-                knoppen om door de jaren heen te lopen.
+                knoppen om door de jaren heen te lopen en een specifiek jaar te bekijken.
                 """
                 |> Markdown.render
             ]
         )
 
 
-    let render data = comp({| data = data |})
+    let render title data = comp({| title = title; data = data |})

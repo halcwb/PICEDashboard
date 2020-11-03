@@ -36,13 +36,21 @@ module Literals =
         [<Literal>]
         let paragraphTotals = "Totalen"
         [<Literal>]
-        let paragraphPerYear = "Per Jaar"
+        let paragraphPerYear = "Per jaar"
         [<Literal>]
-        let paragraphPerMonth = "Per Maand"
+        let paragraphPerMonth = "Per maand"
         [<Literal>]
         let paragraphPIMandPRISM = "PIM en PRISM"
         [<Literal>]
         let paragraphSMR = "Standardized Mortality Ratio"
+        [<Literal>]
+        let paragraphPICUDays = "Ligdagen"
+        [<Literal>]
+        let paragraphAdmDisch = "Opnames/Ontslagen"
+        [<Literal>]
+        let paragraphUrgency = "Urgentie"
+        [<Literal>]
+        let paragraphOccupancy = "Bed bezetting"
 
 module Types =
 

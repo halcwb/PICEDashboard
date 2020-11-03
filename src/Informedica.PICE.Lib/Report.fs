@@ -32,13 +32,21 @@ module Report =
         [<Literal>]
         let paragraphTotals = "Totalen"
         [<Literal>]
-        let paragraphPerYear = "Per Jaar"
+        let paragraphPerYear = "Per jaar"
         [<Literal>]
-        let paragraphPerMonth = "Per Maand"
+        let paragraphPerMonth = "Per maand"
         [<Literal>]
         let paragraphPIMandPRISM = "PIM en PRISM"
         [<Literal>]
         let paragraphSMR = "Standardized Mortality Ratio"
+        [<Literal>]
+        let paragraphPICUDays = "Ligdagen"
+        [<Literal>]
+        let paragraphAdmDisch = "Opnames/Ontslagen"
+        [<Literal>]
+        let paragraphUrgency = "Urgentie"
+        [<Literal>]
+        let paragraphOccupancy = "Bed bezetting"
         [<Literal>]
         let capYear = "Jaar"
         [<Literal>]
@@ -356,7 +364,9 @@ module Report =
         |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphPIMandPRISM "Op de x-as staan de actuele en geschatte mortaliteit"
         |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphSMR ""
         |> addChapter Literals.sectionPICE Literals.groupAdmission
-        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphPerYear ""
+        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphAdmDisch ""
+        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphOccupancy ""
+        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphUrgency ""
         |> addChapter Literals.sectionPICE Literals.groupGender
         |> addParagraph Literals.sectionPICE Literals.groupGender Literals.paragraphTotals  (printCount stats.Totals.Gender true)
         |> addParagraph Literals.sectionPICE Literals.groupGender Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))

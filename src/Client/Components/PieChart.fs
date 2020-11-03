@@ -124,7 +124,7 @@ module PieChart =
                             pie.labelLine false
                             pie.label false
                             pie.dataKey (fun p -> p.value)
-                            pie.isAnimationActive false
+                            pie.animationDuration 700
                             pie.children cells
                         ]
                     ]

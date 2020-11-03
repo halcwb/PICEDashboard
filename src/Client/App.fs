@@ -154,7 +154,6 @@ let statsView =
                                         grps
                                 )
 
-                            Browser.Dom.console.log("treedata", treeData)
                             TreeViewDrawer.render treeData (TreeItemSelected >> props.dispatch)
 
                             if props.model.DisplayTypeAcknowledged then
@@ -166,6 +165,7 @@ let statsView =
                                     | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
                                     | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
                                 Dialog.render "### Verandering van rapport type" content (fun _ -> DisplayTypeAcknowledged |> props.dispatch)
+
                         | Resolved (Error err)  ->
                             sprintf "Oeps er ging wat mis:\n%s" err
                             |> display

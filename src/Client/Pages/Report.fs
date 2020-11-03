@@ -141,22 +141,33 @@ module Report =
                                 ]
 
                             | Graph when chapter.Title = Literals.groupAdmission && 
-                                         paragraph.Title = Literals.paragraphPerYear ->
+                                         paragraph.Title = Literals.paragraphAdmDisch ->
                                 prop.children [
                                     "#### Opnames/ontslagen en ligdagen" |> Markdown.render
-                                    s.YearTotals |> Components.AdmissionsGraph.render
+                                    s.YearTotals |> Components.AdmissionsGraph.render                                    
+                                ]
+
+
+                            | Graph when chapter.Title = Literals.groupAdmission && 
+                                         paragraph.Title = Literals.paragraphOccupancy ->
+                                prop.children [
                                     
-//                                    "#### Bed Bezetting" |> Markdown.render
                                     s.YearTotals 
                                     |> List.map (fun ytot ->
                                         ytot.Period
                                         , ytot.Occupancy
                                     )
-                                    |> OccupancyGraph.render
+                                    |> OccupancyGraph.render paragraph.Title
+                                ]
 
+                            
+                            | Graph when chapter.Title = Literals.groupAdmission && 
+                                         paragraph.Title = Literals.paragraphUrgency ->
+                                prop.children [
                                     (fun t -> t.Urgency)
                                     |> getStackedBarChart s "Opname Urgentie"
                                 ]
+
 
 
                             | Graph when chapter.Title = Literals.groupGender && 
@@ -228,6 +239,7 @@ module Report =
                                  ]
 
                             | _ ->
+//                                Browser.Dom.console.log("couldn't find: ", chapter.Title, paragraph.Title)
                                 prop.children [
                                     paragraph.Title |> sprintf "#### %s" |> Markdown.render
                                     paragraph.Content |> Markdown.render
