@@ -15,42 +15,71 @@ module Utils =
 
 module Literals =
 
-        [<Literal>]
-        let sectionPICE = "PICE Rapport"
-        [<Literal>]
-        let groupValidation = "Validatie"
-        [<Literal>]
-        let groupOverview = "Overzicht"
-        [<Literal>]
-        let groupMortality = "Mortaliteit"
-        [<Literal>]
-        let groupAdmission = "Opname"
-        [<Literal>]
-        let groupGender = "Geslacht"
-        [<Literal>]
-        let groupAge = "Leeftijd"
-        [<Literal>]
-        let groupDischargeReason = "Ontslagreden"
-        [<Literal>]
-        let groupDiagnoseGroup = "Diagnose Groep"
-        [<Literal>]
-        let paragraphTotals = "Totalen"
-        [<Literal>]
-        let paragraphPerYear = "Per jaar"
-        [<Literal>]
-        let paragraphPerMonth = "Per maand"
-        [<Literal>]
-        let paragraphPIMandPRISM = "PIM en PRISM"
-        [<Literal>]
-        let paragraphSMR = "Standardized Mortality Ratio"
-        [<Literal>]
-        let paragraphPICUDays = "Ligdagen"
-        [<Literal>]
-        let paragraphAdmDisch = "Opnames/Ontslagen"
-        [<Literal>]
-        let paragraphUrgency = "Urgentie"
-        [<Literal>]
-        let paragraphOccupancy = "Bed bezetting"
+    [<Literal>]
+    let sectionPICE = "PICE Rapport"
+    [<Literal>]
+    let groupValidation = "Validatie"
+    [<Literal>]
+    let groupOverview = "Overzicht"
+    [<Literal>]
+    let groupMortality = "Mortaliteit"
+    [<Literal>]
+    let groupAdmission = "Opname"
+    [<Literal>]
+    let groupPatient = "Patient"
+    [<Literal>]
+    let groupGender = "Geslacht"
+    [<Literal>]
+    let groupAge = "Leeftijd"
+    [<Literal>]
+    let groupDischarge = "Ontslag"
+    [<Literal>]
+    let groupDischargeReason = "Ontslagreden"
+    [<Literal>]
+    let groupDiagnose = "Diagnose"
+    [<Literal>]
+    let groupDiagnoseGroup = "Diagnose Groep"
+    [<Literal>]
+    let groupVentilation = "Beademing"
+    [<Literal>]
+    let subGroupCanule = "Canule"
+    [<Literal>]
+    let paragraphTotals = "Totalen"
+    [<Literal>]
+    let paragraphPerYear = "Per jaar"
+    [<Literal>]
+    let paragraphPerMonth = "Per maand"
+    [<Literal>]
+    let paragraphPIMandPRISM = "PIM en PRISM"
+    [<Literal>]
+    let paragraphSMR = "Standardized Mortality Ratio"
+    [<Literal>]
+    let paragraphPICUDays = "Ligdagen"
+    [<Literal>]
+    let paragraphAdmDisch = "Opnames/Ontslagen"
+    [<Literal>]
+    let paragraphUrgency = "Urgentie"
+    [<Literal>]
+    let paragraphOccupancy = "Bed bezetting"
+    [<Literal>]
+    let capYear = "Jaar"
+    [<Literal>]
+    let capPatient = "Patienten"
+    [<Literal>]
+    let capAdmission = "Opnames"
+    [<Literal>]
+    let capDischarge = "Ontslagen"
+    [<Literal>]
+    let capBedDays = "Ligdagen"
+    [<Literal>]
+    let capMortality = "Mortaliteit"
+    [<Literal>]
+    let capPIM2 = "PIM-2"
+    [<Literal>]
+    let capPIM3 = "PIM-3"
+    [<Literal>]
+    let capPRISM = "PRISM-IV"
+
 
 module Types =
 
@@ -77,6 +106,7 @@ module Types =
             HospitalDischargeDestinations : (string * int) list
             DiagnoseGroups : (string * int) list
             Occupancy : (DateTime * int) list
+            Cannule : (string * int) list
         }
 
 
@@ -97,6 +127,7 @@ module Types =
     and Chapter = 
         {
             Title : string
+            Chapters : Chapter list
             Paragraphs : Paragraph list
         }
     and Paragraph =

@@ -26,6 +26,7 @@ module ServerApi =
             AgeGroup = totals.AgeGroup
             DiagnoseGroups = totals.DiagnoseGroups
             Occupancy = totals.Occupancy
+            Cannule = totals.Canule
             PICUDays = totals.PICUDays
             PICUDeaths = totals.PICUDeaths
             PIM2Mortality = totals.PIM2Mortality
@@ -35,6 +36,29 @@ module ServerApi =
 
     let createReport () =
         let path = "../mrdm/report.cache"
+
+        let mapParagraph (p : Report.Paragraph) =
+            {
+                Title = p.Title
+                Content = p.Content
+            }
+
+        let rec mapChapter (chapter : Report.Chapter) =
+            match chapter.Chapters with
+            | [] -> 
+                {
+                    Title = chapter.Title
+                    Chapters = []
+                    Paragraphs = 
+                        chapter.Paragraphs |> List.map mapParagraph
+                }
+            | _ ->
+                {
+                    Title = chapter.Title
+                    Chapters = chapter.Chapters |> List.map mapChapter
+                    Paragraphs = chapter.Paragraphs |> List.map mapParagraph
+                }
+
         match path |> Cache.getCache<Report> with
         | Some report -> report
         | None        ->
@@ -52,20 +76,7 @@ module ServerApi =
                             {
                                 Title = s.Title
                                 Chapters = 
-                                    s.Chapters
-                                    |> List.map (fun g ->
-                                        { 
-                                            Title = g.Title
-                                            Paragraphs =
-                                                g.Paragraphs
-                                                |> List.map (fun i ->
-                                                    {
-                                                        Title = i.Title
-                                                        Content = i.Content
-                                                    }
-                                                )
-                                        }
-                                    )
+                                    s.Chapters |> List.map mapChapter
                                 Totals = s.Totals |> mapTotals
                                 YearTotals = 
                                     s.YearTotals

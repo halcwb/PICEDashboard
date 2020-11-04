@@ -165,6 +165,7 @@ module Types =
             AdmissionWeight : float option
             AdmissionLength : int option
             ContinuousReanimation : bool
+            Canule : bool
             PIM : PIM
             PRISM24 : PRISM option
             PRISM12 : PRISM option

@@ -8,6 +8,7 @@
       <Compile Include="..\Shared\Shared.fs" />
       <Compile Include="..\Shared\Api.fs" />
       <Compile Include="Env.fs" />
+      <Compile Include="Report.fs" />
       <Compile Include="ServerApi.fs" />
       <Compile Include="Server.fs" />
   </ItemGroup>

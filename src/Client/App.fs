@@ -47,14 +47,17 @@ let update msg model =
                 | Table -> Print
             DisplayTypeAcknowledged = false
         }, Cmd.none
+
     | DisplayTypeAcknowledged -> 
         { model with
             DisplayTypeAcknowledged = true
         }, Cmd.none
+
     | TreeItemSelected s -> 
         { model with
             SelectedTreeItem = Some s
         }, Cmd.none
+
     | LoadStatistics Started ->
         let load = async {
             try
@@ -87,6 +90,35 @@ let useStyles = Styles.makeStyles(fun styles theme ->
 
     |}
 )
+
+
+let mapToTreeData (sections : Section list) =
+    let rec mapChapter s (chapter : Chapter) =
+        let paragraphs = 
+            chapter.Paragraphs
+            |> List.mapi (fun i p -> 
+                TreeViewDrawer.createData (sprintf "%s.P|%i" s i) p.Title []
+            )
+
+        chapter.Chapters 
+        |> List.mapi (fun i chapter -> 
+            chapter 
+            |> mapChapter (sprintf "%s.C|%i" s i)
+        ) 
+        |> List.append paragraphs
+        |> TreeViewDrawer.createData s chapter.Title
+        
+    sections
+    |> List.mapi (fun i section ->
+        section.Chapters 
+        |> List.mapi (fun i2 chapter ->
+            chapter |> mapChapter (sprintf "%i.C|%i" i i2)
+        )
+        |> TreeViewDrawer.createData 
+            (string i)
+            section.Title
+            
+    )
 
 let statsView = 
     React.functionComponent("statsview", fun (props : {| model : Model; dispatch : Msg -> unit |}) ->
@@ -129,43 +161,26 @@ let statsView =
                         | HasNotStartedYet -> display "De boel wordt opgestart ..."
                         | InProgress       -> display "Het rapport wordt opgehaald ..."
                         | Resolved (Ok report) -> 
-                            let treeData = 
+                            let treeData =
                                 report.Sections
-                                |> List.mapi (fun i1 s ->
-                                    let grps =
-                                        s.Chapters
-                                        |> List.mapi (fun i2 g ->
-                                            let items =
-                                                g.Paragraphs
-                                                |> List.mapi (fun i3 item ->
-                                                    TreeViewDrawer.createData
-                                                        (sprintf "%i.%i.%i" i1 i2 i3)
-                                                        item.Title
-                                                        []
-                                                )
-                                            TreeViewDrawer.createData
-                                                (sprintf "%i.%i" i1 i2)
-                                                g.Title
-                                                items
-                                        )
-                                    TreeViewDrawer.createData 
-                                        (sprintf "%i" i1) 
-                                        s.Title
-                                        grps
-                                )
-
+                                |> mapToTreeData
                             TreeViewDrawer.render treeData (TreeItemSelected >> props.dispatch)
 
-                            if props.model.DisplayTypeAcknowledged then
-                                Pages.Report.render props.model.DisplayType props.model.SelectedTreeItem report
-                            else 
-                                let content =
-                                    match props.model.DisplayType with
-                                    | Print -> "Het rapport toont nu een print versie"
-                                    | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
-                                    | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
-                                Dialog.render "### Verandering van rapport type" content (fun _ -> DisplayTypeAcknowledged |> props.dispatch)
+                            Html.div [
+                                prop.style [ style.marginLeft 100 ]
+                                prop.children [
+                                    if props.model.DisplayTypeAcknowledged then
+                                        Pages.Report.render props.model.DisplayType props.model.SelectedTreeItem report
+                                    else 
+                                        let content =
+                                            match props.model.DisplayType with
+                                            | Print -> "Het rapport toont nu een print versie"
+                                            | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
+                                            | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
+                                        Dialog.render "### Verandering van rapport type" content (fun _ -> DisplayTypeAcknowledged |> props.dispatch)
 
+                                ]
+                            ]
                         | Resolved (Error err)  ->
                             sprintf "Oeps er ging wat mis:\n%s" err
                             |> display

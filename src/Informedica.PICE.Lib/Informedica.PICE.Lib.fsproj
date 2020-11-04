@@ -35,7 +35,6 @@
         <Compile Include="Validation.fs" />
         <Compile Include="Parsing.fs" />
         <Compile Include="Statistics.fs" />
-        <Compile Include="Report.fs" />
         <Compile Include="Export.fs" />
     </ItemGroup>
     <ItemGroup>

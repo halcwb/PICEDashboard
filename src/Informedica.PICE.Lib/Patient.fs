@@ -159,6 +159,7 @@ module Patient =
         admissionWeight
         admissionLength
         contReanimation
+        canule
         pim
         prism24
         prism12
@@ -181,6 +182,7 @@ module Patient =
             AdmissionWeight = admissionWeight
             AdmissionLength = admissionLength
             ContinuousReanimation = contReanimation
+            Canule = canule
             PIM = pim
             PRISM24 = prism24
             PRISM12 = prism12

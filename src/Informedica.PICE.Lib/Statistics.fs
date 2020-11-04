@@ -26,6 +26,7 @@ module Statistics =
         member val PIM2Mortality = 0. with get, set
         member val PIM3Mortality = 0. with get, set
         member val PRISM4Mortality = 0. with get, set
+        member val Canule : (string * int) list = [] with get, set
         member val Urgency : (string * int) list = [] with get, set
         member val Gender : (string * int) list = [] with get, set
         member val AgeGroup : (string * int) list = [] with get, set
@@ -398,6 +399,11 @@ module Statistics =
             |> List.sum
             |> int
 
+        stats.Totals.Canule <-
+            pats
+            |> List.countBy (fun p -> p.picuAdmission.Canule)
+            |> List.map (fun (k, v) -> (if k then "Canule" else "Geen canule"), v)
+
         let yrTots =
             [ 2003..DateTime.Now.Year - 1 ]
             |> List.map (fun yr ->
@@ -547,6 +553,10 @@ module Statistics =
                     data
                     |> List.countByList caps 
 
+            tot.Totals.Canule <-
+                admissions
+                |> List.countBy (fun pa -> pa.Canule)
+                |> List.map (fun (k, v) -> (if k then "Canule" else "Geen canule"), v)
         )
         // PICU discharge statistics
         yrTots

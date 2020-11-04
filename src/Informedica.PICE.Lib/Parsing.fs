@@ -596,6 +596,7 @@ module Parsing =
             <*> parseFloat d.gewicht
             <*> parseInt d.``adm-length``
             <*> parseBool d.contrean12
+            <*> parseBool d.canule
             <*> pim d
             <*> Result.ok None
             <*> prism d
