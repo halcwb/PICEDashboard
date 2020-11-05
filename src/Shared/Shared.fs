@@ -40,6 +40,8 @@ module Literals =
     [<Literal>]
     let groupDiagnoseGroup = "Diagnose Groep"
     [<Literal>]
+    let groupSpecialism = "Opname specialisme"
+    [<Literal>]
     let groupVentilation = "Beademing"
     [<Literal>]
     let subGroupCanule = "Canule"
@@ -105,6 +107,7 @@ module Types =
             DischargeReasons : (string * int) list
             HospitalDischargeDestinations : (string * int) list
             DiagnoseGroups : (string * int) list
+            Specialisme : (string * int) list
             Occupancy : (DateTime * int) list
             Cannule : (string * int) list
         }

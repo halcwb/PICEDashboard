@@ -52,39 +52,47 @@ module Markdown =
         let headers17 = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
         [<Literal>]
         let columns17 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|{9}|{10}|{11}|{12}|{13}|{14}|{15:F0}|{16:F0}|"
+        [<Literal>]
+        let headers42 = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+        [<Literal>]
+        let columns42 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|{9}|{10}|{11}|{12}|{13}|{14}|{15:F0}|{16:F0}|{17:F0}|{18:F0}|{19:F0}|{20}|{21}|{22}|{23}|{24}|{25}|{26:F0}|{27:F0}|{28}|{29}|{30}|{31}|{32}|{33}|{34:F0}|{35:F0}|{36:F0}|{37}|{38}|{39}|{40}|{41}|"
+        [<Literal>]
+        let headers47 = "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|"
+        [<Literal>]
+        let columns47 = "|{0}|{1}|{2}|{3}|{4}|{5}|{6:F0}|{7:F0}|{8:F0}|{9}|{10}|{11}|{12}|{13}|{14}|{15:F0}|{16:F0}|{17:F0}|{18:F0}|{19:F0}|{20}|{21}|{22}|{23}|{24}|{25}|{26:F0}|{27:F0}|{28}|{29}|{30}|{31}|{32}|{33}|{34:F0}|{35:F0}|{36:F0}|{37}|{38}|{39}|{40}|{41}|{42}|{43:F0}|{44:F0}|{45:F0}|{46:F0}|"
 
 
 
     let createMDTable (sb : StringBuilder)  (xs : obj list list) =
         match xs with
         | h::tail ->
+            let c = xs |> List.head |> List.length
+            if xs |> List.forall (List.length >> ((=) c)) |> not then 
+                failwith "all rows should have equal length"
             let hdr, clmn =
-                match h with
-                | _ when h |> List.length = 2 -> Literals.headers2, Literals.columns2
-                | _ when h |> List.length = 3 -> Literals.headers3, Literals.columns3
-                | _ when h |> List.length = 4 -> Literals.headers4, Literals.columns4
-                | _ when h |> List.length = 5 -> Literals.headers5, Literals.columns5
-                | _ when h |> List.length = 6 -> Literals.headers6, Literals.columns6
-                | _ when h |> List.length = 7 -> Literals.headers7, Literals.columns7
-                | _ when h |> List.length = 8 -> Literals.headers8, Literals.columns8
-                | _ when h |> List.length = 9 -> Literals.headers9, Literals.columns9
-                | _ when h |> List.length = 16 -> Literals.headers17, Literals.columns16
-                | _ when h |> List.length = 17 -> Literals.headers17, Literals.columns17
-                | _ ->
-                    h 
-                    |> List.length
-                    |> sprintf "unsupported columns count (min 2, max 9): %i" 
-                    |> failwith
-            sb
-            |> StringBuilder.appendLineFormat clmn h
-            |> StringBuilder.appendLine hdr
-            |> fun sb ->
-                tail
-                |> List.fold (fun sb row ->
-                    sb
-                    |> StringBuilder.appendLineFormat clmn row
-                ) sb
-
+                let hdr = "|:--:"
+                let clm = "|{x}"
+                let c = h |> List.length 
+                [0..(c - 1)]
+                |> List.fold (fun (h, c) i ->
+                    h + hdr, c + (clm |> String.replace "x" (i |> string))
+                ) ("", "")
+                |> fun (hdr, clm) ->
+                    hdr + "|", clm + "|"
+            try 
+                sb
+                |> StringBuilder.appendLineFormat clmn h
+                |> StringBuilder.appendLine hdr
+                |> fun sb ->
+                    tail
+                    |> List.fold (fun sb row ->
+                        sb
+                        |> StringBuilder.appendLineFormat clmn row
+                    ) sb
+            with 
+            | e -> 
+                sprintf "%s\n with hdr: %s\n clmn: %s" (e.ToString()) hdr clmn
+                |> failwith
         | _ -> 
             "not a valid table"
             |> failwith

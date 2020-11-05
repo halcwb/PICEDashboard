@@ -33,6 +33,7 @@ module Statistics =
         member val DischargeReasons : (string * int) list = [] with get, set
         member val HospitalDischargeDestinations : (string * int) list = [] with get, set
         member val DiagnoseGroups : (string * int) list = [] with get, set
+        member val Specialism : (string * int) list = [] with get, set
         member val Occupancy : (DateTime * int) list = [] with get, set
 
 
@@ -128,11 +129,17 @@ module Statistics =
             |> List.distinct
 
         let countBy un caps (ds : DataOption option list) =
+            let caps = un::caps
+
             ds
             |> List.map (fun d -> 
                 match d with
                 | Some d -> d.Label
                 | None   -> un
+            )
+            |> List.map (fun s -> 
+                if caps |> List.exists ((=) s) then s
+                else "Overige"
             )
             |> List.countByList caps
 
@@ -353,9 +360,7 @@ module Statistics =
             
             pats
             |> List.map (fun p -> p.hospitalAdmission.DischargeDestination)
-            |> fun xs -> 
-                xs
-                |> countBy unknown (xs |> getCaps)
+            |> fun xs ->  xs |> countBy "Onbekend" (xs |> getCaps)
 
         stats.Totals.Urgency <-
             pats
@@ -379,6 +384,25 @@ module Statistics =
             pats
             |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
             |> ageToCount
+
+        stats.Totals.Specialism <-
+            pats
+            |> List.map (fun p -> p.picuAdmission.ReferingSpecialism)
+            |> fun xs -> 
+                let xs =
+                    xs 
+                    |> countBy "Onbekend" (xs |> getCaps)
+                xs
+                |> List.fold (fun acc (k, v) ->
+                    if acc |> List.exists (fst >> (=) k) then acc
+                    else
+                        acc
+                        |> List.map (fun (k', v') ->
+                            if k' = "Overige" then k', v'+ v 
+                            else (k', v')
+                        )
+                ) ((xs |> List.take 10) @ [ "Overige", 0 ])
+            
 
         stats.Totals.DiagnoseGroups <-
             pats
@@ -536,6 +560,11 @@ module Statistics =
                 )
                 |> List.countByList grps
 
+            tot.Totals.Specialism <-
+                admissions
+                |> List.map (fun pa -> pa.ReferingSpecialism)
+                |> countBy "Onbekend" (stats.Totals.Specialism |> List.map fst |> List.distinct)
+
             tot.Totals.Urgency <-
                 admissions
                 |> List.map (fun pa -> pa.PIM.Urgency)
@@ -578,9 +607,7 @@ module Statistics =
             tot.Totals.HospitalDischargeDestinations <-
                 filterDischarged (dateFilter yr None) (fun d -> d.hospitalAdmission)
                 |> List.map (fun a -> a.DischargeDestination )
-                |> fun xs ->
-                    xs
-                    |> countBy "Onbekend" (stats.Totals.HospitalDischargeDestinations |> List.map fst)
+                |> countBy "Onbekend" (stats.Totals.HospitalDischargeDestinations |> List.map fst)
         )
         // PICU admitted statistics
         yrTots
@@ -692,6 +719,12 @@ module Statistics =
                         filterAdmission (dateFilter yr mo) id
                         |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
                         |> ageToCount
+
+                    moTot.Totals.Specialism <-
+                        filterAdmission (dateFilter yr mo) (fun p -> p.picuAdmission)
+                        |> List.map (fun pa -> pa.ReferingSpecialism)
+                        |> countBy "Onbekend" (stats.Totals.Specialism |> List.map fst |> List.distinct)
+
 
                     moTot.Totals.DiagnoseGroups <-
                         let grps = 

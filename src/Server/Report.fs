@@ -295,6 +295,9 @@ module Report =
         |> addSubChapter Literals.sectionPICE  Literals.groupDiagnose Literals.groupDiagnoseGroup 
         |> addSubParagraph Literals.sectionPICE  Literals.groupDiagnose Literals.groupDiagnoseGroup Literals.paragraphTotals (printCount stats.Totals.DiagnoseGroups true)
         |> addSubParagraph Literals.sectionPICE  Literals.groupDiagnose Literals.groupDiagnoseGroup Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
+        |> addSubChapter Literals.sectionPICE  Literals.groupDiagnose Literals.groupSpecialism 
+        |> addSubParagraph Literals.sectionPICE  Literals.groupDiagnose Literals.groupSpecialism Literals.paragraphTotals (printCount stats.Totals.Specialism true)
+        |> addSubParagraph Literals.sectionPICE  Literals.groupDiagnose Literals.groupSpecialism Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Specialism))
         |> addChapter Literals.sectionPICE Literals.groupVentilation
         |> addSubChapter Literals.sectionPICE Literals.groupVentilation  Literals.subGroupCanule 
         |> addSubParagraph Literals.sectionPICE  Literals.groupVentilation Literals.subGroupCanule Literals.paragraphTotals ""

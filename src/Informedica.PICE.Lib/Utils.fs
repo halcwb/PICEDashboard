@@ -54,5 +54,11 @@ module Utils =
             |> List.countBy id
             |> List.map (fun (k, v) -> k, v - 1)
             |> List.sortBy (fun (k, _) ->
-                xs1 |> List.findIndex ((=) k)
+                try
+                    xs1 |> List.findIndex ((=) k)
+                with
+                | _ ->
+                    xs1 |> String.concat ", "
+                    |> sprintf "countByList couldn't find %s in %s" k
+                    |> failwith
             )

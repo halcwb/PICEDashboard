@@ -251,6 +251,23 @@ module Report =
                         |> getStackedBarChart section paragraph.Title
                         ]
 
+                | Graph when chapter.Title = Literals.groupSpecialism && 
+                                paragraph.Title = Literals.paragraphTotals ->
+                    prop.children [ 
+                        section.YearTotals
+                        |> List.map (fun t ->
+                            t.Period, t.Specialisme
+                        )
+                        |> Components.PieChart.render paragraph.Title section.Totals.Specialisme
+                    ]
+
+                | Graph when chapter.Title = Literals.groupSpecialism  && 
+                                paragraph.Title = Literals.paragraphPerYear ->
+                    prop.children [
+                        (fun t -> t.Specialisme)
+                        |> getStackedBarChart section paragraph.Title
+                        ]
+
                 | Graph when chapter.Title = Literals.subGroupCanule &&
                             paragraph.Title = Literals.paragraphTotals ->
                     prop.children [
