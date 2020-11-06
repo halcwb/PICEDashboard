@@ -228,6 +228,8 @@ module Parsing =
                 <!> Result.ok d.``ziekenhuis-episode_uri``
                 <*> Result.ok d.``ziekenhuis-episode-upn``
                 <*> parseDateOpt d.``adm-hosp-admdate``
+                <*> (findOk "herk-tran-door" d.``herk-tran-door``)
+                <*> (findOk "adm-transport-adm" d.``adm-transport-adm``)
                 <*> (findOk "adm-desthospunitid" d.``adm-desthospunitid``)
                 <*> parseDateOpt d.``adm-hosp-disdate`` 
             )

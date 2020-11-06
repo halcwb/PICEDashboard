@@ -287,6 +287,12 @@ module Report =
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphAdmDisch ""
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphOccupancy ""
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphUrgency ""
+        |> addSubChapter Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportHospital 
+        |> addSubParagraph Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportHospital Literals.paragraphTotals ""
+        |> addSubParagraph Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportHospital Literals.paragraphPerYear ""
+        |> addSubChapter Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportTeam 
+        |> addSubParagraph Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportTeam Literals.paragraphTotals ""
+        |> addSubParagraph Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportTeam Literals.paragraphPerYear ""
         |> addChapter Literals.sectionPICE Literals.groupDischarge
         |> addSubChapter Literals.sectionPICE Literals.groupDischarge Literals.groupDischargeReason
         |> addSubParagraph Literals.sectionPICE Literals.groupDischarge Literals.groupDischargeReason Literals.paragraphTotals  (printCount stats.Totals.DischargeReasons true)

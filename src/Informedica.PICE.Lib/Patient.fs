@@ -32,11 +32,13 @@ module Patient =
             HospitalAdmissions = []
         }
 
-    let createHospitalAdmission id hn adt dest ddt =
+    let createHospitalAdmission id hn adt trh trt dest ddt =
         {
             Id = id
             HospitalNumber = hn
             AdmissionDate = adt
+            TransportHospital = trh
+            TransportTeam = trt
             DischargeDate = ddt
             DischargeDestination = dest
             PICUAdmissions = []

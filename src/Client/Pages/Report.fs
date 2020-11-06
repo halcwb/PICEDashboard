@@ -59,34 +59,34 @@ module Report =
         Browser.Dom.console.log("selecting", s)
 
         let rec selectChapter (ids : string list) (chapters : Chapter list) =
-//            Browser.Dom.console.log("select chapter", ids |> List.toArray)
+            Browser.Dom.console.log("select chapter", ids |> String.concat ", ", chapters |> List.map (fun c -> c.Title) |>  String.concat ", ")
             match ids with
             | id::tail ->
                 match id |> String.split2 with
                 | [s; id] when s = "C" ->
                     let chapter = chapters.[id |> int]
-                    match chapter.Chapters with
-                    | [] -> 
-                        if tail |> List.isEmpty then [ chapter ]
-                        else
-                            [ chapter ]
-                            |> selectChapter tail
+                    Browser.Dom.console.log("selected chapter: ", chapter.Title)
+                    match tail with
+                    | [] -> [ chapter ]
+                    | [ id ] ->
+                        Browser.Dom.console.log("Finishing with: ", id)
+                        match id |> String.split2 with
+                        | [s; id] when s = "C" -> 
+                            [ { chapter with Chapters = [ chapter.Chapters.[id |> int] ]; Paragraphs = [] } ]
+                        | [s; id] when s = "P" -> 
+                            Browser.Dom.console.log("Picked paragraph", id)
+                            [ { chapter with Paragraphs = [ chapter.Paragraphs.[id |> int] ]; Chapters = [] } ]
+                        | _ -> 
+                            sprintf "failwith couldn't get %s" id |> failwith
                     | _ ->
                         [
                             { chapter with
+                                Paragraphs = []
                                 Chapters = (chapter.Chapters |> selectChapter tail)
                             }
                         ]
-                | [s; id] when s = "P" ->
-                    let chapter = chapters |> List.head
-                    [
-                        { chapter with
-                            Paragraphs = [ chapter.Paragraphs.[id |> int] ]
-                        }
-                    ]
                 | _ ->
-                    Browser.Dom.console.log("couldn't pick", [|s, id|])
-                    chapters
+                    sprintf "failwith couldn't get %s" id |> failwith
             |  _ -> chapters
 
         match s |> String.split with
@@ -182,6 +182,35 @@ module Report =
                         |> getStackedBarChart section "Opname Urgentie"
                     ]
 
+                | Graph when chapter.Title = Literals.subGroupTransportHospital &&
+                             paragraph.Title = Literals.paragraphTotals ->
+                        prop.children [
+                            section.YearTotals
+                            |> List.map (fun t -> t.Period, t.TransportHospital)
+                            |> Components.PieChart.render paragraph.Title section.Totals.TransportHospital
+                        ]
+
+                | Graph when chapter.Title = Literals.subGroupTransportHospital &&
+                             paragraph.Title = Literals.paragraphPerYear ->
+                        prop.children [
+                            (fun t -> t.TransportHospital)
+                            |> getStackedBarChart section paragraph.Title
+                        ]
+
+                | Graph when chapter.Title = Literals.subGroupTransportTeam &&
+                             paragraph.Title = Literals.paragraphTotals ->
+                        prop.children [
+                            section.YearTotals
+                            |> List.map (fun t -> t.Period, t.TransportTeam)
+                            |> Components.PieChart.render paragraph.Title section.Totals.TransportTeam
+                        ]
+
+                | Graph when chapter.Title = Literals.subGroupTransportTeam &&
+                             paragraph.Title = Literals.paragraphPerYear ->
+                        prop.children [
+                            (fun t -> t.TransportTeam)
+                            |> getStackedBarChart section paragraph.Title
+                        ]
 
                 | Graph when chapter.Title = Literals.groupGender && 
                                 paragraph.Title = Literals.paragraphTotals ->

@@ -35,6 +35,8 @@ module Statistics =
         member val DiagnoseGroups : (string * int) list = [] with get, set
         member val Specialism : (string * int) list = [] with get, set
         member val Occupancy : (DateTime * int) list = [] with get, set
+        member val TransportHospital : (string * int) list = [] with get, set
+        member val TransportTeam : (string * int) list = [] with get, set
 
 
     type MonthTotals () =
@@ -428,6 +430,27 @@ module Statistics =
             |> List.countBy (fun p -> p.picuAdmission.Canule)
             |> List.map (fun (k, v) -> (if k then "Canule" else "Geen canule"), v)
 
+        stats.Totals.TransportHospital <-
+            pats
+            |> List.map (fun p -> 
+                p.hospitalAdmission.TransportHospital
+            )
+            |> fun xs ->
+                let caps = xs |> getCaps
+                xs 
+                |> countBy "Onbekend" caps
+
+        stats.Totals.TransportTeam <-
+            pats
+            |> List.map (fun p -> 
+                p.hospitalAdmission.TransportTeam
+            )
+            |> fun xs ->
+                let caps = xs |> getCaps
+                xs 
+                |> countBy "Onbekend" caps
+            
+
         let yrTots =
             [ 2003..DateTime.Now.Year - 1 ]
             |> List.map (fun yr ->
@@ -586,6 +609,16 @@ module Statistics =
                 admissions
                 |> List.countBy (fun pa -> pa.Canule)
                 |> List.map (fun (k, v) -> (if k then "Canule" else "Geen canule"), v)
+
+            tot.Totals.TransportHospital <-
+                filterAdmission (dateFilter yr None) (fun p -> p.hospitalAdmission)
+                |> List.map (fun ha -> ha.TransportHospital)
+                |> countBy "Onbekend" (stats.Totals.TransportHospital |> List.map fst |> List.distinct)
+
+            tot.Totals.TransportTeam <-
+                filterAdmission (dateFilter yr None) (fun p -> p.hospitalAdmission)
+                |> List.map (fun ha -> ha.TransportTeam)
+                |> countBy "Onbekend" (stats.Totals.TransportTeam |> List.map fst |> List.distinct)
         )
         // PICU discharge statistics
         yrTots
@@ -743,6 +776,16 @@ module Statistics =
                         |> fun xs ->
                             xs
                             |> countBy "Onbekend" (stats.Totals.DischargeReasons |> List.map fst)
+
+                    moTot.Totals.TransportHospital <-
+                        filterAdmission (dateFilter yr mo) (fun p -> p.hospitalAdmission)
+                        |> List.map (fun ha -> ha.TransportHospital)
+                        |> countBy "Onbekend" (stats.Totals.TransportHospital |> List.map fst |> List.distinct)
+
+                    moTot.Totals.TransportTeam <-
+                        filterAdmission (dateFilter yr mo) (fun p -> p.hospitalAdmission)
+                        |> List.map (fun ha -> ha.TransportTeam)
+                        |> countBy "Onbekend" (stats.Totals.TransportTeam |> List.map fst |> List.distinct)
 
 
                     moTot

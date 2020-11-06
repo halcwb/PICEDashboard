@@ -144,6 +144,8 @@ module Types =
             HospitalNumber : string
             AdmissionDate : DateTime option
             DischargeDate : DateTime option
+            TransportHospital : DataOption option
+            TransportTeam : DataOption option
             DischargeDestination : DataOption option
             PICUAdmissions : PICUAdmission list
         }

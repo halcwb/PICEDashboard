@@ -64,6 +64,10 @@ module Literals =
     [<Literal>]
     let paragraphOccupancy = "Bed bezetting"
     [<Literal>]
+    let subGroupTransportHospital = "Transporterend ziekenhuis"
+    [<Literal>]
+    let subGroupTransportTeam = "Transport team"
+    [<Literal>]
     let capYear = "Jaar"
     [<Literal>]
     let capPatient = "Patienten"
@@ -110,6 +114,8 @@ module Types =
             Specialisme : (string * int) list
             Occupancy : (DateTime * int) list
             Cannule : (string * int) list
+            TransportHospital : (string * int) list
+            TransportTeam : (string * int) list
         }
 
 
