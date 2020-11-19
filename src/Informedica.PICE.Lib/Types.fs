@@ -155,6 +155,7 @@ module Types =
             HospitalAdmissionId : string
             ClickId : string
             HospitalNumber : string
+            Readmission : bool
             AdmissionDate : DateTime option
             DischargeDate : DateTime option
             DischargeReason : DataOption option

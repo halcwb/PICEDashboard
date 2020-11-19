@@ -6,6 +6,21 @@ module Export =
     open System
     open Types
 
+    let getPatientState (pa : PICUAdmission) (pat : Patient) =
+        match pa.AdmissionDate, pa.DischargeDate with
+        | Some dt1, Some dt2 ->
+            match pat.DateOfDeath with
+            | Some dt -> 
+                if dt >= dt1 && dt <= dt2 then "Death"
+                else
+                    match pa.DischargeReason with
+                    | None -> "Alive"
+                    | Some dr ->
+                        if dr.Id = "100" then "Death" else "Alive"
+            | None -> "Alive"
+        | _ -> "Alive"
+
+
     let optDateDiff fSome defVal (dt1 : DateTime option) (dt2 : DateTime option) =
         match dt1, dt2 with
         | Some d1, Some d2 -> (d1 - d2).TotalDays |> fSome
@@ -60,6 +75,7 @@ module Export =
                 "PRISM3Neuro"
                 "PRISM3Score"
                 "PRISM4Mortality"
+                "Status"
             ]
             |> List.singleton
 
@@ -128,6 +144,7 @@ module Export =
                         | None, Some prism, _ 
                         | None, None, Some prism -> yield! (prism |> Some |> optPRISM)
                         | _ -> ()
+                        getPatientState pa pat
                     ]
                 )
             )

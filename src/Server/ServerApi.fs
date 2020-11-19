@@ -15,6 +15,7 @@ module ServerApi =
             Period = totals.Period
             InvalidPatients = totals.InvalidPatients
             Patients = totals.Patients
+            Readmission = totals.Readmission
             Admissions = totals.Admissions
             Admitted = totals.Admitted
             Deaths = totals.Deaths
@@ -31,6 +32,7 @@ module ServerApi =
             TransportHospital = totals.TransportHospital
             TransportTeam = totals.TransportTeam
             PICUDays = totals.PICUDays
+            LengthOfStay = totals.LengthOfStay
             PICUDeaths = totals.PICUDeaths
             PIM2Mortality = totals.PIM2Mortality
             PIM3Mortality = totals.PIM3Mortality
@@ -128,8 +130,47 @@ module ServerApi =
             }
 
 
+        member this.GetScoresCSV (patnums : string list) =
+            printfn "getting scores from %i patients" (patnums |> List.length)
+//            printfn "first entry is: ||%s||" (patnums.[0])
+            async {
+                try
+                    let csv =
+                        Parsing.parseMRDM ()
+                        |> Export.export
+                        |> fun xs ->
+                            let headings = [ xs |> List.head ]
+                            patnums
+                            |> List.fold (fun acc pn ->
+                                match xs |> List.tryFind(List.head >> ((=) pn)) with
+                                | Some x -> [ x ] |> List.append acc
+                                | None -> 
+                                    [ [ sprintf "could not find: %A" pn ] ] 
+                                    |> List.append acc
+                            ) [[]]
+                            |> List.filter (List.isEmpty >> not)
+                            |> List.append headings
+                        |> fun xs ->
+                            printfn "found: %i patients" ((xs |> List.length) - 1)
+                            xs
+                        |> List.map (fun xs ->
+                            xs |> String.concat "\t"
+                        )
+                        |> String.concat "\n"
+                    
+                    return Ok csv
+                with
+                    | error -> 
+                        logger.LogError(error, "Error while trying to get CSV file")
+                        return Error error.Message            
+            }
+
+
         member this.Build() : IServerApi =
             {
                 SayHello = this.SayHello
                 GetReport = this.GetReport
+                GetScoresCSV = this.GetScoresCSV
             }
+
+      

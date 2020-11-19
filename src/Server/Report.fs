@@ -275,7 +275,9 @@ module Report =
         |> addParagraph Literals.sectionPICE Literals.groupOverview Literals.paragraphPerYear (allYearTabel stats)
         |> addChapter Literals.sectionPICE Literals.groupMortality
         |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphPIMandPRISM "Op de x-as staan de actuele en geschatte mortaliteit"
-        |> addParagraph Literals.sectionPICE Literals.groupMortality Literals.paragraphSMR ""
+        |> addSubChapter Literals.sectionPICE Literals.groupMortality Literals.groupSMR
+        |> addSubParagraph Literals.sectionPICE Literals.groupMortality Literals.groupSMR Literals.paragraphSMRperYear ""
+        |> addSubParagraph Literals.sectionPICE Literals.groupMortality Literals.groupSMR Literals.paragraphSMRfunnel ""
         |> addChapter Literals.sectionPICE Literals.groupPatient
         |> addSubChapter Literals.sectionPICE Literals.groupPatient Literals.groupGender
         |> addSubParagraph Literals.sectionPICE Literals.groupPatient Literals.groupGender Literals.paragraphTotals  (printCount stats.Totals.Gender true)
@@ -287,6 +289,8 @@ module Report =
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphAdmDisch ""
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphOccupancy ""
         |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphUrgency ""
+        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphReadmission ""
+        |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphLengthOfStay ""
         |> addSubChapter Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportHospital 
         |> addSubParagraph Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportHospital Literals.paragraphTotals ""
         |> addSubParagraph Literals.sectionPICE Literals.groupAdmission Literals.subGroupTransportHospital Literals.paragraphPerYear ""

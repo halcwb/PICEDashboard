@@ -142,7 +142,7 @@ module Parsing =
 
         let parseDiagnose n id =
             id
-            |> MRDM.Codes.find n
+            |> Options.find n
             |> function
             | None -> []
             | Some s ->
@@ -156,7 +156,7 @@ module Parsing =
 
 
     let findOk n d = 
-        MRDM.Codes.find n d
+        Options.find n d
         |> function
         | Some s -> s |> Some  
         | None   -> None       
@@ -508,6 +508,9 @@ module Parsing =
         let getDiagn n s  =
             Parsers.parseDiagnose n s
             |> Result.ok
+        let mapReadm s = 
+            s = "13" 
+            |> Result.ok
 
         let prism (d: MRDM.MRDMPicu.Row) =
             Patient.createPRISM
@@ -576,7 +579,7 @@ module Parsing =
             let find n c =
                 if c |> isNullOrWhiteSpace then Result.ok None
                 else
-                    match MRDM.Codes.find n c with
+                    match Options.find n c with
                     | Some d -> d |> Some |> Result.ok 
                     | None ->
                         [| sprintf "couldn't find code %s with name %s" c n |]
@@ -587,6 +590,7 @@ module Parsing =
             <*> Result.ok d.``ziekenhuis-episode_uri``
             <*> Result.ok d.``adm-ic-id`` 
             <*> Result.ok "" //d.``ziekenhuis-episode-upn``
+            <*> mapReadm d.``adm-readmtypeid``
             <*> parseDateOpt d.``adm-ic-admdate``
             <*> parseDateOpt d.``adm-ic-disdate``
             <*> find "adm-disreasonid" d.``adm-disreasonid``
@@ -609,7 +613,7 @@ module Parsing =
     [<Literal>]
     let cachePath = "./../mrdm/data.cache"
 
-    let parseMRDM () : Result<(Types.Patient [] * string []), string []> =
+    let parseMRDMwithCache cachePath : Result<(Types.Patient [] * string []), string []> =
         match cachePath |> Cache.getCache<Result<(Types.Patient [] * string []), string []>> with
         | Some pats -> pats
         | None ->
@@ -674,3 +678,6 @@ module Parsing =
             pats |> Cache.cache cachePath
             pats
 
+
+
+    let parseMRDM () : Result<(Types.Patient [] * string []), string []> = parseMRDMwithCache cachePath

@@ -41,7 +41,7 @@ module TreeViewDrawer =
     )
 
     let private comp =
-        React.functionComponent("treeview", fun (props : {| data: Data list; dispatch : string -> unit |}) ->
+        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; dispatch : string -> unit |}) ->
             let classes = useStyles ()
 
             let rec create data : ReactElement list =
@@ -73,7 +73,7 @@ module TreeViewDrawer =
                 prop.className classes.root
                 prop.children [
                     Mui.drawer [
-                        drawer.open' true
+                        drawer.open' props.isOpen
                         drawer.variant.persistent
                         drawer.anchor.left
 //                        prop.className classes.drawer
@@ -91,4 +91,4 @@ module TreeViewDrawer =
             ]
         )
 
-    let render data dispatch = comp ({| data = data; dispatch = dispatch |})
+    let render data isOpen dispatch = comp ({| data = data; isOpen = isOpen; dispatch = dispatch |})

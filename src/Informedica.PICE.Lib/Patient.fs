@@ -150,6 +150,7 @@ module Patient =
         hospitalAdmissionId
         clickId
         hospitalNumber
+        readmission
         admissionDate
         dischargeDate
         dischargeReason
@@ -172,6 +173,7 @@ module Patient =
             HospitalAdmissionId = hospitalAdmissionId
             ClickId = clickId
             HospitalNumber = hospitalNumber
+            Readmission = readmission
             AdmissionDate = admissionDate
             DischargeDate = dischargeDate
             DischargeReason = dischargeReason

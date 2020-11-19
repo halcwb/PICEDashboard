@@ -44,6 +44,7 @@ module AppBar =
         {|
             title : string
             buttonsLeft : {| button : ReactElement; dispatch : unit -> unit |} list
+            buttonsRight : {| button : ReactElement; dispatch : unit -> unit |} list
         |}
 
 
@@ -64,13 +65,23 @@ module AppBar =
                         typography.variant.h6
                         prop.text props.title
                     ]
+                    // filler
+                    Html.div [ prop.style [ style.flexGrow 1 ] ]
+                    // buttons on the right side
+                    for b in props.buttonsRight do
+                        createButton classes.menuButton b.dispatch b.button
+
                 ]
             ]
         )
 
 
-    let render title buttons =
-            let buttons =
-                buttons
+    let render title buttonsL buttonsR =
+            let buttonsL =
+                buttonsL
                 |> List.map (fun (b, d) -> {| button = b; dispatch = d |})
-            comp ({| title = title; buttonsLeft = buttons |})
+            let buttonsR =
+                buttonsR
+                |> List.map (fun (b, d) -> {| button = b; dispatch = d |})
+
+            comp ({| title = title; buttonsLeft = buttonsL; buttonsRight = buttonsR |})

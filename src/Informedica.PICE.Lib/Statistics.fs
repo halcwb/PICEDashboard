@@ -37,8 +37,9 @@ module Statistics =
         member val Occupancy : (DateTime * int) list = [] with get, set
         member val TransportHospital : (string * int) list = [] with get, set
         member val TransportTeam : (string * int) list = [] with get, set
-
-
+        member val Readmission : (string * int) list = [] with get, set
+        member val LengthOfStay : (string  * int) list = [] with get, set
+        
     type MonthTotals () =
         member val Month = 0 with get, set
         member val Totals = Totals ()
@@ -223,6 +224,39 @@ module Statistics =
                 | s when s = "ouder dan 18 jaar" -> 6
                 | _ -> 999
             )
+
+        let stayToCount (dts : (DateTime option * DateTime option) list) =
+            let stayList = [
+                "tot 2 dagen"
+                "2 dagen - 28 dagen"
+                "28 dagen - 6 maanden"
+                "6 maanden - 1 jaar"
+                "langer dan 1 jaar"
+                "onbekende duur"
+            ]
+
+            dts
+            |> List.map (fun (ad, bd) ->
+                match ad, bd with
+                | Some ad, Some bd ->
+                    match (ad - bd).TotalDays with
+                    | ds when ds < 2.  -> "tot 2 dagen"
+                    | ds when ds < 28. -> "2 dagen - 28 dagen"
+                    | ds when ds < (365. / 2.)  -> "28 dagen - 6 maanden"
+                    | ds when ds < 365. -> "6 maanden - 1 jaar"
+                    | _ -> "langer dan 1 jaar"
+                | _, _ -> "onbekende duur"
+            )
+            |> List.countByList stayList
+            |> List.sortBy (fun (k, _) ->
+                match k with
+                | s when s = "tot 2 dagen" -> 0
+                | s when s = "2 dagen - 28 dagen"  -> 1
+                | s when s = "28 dagen - 6 maanden"   -> 2
+                | s when s = "6 maanden - 1 jaar"  -> 3
+                | s when s = "langer dan 1 jaar" -> 4
+                | _ -> 999
+            )
              
         let pats =
             let notValid =
@@ -354,12 +388,6 @@ module Statistics =
                 |> countBy "Onbekend" (xs |> getCaps) 
 
         stats.Totals.HospitalDischargeDestinations <-
-            let unknown = 
-                MRDM.Codes.find "adm-desthospunitid" "99"
-                |> function
-                | Some d -> d.Label
-                | None   -> ""
-            
             pats
             |> List.map (fun p -> p.hospitalAdmission.DischargeDestination)
             |> fun xs ->  xs |> countBy "Onbekend" (xs |> getCaps)
@@ -386,6 +414,19 @@ module Statistics =
             pats
             |> List.map (fun p -> p.picuAdmission.AdmissionDate, p.patient.BirthDate)
             |> ageToCount
+
+        stats.Totals.LengthOfStay <-
+            pats
+            |> List.map (fun p -> p.picuAdmission.DischargeDate, p.picuAdmission.AdmissionDate)
+            |> stayToCount
+
+        stats.Totals.Readmission <-
+            pats
+            |> List.map (fun p -> 
+                if p.picuAdmission.Readmission then "Heropname"
+                else "Geen heropname"
+            )
+            |> List.countByList ["Heropname"; "Geen heropname"]
 
         stats.Totals.Specialism <-
             pats
@@ -619,6 +660,20 @@ module Statistics =
                 filterAdmission (dateFilter yr None) (fun p -> p.hospitalAdmission)
                 |> List.map (fun ha -> ha.TransportTeam)
                 |> countBy "Onbekend" (stats.Totals.TransportTeam |> List.map fst |> List.distinct)
+
+            tot.Totals.LengthOfStay <-
+                admissions
+                |> List.map (fun pa -> pa.DischargeDate, pa.AdmissionDate)
+                |> stayToCount
+
+            tot.Totals.Readmission <-
+                admissions
+                |> List.map (fun pa -> 
+                    if pa.Readmission then "Heropname"
+                    else "Geen heropname"
+                )
+                |> List.countByList ["Heropname"; "Geen heropname"]
+
         )
         // PICU discharge statistics
         yrTots

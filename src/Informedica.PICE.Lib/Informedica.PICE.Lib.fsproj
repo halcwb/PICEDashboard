@@ -14,7 +14,7 @@
         <Tailcalls>true</Tailcalls>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="Scripts/Scripts.fsx" />
+        <None Include="Scripts\MRDM2.fsx" />
         <None Include="Scripts\countByList.fsx" />
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="StartUp.fs" />
@@ -29,6 +29,7 @@
         <Compile Include="Utils.fs" />
         <Compile Include="Click.fs" />
         <Compile Include="MRDM.fs" />
+        <Compile Include="Options.fs" />
         <Compile Include="PIM.fs" />
         <Compile Include="PRISM.fs" />
         <Compile Include="Patient.fs" />

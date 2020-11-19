@@ -54,7 +54,11 @@ module Literals =
     [<Literal>]
     let paragraphPIMandPRISM = "PIM en PRISM"
     [<Literal>]
-    let paragraphSMR = "Standardized Mortality Ratio"
+    let groupSMR = "Standardized Mortality Ratio"
+    [<Literal>]
+    let paragraphSMRperYear = "SMR per jaar"
+    [<Literal>]
+    let paragraphSMRfunnel = "SMR funnel plot"
     [<Literal>]
     let paragraphPICUDays = "Ligdagen"
     [<Literal>]
@@ -64,7 +68,11 @@ module Literals =
     [<Literal>]
     let paragraphOccupancy = "Bed bezetting"
     [<Literal>]
-    let subGroupTransportHospital = "Transporterend ziekenhuis"
+    let paragraphReadmission = "Heropname"
+    [<Literal>]
+    let paragraphLengthOfStay = "Opname duur"
+    [<Literal>]
+    let subGroupTransportHospital = "Transport door"
     [<Literal>]
     let subGroupTransportTeam = "Transport team"
     [<Literal>]
@@ -116,6 +124,8 @@ module Types =
             Cannule : (string * int) list
             TransportHospital : (string * int) list
             TransportTeam : (string * int) list
+            Readmission : (string * int) list
+            LengthOfStay : (string * int) list
         }
 
 

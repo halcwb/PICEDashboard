@@ -13,4 +13,5 @@ module Api =
     type IServerApi = {
         SayHello : unit -> Async<Result<string, string>>
         GetReport : unit -> Async<Result<Types.Report, string>>
+        GetScoresCSV : string list -> Async<Result<string, string>>
     }  

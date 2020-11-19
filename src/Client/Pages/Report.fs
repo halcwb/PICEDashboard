@@ -145,12 +145,16 @@ module Report =
                         section.YearTotals |> Components.MortalityGraph.render paragraph.Content
                     ]
 
-                | Graph when chapter.Title = Literals.groupMortality && 
-                                paragraph.Title = Literals.paragraphSMR -> 
+                | Graph when chapter.Title = Literals.groupSMR && 
+                                paragraph.Title = Literals.paragraphSMRperYear -> 
                     prop.children [
-                        paragraph.Title |> sprintf "#### %s" |> Markdown.render
                         "##### SMR per Jaar" |> Markdown.render
                         section.YearTotals |> Components.SMRGraph.render
+                    ]
+
+                | Graph when chapter.Title = Literals.groupSMR && 
+                                paragraph.Title = Literals.paragraphSMRfunnel -> 
+                    prop.children [
                         "##### SMR Funnelplot " |> Markdown.render
                         section.YearTotals |> Components.FunnelPlot.render
                     ]
@@ -180,6 +184,21 @@ module Report =
                     prop.children [
                         (fun t -> t.Urgency)
                         |> getStackedBarChart section "Opname Urgentie"
+                    ]
+
+                | Graph when chapter.Title = Literals.groupAdmission && 
+                                paragraph.Title = Literals.paragraphReadmission ->
+                    prop.children [
+                        section.YearTotals
+                        |> List.map (fun t -> t.Period, t.Readmission)
+                        |> Components.PieChart.render paragraph.Title section.Totals.Readmission
+                    ]
+
+                | Graph when chapter.Title = Literals.groupAdmission && 
+                                paragraph.Title = Literals.paragraphLengthOfStay ->
+                    prop.children [
+                        (fun t -> t.LengthOfStay)
+                        |> getStackedBarChart section "Opname duur"
                     ]
 
                 | Graph when chapter.Title = Literals.subGroupTransportHospital &&
