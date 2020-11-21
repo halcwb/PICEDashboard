@@ -160,7 +160,7 @@ module Types =
         | AgeFilter of AgeGroup
         | DiagnoseFilter of DiagnoseGroup
     and DiagnoseGroup =
-        | Cardicac
+        | Cardiac
         | Oncology
         | OtherDiagnoses
     and AgeGroup =
@@ -171,3 +171,38 @@ module Types =
         | MiddleChildhood
         | Adolescence
 
+module Filter =
+
+    open Types
+
+    //"0 dagen - 4 weken"
+    //"1 maand - 1 jaar"
+    //"1 jaar - 4 jaar"
+    //"4 jaar - 12 jaar"
+    //"12 jaar - 16 jaar"
+    //"16 jaar - 18 jaar"
+    //"ouder dan 18 jaar"
+    //"onbekende leeftijd"            
+    let mapping =
+        [
+            NoFilter, ""
+            AgeFilter Neonate, "0 dagen - 4 weken"
+            AgeFilter Infant, "1 maand - 1 jaar"
+            AgeFilter Toddler, "1 jaar - 4 jaar"
+            AgeFilter EarlyChildhood, "4 jaar - 12 jaar"
+            AgeFilter MiddleChildhood, "12 jaar - 18 jaar"
+            AgeFilter Adolescence, "ouder dan 18 jaar"
+            DiagnoseFilter Cardiac, "cardiaal"
+            DiagnoseFilter Oncology, "oncologie"
+            DiagnoseFilter OtherDiagnoses, "overige diagnoses"            
+        ]
+
+
+    let stringToFilter s =
+        mapping
+        |> List.tryFind (snd >> (=) s)
+
+
+    let filterToString f =
+        mapping
+        |> List.tryFind (fst >> (=) f)

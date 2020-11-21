@@ -9,10 +9,11 @@ module TreeViewDrawer =
     open Fable.MaterialUI
 
     open Informedica.PICE.Shared.Types
+    module Filter = Informedica.PICE.Shared.Filter
 
     let drawerWidth = 300
 
-    type State = Filter
+    type State = Filter * string
 
     type Msg = 
         | FilterChanged of Filter
@@ -24,13 +25,16 @@ module TreeViewDrawer =
             children : Data list
         }
 
-    let init () = NoFilter,Cmd.none
+    let init () = (NoFilter, "0"), Cmd.none
 
-    let update msg _ =
+
+    let update dispatch msg state =
         match msg with
         | FilterChanged f -> 
             printfn "filter changed to: %A" f
-            f, Cmd.none
+            let state = (f, state |> snd)
+            state, Cmd.ofSub (fun _ -> state |> dispatch)
+
 
     let createData id label children =
         {
@@ -38,6 +42,7 @@ module TreeViewDrawer =
             label = label
             children = children
         }
+
 
     let useStyles = Styles.makeStyles(fun styles theme ->
         {|
@@ -62,19 +67,27 @@ module TreeViewDrawer =
     let private comp =
         React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; dispatch : (Filter * string) -> unit |}) ->
             let classes = useStyles ()
-            let state, dispatch = React.useElmish(init, update, [||])
+            let state, dispatch = React.useElmish(init, update props.dispatch, [||])
             
             let dropdown =
+                let value = 
+                    state
+                    |> fst
+                    |> Filter.filterToString
+                    |> function 
+                    | Some (_, s) -> s
+                    | None -> ""
+
                 let dispatch s =
-                    match s with
-                    |_ when s = "Neonaat" -> Neonate |> AgeFilter
-                    |_ -> NoFilter
+                    match s |> Filter.stringToFilter with
+                    | Some (f, _) -> f 
+                    | _ -> NoFilter
                     |> FilterChanged
                     |> dispatch
-                [
-                    "Neonaat"
-                ]
-                |> DropDownBox.render "" true "Filter" dispatch
+
+                Filter.mapping
+                |> List.map snd
+                |> DropDownBox.render value true "Filter" dispatch
 
             let rec create data : ReactElement list =
                 data
@@ -88,7 +101,7 @@ module TreeViewDrawer =
                                 prop.text d.label 
                             ]
                         ]
-                        treeItem.onLabelClick (fun _ -> props.dispatch (state, d.id))
+                        treeItem.onLabelClick (fun _ -> props.dispatch (state |> fst, d.id))
                         treeItem.children (d.children |> create)
                     ]
                 )
