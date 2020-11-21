@@ -22,6 +22,7 @@ type State =
         DisplayType : DisplayType
         DisplayTypeAcknowledged : bool
         SideMenuIsOpen : bool
+        SelectedFilter : Filter
         SelectedTreeItem : string option
     }
 
@@ -31,7 +32,7 @@ type Msg =
     | LoadPatientsCSV of AsyncOperationStatus<Result<string, string>>
     | DisplayTypeChanged
     | DisplayTypeAcknowledged
-    | TreeItemSelected of string
+    | ReportFilterItemSelected of Filter * string
     | PatientCSVRequested
     | PatientCSVCanceled
     | PatientListReceived of string
@@ -47,6 +48,7 @@ let init() =
             DisplayType = Graph
             DisplayTypeAcknowledged = true
             SideMenuIsOpen = true
+            SelectedFilter = NoFilter
             SelectedTreeItem = Some "0"
         }
     state, Cmd.ofMsg (LoadStatistics Started)
@@ -109,15 +111,20 @@ let update msg state =
             DisplayTypeAcknowledged = true
         }, Cmd.none
 
-    | TreeItemSelected s -> 
+    | ReportFilterItemSelected (f, s) -> 
+        let cmd = 
+            if state.SelectedFilter = f then Cmd.none
+            else
+                Cmd.ofMsg (LoadStatistics Started)
         { state with
+            SelectedFilter = f
             SelectedTreeItem = Some s
-        }, Cmd.none
+        }, cmd
 
     | LoadStatistics Started ->
         let load = async {
             try
-                let! stats = Server.api.GetReport ()
+                let! stats = Server.api.GetReport state.SelectedFilter
                 return LoadStatistics(Finished stats)
             with
             | error -> 
@@ -257,7 +264,8 @@ let createMainContent report displayTypeAck displayType menuIsOpen treeItem disp
             let treeData =
                 report.Sections
                 |> mapToTreeData
-            TreeViewDrawer.render treeData menuIsOpen (TreeItemSelected >> dispatch)
+
+            TreeViewDrawer.render treeData menuIsOpen (ReportFilterItemSelected >> dispatch)
 
             Html.div [
                 prop.style [ style.marginLeft 150 ]

@@ -13,6 +13,7 @@
         <Compile Include="Bindings.fs" />
         <Compile Include="Types.fs" />
         <Compile Include="Utils.fs" />
+        <Compile Include="Components\DropDownBox.fs" />
         <Compile Include="Components\ColoredList.fs" />
         <Compile Include="Components\Markdown.fs" />
         <Compile Include="Components\AppBar.fs" />

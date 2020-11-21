@@ -10,6 +10,8 @@ module ServerApi =
     open Informedica.PICE.Shared.Api
     open Informedica.PICE.Lib
 
+    module PICETypes = Informedica.PICE.Lib.Types
+
     let mapTotals (totals : Statistics.Totals) =
         {
             Period = totals.Period
@@ -39,8 +41,10 @@ module ServerApi =
             PRISM4Mortality = totals.PRISM4Mortality
         }
 
-    let createReport () =
-        let path = "../mrdm/report.cache"
+    let createReport filter =
+        let path = 
+            (sprintf "%A" filter).ToLower()
+            |> sprintf "../mrdm/%s.report.cache"
 
         let mapParagraph (p : Report.Paragraph) =
             {
@@ -71,7 +75,7 @@ module ServerApi =
             Parsing.parseMRDM ()
             |> Result.valueOrDefault (fun _ -> [||])
             |> Array.toList
-            |> Statistics.calculate
+            |> Statistics.calculate filter
             |> Report.create
             |> fun rep ->
                 {
@@ -117,11 +121,19 @@ module ServerApi =
                         return Error error.Message
             }
 
-        member this.GetReport () =
+        member this.GetReport filter =
+            let filter =
+                match filter with
+                | NoFilter -> PICETypes.NoFilter
+                | AgeFilter f ->
+                    match f with
+                    | Neonate -> 
+                        PICETypes.Neonate
+                        |> PICETypes.AgeFilter
 
             async {
                 try 
-                    let report = createReport()
+                    let report = createReport filter
                     return Ok report
                 with
                 | error ->

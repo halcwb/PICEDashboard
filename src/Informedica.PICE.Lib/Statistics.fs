@@ -112,7 +112,7 @@ module Statistics =
         | _ -> "not a valid filter" |> failwith
 
 
-    let calculate (pats: Patient list) =
+    let calculate (filter : Filter) (pats: Patient list) =
         let stats = Statistics ()
 
         let getPRISMMort (pa : PICUAdmission) =
@@ -306,6 +306,17 @@ module Statistics =
                         | _ -> true
                     )
                 )
+            )
+            |> List.filter (fun p ->
+                match filter with
+                | NoFilter -> true
+                | AgeFilter a ->
+                    match a with
+                    | Neonate ->
+                        match p.picuAdmission.AdmissionDate, p.patient.BirthDate with
+                        | Some dt1, Some dt2 -> (dt1 - dt2).TotalDays <= 28.
+                        | _ -> false
+
             )
 
         stats.Totals.Patients <-

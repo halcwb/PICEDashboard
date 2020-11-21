@@ -155,4 +155,19 @@ module Types =
             Content : string
         }
 
+    type Filter =
+        | NoFilter
+        | AgeFilter of AgeGroup
+        | DiagnoseFilter of DiagnoseGroup
+    and DiagnoseGroup =
+        | Cardicac
+        | Oncology
+        | OtherDiagnoses
+    and AgeGroup =
+        | Neonate
+        | Infant
+        | Toddler 
+        | EarlyChildhood
+        | MiddleChildhood
+        | Adolescence
 

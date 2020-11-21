@@ -72,11 +72,28 @@ open Informedica.PICE.Lib
 
 let path = __SOURCE_DIRECTORY__ + "./../" + Parsing.cachePath
 
+
+let patnums = 
+    [
+        "8157341"
+        "612547"
+        "2611916"
+        "3512441"
+    ]
+
 path
 |> Parsing.parseMRDMwithCache
 |> Export.export
+|> fun xs ->
+    patnums
+    |> List.fold (fun acc pn ->
+        match xs |> List.tryFind(List.head >> ((=) pn)) with
+        | Some x -> [ x ] |> List.append acc
+        | None -> 
+
+            acc
+    ) [[]]
 |> List.map (fun xs ->
     xs |> String.concat ";"
 )
 |> String.concat "\n"
-|> File.writeTextToFile (__SOURCE_DIRECTORY__ + "./../../mrdm/Scores.csv")

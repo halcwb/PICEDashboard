@@ -2,11 +2,20 @@
 
 module TreeViewDrawer =
 
+    open Elmish
     open Feliz
+    open Feliz.UseElmish
     open Feliz.MaterialUI
     open Fable.MaterialUI
 
+    open Informedica.PICE.Shared.Types
+
     let drawerWidth = 300
+
+    type State = Filter
+
+    type Msg = 
+        | FilterChanged of Filter
 
     type Data =
         {
@@ -14,6 +23,14 @@ module TreeViewDrawer =
             label : string
             children : Data list
         }
+
+    let init () = NoFilter,Cmd.none
+
+    let update msg _ =
+        match msg with
+        | FilterChanged f -> 
+            printfn "filter changed to: %A" f
+            f, Cmd.none
 
     let createData id label children =
         {
@@ -34,6 +51,8 @@ module TreeViewDrawer =
                 yield! theme.mixins.toolbar
             ]
             drawer = styles.create [
+                style.marginTop 20
+                style.padding 10
                 style.flexGrow 1
                 style.width drawerWidth
             ]
@@ -41,8 +60,21 @@ module TreeViewDrawer =
     )
 
     let private comp =
-        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; dispatch : string -> unit |}) ->
+        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; dispatch : (Filter * string) -> unit |}) ->
             let classes = useStyles ()
+            let state, dispatch = React.useElmish(init, update, [||])
+            
+            let dropdown =
+                let dispatch s =
+                    match s with
+                    |_ when s = "Neonaat" -> Neonate |> AgeFilter
+                    |_ -> NoFilter
+                    |> FilterChanged
+                    |> dispatch
+                [
+                    "Neonaat"
+                ]
+                |> DropDownBox.render "" true "Filter" dispatch
 
             let rec create data : ReactElement list =
                 data
@@ -56,16 +88,17 @@ module TreeViewDrawer =
                                 prop.text d.label 
                             ]
                         ]
-                        treeItem.onLabelClick (fun _ -> d.id |> props.dispatch)
+                        treeItem.onLabelClick (fun _ -> props.dispatch (state, d.id))
                         treeItem.children (d.children |> create)
                     ]
                 )
 
             let treeView = 
                 Mui.treeView [
+                    
                     treeView.defaultExpandIcon (Icons.expandMoreIcon "")
                     treeView.defaultCollapseIcon (Icons.chevronRightIcon "")
-                    prop.style [ style.padding 20 ]
+//                    prop.style [ style.padding 10 ]
                     prop.children (props.data |> create)
                 ]
 
@@ -82,6 +115,10 @@ module TreeViewDrawer =
                             // this makes sure that the content of the drawer is
                             // below the app bar
                             Html.div [ prop.className classes.toolbar ]
+                            dropdown
+                            Html.div [ 
+                                prop.style [ style.marginTop 20 ]
+                            ]
                             treeView
                         ]
                     ]
