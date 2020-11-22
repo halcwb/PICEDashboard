@@ -25,7 +25,7 @@ module TreeViewDrawer =
             children : Data list
         }
 
-    let init () = (NoFilter, "0"), Cmd.none
+    let init filter = (filter, "0"), Cmd.none
 
 
     let update dispatch msg state =
@@ -65,9 +65,9 @@ module TreeViewDrawer =
     )
 
     let private comp =
-        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; dispatch : (Filter * string) -> unit |}) ->
+        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; filter : Filter; dispatch : (Filter * string) -> unit |}) ->
             let classes = useStyles ()
-            let state, dispatch = React.useElmish(init, update props.dispatch, [||])
+            let state, dispatch = React.useElmish(init props.filter, update props.dispatch, [||])
             
             let dropdown =
                 let value = 
@@ -141,4 +141,4 @@ module TreeViewDrawer =
             ]
         )
 
-    let render data isOpen dispatch = comp ({| data = data; isOpen = isOpen; dispatch = dispatch |})
+    let render data isOpen filter dispatch = comp ({| data = data; isOpen = isOpen; filter = filter; dispatch = dispatch |})

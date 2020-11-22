@@ -255,7 +255,7 @@ let display (s : string) =
     ]
 
 
-let createMainContent report displayTypeAck displayType menuIsOpen treeItem dispatch =
+let createMainContent report displayTypeAck displayType menuIsOpen filter treeItem dispatch =
     [
         match report with
         | HasNotStartedYet -> display "De boel wordt opgestart ..."
@@ -265,7 +265,7 @@ let createMainContent report displayTypeAck displayType menuIsOpen treeItem disp
                 report.Sections
                 |> mapToTreeData
 
-            TreeViewDrawer.render treeData menuIsOpen (ReportFilterItemSelected >> dispatch)
+            TreeViewDrawer.render treeData menuIsOpen filter (ReportFilterItemSelected >> dispatch)
 
             Html.div [
                 prop.style [ style.marginLeft 150 ]
@@ -324,6 +324,7 @@ let private comp =
                                                      props.state.DisplayTypeAcknowledged 
                                                      props.state.DisplayType
                                                      props.state.SideMenuIsOpen
+                                                     props.state.SelectedFilter
                                                      props.state.SelectedTreeItem
                                                      props.dispatch
                     ]
