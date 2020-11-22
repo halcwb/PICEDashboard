@@ -68,31 +68,38 @@ module Markdown =
         | h::tail ->
             let c = xs |> List.head |> List.length
             if xs |> List.forall (List.length >> ((=) c)) |> not then 
-                failwith "all rows should have equal length"
-            let hdr, clmn =
-                let hdr = "|:--:"
-                let clm = "|{x}"
-                let c = h |> List.length 
-                [0..(c - 1)]
-                |> List.fold (fun (h, c) i ->
-                    h + hdr, c + (clm |> String.replace "x" (i |> string))
-                ) ("", "")
-                |> fun (hdr, clm) ->
-                    hdr + "|", clm + "|"
-            try 
+                printfn "all rows should have equal length"
+                printfn "%s" (sb |> StringBuilder.toString)
+                xs
+                |> List.iteri (fun i xs ->
+                    printfn "row %i: %s" i (xs |> List.map string |> String.concat ", ")
+                )
                 sb
-                |> StringBuilder.appendLineFormat clmn h
-                |> StringBuilder.appendLine hdr
-                |> fun sb ->
-                    tail
-                    |> List.fold (fun sb row ->
-                        sb
-                        |> StringBuilder.appendLineFormat clmn row
-                    ) sb
-            with 
-            | e -> 
-                sprintf "%s\n with hdr: %s\n clmn: %s" (e.ToString()) hdr clmn
-                |> failwith
+            else
+                let hdr, clmn =
+                    let hdr = "|:--:"
+                    let clm = "|{x}"
+                    let c = h |> List.length 
+                    [0..(c - 1)]
+                    |> List.fold (fun (h, c) i ->
+                        h + hdr, c + (clm |> String.replace "x" (i |> string))
+                    ) ("", "")
+                    |> fun (hdr, clm) ->
+                        hdr + "|", clm + "|"
+                try 
+                    sb
+                    |> StringBuilder.appendLineFormat clmn h
+                    |> StringBuilder.appendLine hdr
+                    |> fun sb ->
+                        tail
+                        |> List.fold (fun sb row ->
+                            sb
+                            |> StringBuilder.appendLineFormat clmn row
+                        ) sb
+                with 
+                | e -> 
+                    sprintf "%s\n with hdr: %s\n clmn: %s" (e.ToString()) hdr clmn
+                    |> failwith
         | _ -> 
             "not a valid table"
             |> failwith

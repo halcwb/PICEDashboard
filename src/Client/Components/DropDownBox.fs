@@ -22,12 +22,12 @@ module DropDownBox =
         |> List.mapi (fun i (s: string) ->
             Mui.menuItem [
                 prop.value i
-                menuItem.children
+                prop.children
                     [
                         Mui.typography [
                             typography.color.primary
                             typography.variant.body1
-                            prop.text s
+                            prop.text (if s |> String.IsNullOrEmpty then "Geen" else s)
                         ]
                     ]
             ])

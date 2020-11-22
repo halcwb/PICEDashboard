@@ -122,22 +122,33 @@ module ServerApi =
             }
 
         member this.GetReport filter =
-            let filter =
-                match filter with
-                | NoFilter -> PICETypes.NoFilter
-                | AgeFilter f ->
-                    match f with
-                    | Neonate -> 
-                        PICETypes.Neonate
-                        |> PICETypes.AgeFilter
-
             async {
                 try 
+                    let filter =
+                        match filter with
+                        | NoFilter -> PICETypes.NoFilter
+                        | AgeFilter f ->
+                            match f with
+                            | Neonate -> PICETypes.Neonate 
+                            | Infant -> PICETypes.Infant
+                            | Toddler -> PICETypes.Toddler 
+                            | EarlyChildhood -> PICETypes.EarlyChildhood 
+                            | MiddleChildhood -> PICETypes.MiddleChildhood
+                            | Adolescence -> PICETypes.Adolescence 
+                            |> PICETypes.AgeFilter
+                        | DiagnoseFilter f ->
+                            match f with
+                            | Oncology -> PICETypes.Oncology
+                            | Cardiac -> PICETypes.Cardicac
+                            | OtherDiagnoses -> PICETypes.OtherDiagnoses
+                            |> PICETypes.DiagnoseFilter
+
                     let report = createReport filter
                     return Ok report
                 with
                 | error ->
-                        logger.LogError(error, "Error while trying to say hello world")
+                        printfn "%A" error
+                        logger.LogError(error, "Error while trying create report")
                         return Error error.Message
             }
 

@@ -179,6 +179,16 @@ module Statistics =
                 else
                     [ "Onbekend", 0 ]
                     |> List.append xs
+            |> fun xs ->
+                if xs |> List.exists (fst >> ((=) "Man")) then xs
+                else
+                    [ "Man", 0 ]
+                    |> List.append xs
+            |> fun xs ->
+                if xs |> List.exists (fst >> ((=) "Vrouw")) then xs
+                else
+                    [ "Vrouw", 0 ]
+                    |> List.append xs
             |> List.sortBy (fun (k, _) ->
                 match k with
                 | s when s = "Man" -> 1
@@ -311,12 +321,45 @@ module Statistics =
                 match filter with
                 | NoFilter -> true
                 | AgeFilter a ->
-                    match a with
-                    | Neonate ->
+                    let checkAge min max = 
                         match p.picuAdmission.AdmissionDate, p.patient.BirthDate with
-                        | Some dt1, Some dt2 -> (dt1 - dt2).TotalDays <= 28.
+                        | Some dt1, Some dt2 -> min <= (dt1 - dt2).TotalDays && (dt1 - dt2).TotalDays < max
                         | _ -> false
 
+                    match a with
+                    | Neonate -> checkAge 0. 29.
+                    | Infant -> checkAge 29. 366.
+                    | Toddler -> checkAge 365. (4. * 365. + 1.)
+                    | EarlyChildhood -> checkAge (4. * 365.) (12. * 365. + 1.)
+                    | MiddleChildhood -> checkAge (12. * 365.) (18. * 365. + 1.)
+                    | Adolescence -> checkAge (18. * 365.) (365. * 100.)
+                | DiagnoseFilter d ->
+                    let isOncology =
+                        p.picuAdmission.PrimaryDiagnosis
+                        |> List.exists (fun pd -> 
+                            pd.Id = "2600" ||
+                            pd.Id = "2730" ||
+                            pd.Id = "2840"
+                        ) ||
+                        p.picuAdmission.ReferingSpecialism
+                        |> function 
+                        | None -> false
+                        | Some d -> d.Id = "30"
+                    let isCardiac =
+                        p.picuAdmission.PrimaryDiagnosis
+                        |> List.exists (fun pd -> 
+                            pd.Group = "cardiovasculair" ||
+                            pd.Group = "hartchirurgie"
+                        ) ||
+                        p.picuAdmission.ReferingSpecialism
+                        |> function 
+                        | None -> false
+                        | Some d -> d.Id = "4" || d.Id = "5"
+
+                    match d with
+                    | Oncology -> isOncology
+                    | Cardicac -> isCardiac
+                    | OtherDiagnoses -> isOncology |> not && (isCardiac |> not)
             )
 
         stats.Totals.Patients <-
@@ -446,17 +489,23 @@ module Statistics =
                 let xs =
                     xs 
                     |> countBy "Onbekend" (xs |> getCaps)
+                
                 xs
-                |> List.fold (fun acc (k, v) ->
-                    if acc |> List.exists (fst >> (=) k) then acc
-                    else
-                        acc
-                        |> List.map (fun (k', v') ->
-                            if k' = "Overige" then k', v'+ v 
-                            else (k', v')
-                        )
-                ) ((xs |> List.take 10) @ [ "Overige", 0 ])
-            
+                |> function 
+                | _ when xs |> List.length > 10 ->
+                    xs
+                    |> List.fold (fun acc (k, v) ->
+                        if acc |> List.exists (fst >> (=) k) then acc
+                        else
+                            acc
+                            |> List.map (fun (k', v') ->
+                                if k' = "Overige" then k', v'+ v 
+                                else (k', v')
+                            )
+                    ) ((xs |> List.take 10) @ [ "Overige", 0 ])
+                | _ -> 
+                    // printfn "specialism: %s" (xs |> List.map fst |> String.concat ", ")
+                    xs
 
         stats.Totals.DiagnoseGroups <-
             pats
@@ -639,6 +688,9 @@ module Statistics =
                 admissions
                 |> List.map (fun pa -> pa.ReferingSpecialism)
                 |> countBy "Onbekend" (stats.Totals.Specialism |> List.map fst |> List.distinct)
+                |> fun xs ->
+                    // printfn "specialism yr %A: %s" yr (xs |> List.map fst |> String.concat ", ")
+                    xs
 
             tot.Totals.Urgency <-
                 admissions
@@ -823,7 +875,9 @@ module Statistics =
                         filterAdmission (dateFilter yr mo) (fun p -> p.picuAdmission)
                         |> List.map (fun pa -> pa.ReferingSpecialism)
                         |> countBy "Onbekend" (stats.Totals.Specialism |> List.map fst |> List.distinct)
-
+                        |> fun xs ->
+                            // printfn "specialism mo %A: %s" mo (xs |> List.map fst |> String.concat ", ")
+                            xs
 
                     moTot.Totals.DiagnoseGroups <-
                         let grps = 
