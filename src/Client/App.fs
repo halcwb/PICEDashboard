@@ -14,6 +14,9 @@ open Types
 open Components
 
 
+// module Memoization = Informedica.PICE.Shared.Memoization
+
+
 type State = 
     {   
         Report : Deferred<Result<Report, string>>
@@ -116,7 +119,11 @@ let update msg state =
             if state.SelectedFilter = f then Cmd.none
             else
                 Cmd.ofMsg (LoadStatistics Started)
+
         { state with
+            Report =
+                if state.SelectedFilter = f then state.Report
+                else HasNotStartedYet
             SelectedFilter = f
             SelectedTreeItem = Some s
         }, cmd
@@ -179,8 +186,7 @@ let mapToTreeData (sections : Section list) =
         )
         |> TreeViewDrawer.createData 
             (string i)
-            section.Title
-            
+            section.Title            
     )
 
 
@@ -242,7 +248,7 @@ let createUploadDialog dispatch =
         ]
     ]
 
-let display (s : string) =
+let display showProgress (s : string) =
     Html.div [
         Mui.typography [
             prop.style [
@@ -251,15 +257,15 @@ let display (s : string) =
             prop.text s
             typography.variant.h4 
         ]
-        Mui.linearProgress []
+        if showProgress then Mui.linearProgress []
     ]
 
 
 let createMainContent report displayTypeAck displayType menuIsOpen filter treeItem dispatch =
     [
         match report with
-        | HasNotStartedYet -> display "De boel wordt opgestart ..."
-        | InProgress       -> display "Het rapport wordt opgehaald ..."
+        | HasNotStartedYet -> display true "De boel wordt opgestart ..."
+        | InProgress       -> display true "Het rapport wordt opgehaald ..."
         | Resolved (Ok report) -> 
             let treeData =
                 report.Sections
@@ -284,7 +290,7 @@ let createMainContent report displayTypeAck displayType menuIsOpen filter treeIt
             ]
         | Resolved (Error err)  ->
             sprintf "Oeps er ging wat mis:\n%s" err
-            |> display
+            |> display false
     ]
 
 
