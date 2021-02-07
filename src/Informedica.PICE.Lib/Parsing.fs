@@ -62,7 +62,7 @@ module Parsing =
             | s when s = "8" -> [ PIM.LiverFailure ]
             | s when s = "9" -> [ PIM.NecrotizingEnterocolitis ]
             | s when s = "10" -> [ PIM.DiabeticKetoacidosis ]
-            | s when s = "11" -> [ PIM.CardiomyopathyOrMyocarditis ]
+//            | s when s = "11" -> [ PIM.CardiomyopathyOrMyocarditis ]
             | _ -> []
             |> List.append [
                 if leukemia = "1" then PIM.LeukemiaorLymphoma
@@ -208,6 +208,8 @@ module Parsing =
         Patient.create
         <!> Result.ok d.patient_uri 
         <*> getHospNum hospData
+        <*> Result.ok d.naam
+        <*> Result.ok d.voornaam
         <*> parseDateOpt d.gebdat
         <*> (Parsers.mapGender >> Result.ok) d.geslacht
         <*> parseFloat d.``pat-weight-of-birth``
@@ -286,6 +288,7 @@ module Parsing =
                                                         d.pi = pa.Id
                                                     )
                                                 { pa with
+                                                    HospitalNumber = p.HospitalNumber
                                                     PRISM24 =
                                                         pa.PRISM24
                                                         |> calcPRISM p.BirthDate pa.AdmissionDate
@@ -517,7 +520,7 @@ module Parsing =
             <!> parseFloat d.``sbp-0``
             <*> parseFloat d.``t-min12``
             <*> parseFloat d.``t-max12``
-            <*> parseInt d.``adm-emv``
+            <*> parseInt d.``emv``
             <*> parseInt d.``hr-max12``
             <*> parseInt d.admpupils
             <*> parseFloat d.``ph-min12``

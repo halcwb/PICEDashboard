@@ -127,6 +127,8 @@ module Types =
         {
             Id : string
             HospitalNumber : string
+            LastName : string
+            FirstName : string
             BirthDate : DateTime option
             Gender : Gender
             BirthWeight : float option

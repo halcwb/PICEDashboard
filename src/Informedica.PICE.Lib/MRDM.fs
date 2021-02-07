@@ -5,12 +5,13 @@ module MRDM =
     open System
     open FSharp.Interop.Excel
 
-    //[<Literal>]
-    //let path = __SOURCE_DIRECTORY__ + "/../mrdm/Export_PICE.xlsx"
-
+#if INTERACTIVE
     [<Literal>]
-    let path = "./../mrdm/Export_PICE.xlsx"
-
+    let path = __SOURCE_DIRECTORY__ + "/../mrdm/Export_PICE.xlsx"
+#else
+    [<Literal>]
+    let path = @"./../mrdm/Export_PICE.xlsx"
+#endif
     type MRDMPatient = ExcelFile<path, SheetName = "patient", HasHeaders = true, ForceString = true>
     type MRDMHospital = ExcelFile<path, SheetName = "ziekenhuis-episode", HasHeaders = true, ForceString = true>
     type MRDMPicu = ExcelFile<path, SheetName = "picu-episode", HasHeaders = true, ForceString = true>

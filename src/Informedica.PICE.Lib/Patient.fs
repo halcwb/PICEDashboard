@@ -10,6 +10,8 @@ module Patient =
 
     let create id 
                hosptitalNumber 
+               lastName
+               firstName
                birthDate 
                gender 
                birthWeight
@@ -21,6 +23,8 @@ module Patient =
         {
             Id = id
             HospitalNumber = hosptitalNumber
+            LastName = lastName
+            FirstName = firstName
             BirthDate = birthDate
             Gender = gender
             BirthWeight = birthWeight

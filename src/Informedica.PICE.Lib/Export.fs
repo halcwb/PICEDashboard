@@ -76,6 +76,10 @@ module Export =
                 "PRISM3Score"
                 "PRISM4Mortality"
                 "Status"
+                "Diagnosis1"
+                "Diagnosis2"
+                "DiagnosesOther"
+                "Specialism"
             ]
             |> List.singleton
 
@@ -86,6 +90,14 @@ module Export =
             pat.HospitalAdmissions
             |> List.collect (fun ha ->
                 ha.PICUAdmissions
+                |> List.filter (fun pa ->
+                    pa.AdmissionDate.IsSome &&
+                    pa.DischargeDate.IsSome
+                )
+                |> List.distinctBy (fun pa -> 
+                    pa.HospitalNumber.Trim(), 
+                    pa.AdmissionDate.Value
+                )
                 |> List.map (fun pa ->
                     let optPRISM p =
                         match p with
@@ -145,6 +157,10 @@ module Export =
                         | None, None, Some prism -> yield! (prism |> Some |> optPRISM)
                         | _ -> ()
                         getPatientState pa pat
+                        pa.PrimaryDiagnosis |> List.map (fun d -> d.Name) |> String.concat ";"
+                        pa.SecondaryDiagnosis |> List.map (fun d -> d.Name) |> String.concat ";"
+                        pa.Diagnoses |> List.map (fun d -> d.Name) |> String.concat ";"
+                        pa.ReferingSpecialism |> Option.map (fun rs -> rs.Label) |> Option.defaultValue ""
                     ]
                 )
             )

@@ -16,6 +16,8 @@
     <ItemGroup>
         <None Include="Scripts\MRDM2.fsx" />
         <None Include="Scripts\countByList.fsx" />
+        <None Include="Scripts\Export.fsx" />
+        <None Include="Scripts\MVCheck.fsx" />
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="StartUp.fs" />
         <Compile Include="NullCheck.fs" />

@@ -73,6 +73,7 @@ module Report =
                 )
         }
 
+
     let addParagraph sectionTitle chapterTitle title md report =
         { report with
             Sections =
@@ -131,6 +132,7 @@ module Report =
                 )
         }
 
+
     let addChapter section title report =
         { report with
             Sections =
@@ -150,6 +152,7 @@ module Report =
                         }
                 )
         }
+
 
     let addSection title totals yrTots moTots report =
         { report with
@@ -261,7 +264,6 @@ module Report =
             |> List.map (fun yt -> yt.Totals) ,
             stats.YearTotals
             |> List.map (fun yt -> yt.Year |> string, yt.MonthTotals |> List.map (fun mt -> mt.Totals))
-
 
         {
             Sections = [] 
