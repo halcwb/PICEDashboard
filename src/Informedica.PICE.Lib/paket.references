@@ -5,6 +5,5 @@ group PICELib
      Newtonsoft.Json
      FSharp.Core
      FSharp.Data
-     FSharpComposableQuery
-     FSharp.Data.TypeProviders
      Markdig
+     Microsoft.Data.SqlClient

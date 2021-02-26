@@ -226,7 +226,7 @@ module PIM =
         let recovScore = function
             | PIM.NoRecovery              -> 0.
             | PIM.PostCardiacByPass       -> -1.2246
-            | PIM.PostCariacNonByPass     -> -0.8762
+            | PIM.PostCardiacNonByPass    -> -0.8762
             | PIM.PostNonCardiacProcedure -> -1.5164
 
         let score =

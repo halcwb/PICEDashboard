@@ -1,8 +1,10 @@
 ﻿
 #I __SOURCE_DIRECTORY__
 
-#r "System.Data.Linq"
-#load "../../../.paket/load/net472/PICELib/picelib.group.fsx"
+#r "nuget: Microsoft.Data.SqlClient"
+#r "nuget: Newtonsoft.Json"
+#r "nuget: Markdig"
+#r "nuget: ExcelProvider"
 
 open System
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__ + @"/../."
@@ -17,6 +19,7 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__ + @"/../."
 #load "../Result.fs"
 #load "../Types.fs"
 #load "../Utils.fs"
+#load "../Database.fs"
 #load "../Click.fs"
 #load "../MRDM.fs"
 #load "../Options.fs"
@@ -33,16 +36,17 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__ + @"/../."
 open System
 open Informedica.PICE.Lib
 
+open System.Data
+open Microsoft.Data.SqlClient
 
 let path = __SOURCE_DIRECTORY__ + "./../" + Parsing.cachePath
-
 
 
 path
 |> Parsing.parseMRDMwithCache
 |> Export.export
-|> List.filter (fun xs -> xs.[0] |> String.isNullOrWhiteSpace |> not)
-|> List.distinctBy (fun xs -> xs.[0], xs.[1])
+//|> List.filter (fun xs -> xs.[0] |> String.isNullOrWhiteSpace |> not)
+//|> List.distinctBy (fun xs -> xs.[0], xs.[1])
 |> List.map (fun xs ->
     xs |> String.concat "\t"
 )
@@ -50,9 +54,9 @@ path
 |> String.concat "\n"
 |> File.writeTextToFile "scores.csv"
 
+    
+    
+
 path
 |> Parsing.parseMRDMwithCache
-|> Export.export
-//|> Seq.skip 1
-|> Seq.distinctBy (fun xs -> xs.[0], xs.[1])
-|> Seq.filter (fun xs -> xs.[0] |> String.isNullOrWhiteSpace)
+|> Export.exportToDatabase

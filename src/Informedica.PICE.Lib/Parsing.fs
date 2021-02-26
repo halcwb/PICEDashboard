@@ -20,13 +20,13 @@ module Parsing =
 
     module Parsers =
 
-        let parseInt s =
+        let parseInt (s : string) =
             match Int32.TryParse(s) with
             | true,  x -> Some x
             | false, _ -> None
 
 
-        let parseFloat s =
+        let parseFloat (s : string) =
             match Double.TryParse(s,NumberStyles.Any,  CultureInfo.InvariantCulture) with
             | true, x  -> Some x
             | false, _ -> None
@@ -605,6 +605,7 @@ module Parsing =
             <*> parseFloat d.gewicht
             <*> parseInt d.``adm-length``
             <*> parseBool d.contrean12
+            <*> parseBool d.``septische-shock``
             <*> parseBool d.canule
             <*> pim d
             <*> Result.ok None

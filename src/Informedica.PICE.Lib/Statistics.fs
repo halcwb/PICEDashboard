@@ -146,7 +146,6 @@ module Statistics =
             )
             |> List.countByList caps
 
-
         let calculateOccupancey yr (pas : PICUAdmission list) =
             let start = DateTime(yr, 1, 1)
 
@@ -916,6 +915,7 @@ module Statistics =
         stats.YearTotals <- yrTots
         stats
     
+
     module Literals =
 
         [<Literal>]
@@ -943,6 +943,7 @@ module Statistics =
         [<Literal>]
         let countItem = "* {0}: {1}"
 
+
     let calcPerc t n  =
         try
             if t > 0 then
@@ -954,6 +955,7 @@ module Statistics =
         with 
         | e -> sprintf "error calcPerc %A %A\n%s" t n (e.ToString())
                |> failwith
+
 
     let printCount title kvs sort sb =
         sb

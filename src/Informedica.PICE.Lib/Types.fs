@@ -103,7 +103,7 @@ module Types =
         type Recovery =
             | NoRecovery
             | PostCardiacByPass
-            | PostCariacNonByPass
+            | PostCardiacNonByPass
             | PostNonCardiacProcedure
 
     type PIM =
@@ -171,6 +171,7 @@ module Types =
             AdmissionLength : int option
             ContinuousReanimation : bool
             Canule : bool
+            Sepsis : bool
             PIM : PIM
             PRISM24 : PRISM option
             PRISM12 : PRISM option

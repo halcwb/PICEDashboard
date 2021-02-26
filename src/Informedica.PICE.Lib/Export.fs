@@ -4,7 +4,19 @@ namespace Informedica.PICE.Lib
 module Export =
 
     open System
+    open System.Data
+
+    open Microsoft.Data.SqlClient
+
     open Types
+
+    [<Literal>]
+    let serverName = "VOXDB-PICURED01"
+    [<Literal>]
+    let databaseName = "PICE_MRDM"
+    [<Literal>]
+    let tableName = "PimPrism"
+
 
     let getPatientState (pa : PICUAdmission) (pat : Patient) =
         match pa.AdmissionDate, pa.DischargeDate with
@@ -26,6 +38,7 @@ module Export =
         | Some d1, Some d2 -> (d1 - d2).TotalDays |> fSome
         | _, _             -> defVal
 
+
     let export (pats: Result<Patient[] * string[], _>) =
         let optToString = Option.map string >> Option.defaultValue ""
         let optDateDiff = optDateDiff string ""
@@ -34,7 +47,8 @@ module Export =
             [
                 "HospitalNumber"
                 "AdmissionDate"
-                "Age(days)"
+                "DischargeDate"
+                "Age"
                 "RiskDiagnoses"
                 "Urgency"
                 "Recovery"
@@ -76,6 +90,7 @@ module Export =
                 "PRISM3Score"
                 "PRISM4Mortality"
                 "Status"
+                "Sepsis"
                 "Diagnosis1"
                 "Diagnosis2"
                 "DiagnosesOther"
@@ -136,7 +151,8 @@ module Export =
 
                     [
                         pat.HospitalNumber
-                        pa.AdmissionDate |> Option.map string |> Option.defaultValue ""
+                        pa.AdmissionDate.Value |> string
+                        pa.DischargeDate.Value |> string
                         optDateDiff pa.AdmissionDate pat.BirthDate
                         pa.PIM.RiskDiagnosis |> List.map string |> String.concat ", "
                         pa.PIM.Urgency |> string
@@ -157,6 +173,7 @@ module Export =
                         | None, None, Some prism -> yield! (prism |> Some |> optPRISM)
                         | _ -> ()
                         getPatientState pa pat
+                        pa.Sepsis |> string
                         pa.PrimaryDiagnosis |> List.map (fun d -> d.Name) |> String.concat ";"
                         pa.SecondaryDiagnosis |> List.map (fun d -> d.Name) |> String.concat ";"
                         pa.Diagnoses |> List.map (fun d -> d.Name) |> String.concat ";"
@@ -167,3 +184,83 @@ module Export =
         )
         |> List.append headers
 
+
+    let exportToDatabase (pats: Result<Patient[] * string[], _>) =
+        pats
+        |> function
+        | Error _ -> ()
+        | Ok _ ->
+            let data = 
+                pats 
+                |> export
+                |> List.distinctBy (fun x -> x.[0], x.[1])
+        
+            let headers =
+                let stringCols =
+                    [
+                        "RiskDiagnoses"; "Urgency";
+                        "Recovery"; "Ventilated"; "AdmissionPupils";
+                        "AdmissionSource"; "Cancer"; "CPR24HourBefore";
+                        "MentalStatus";
+                        "PupilsFixed"; "Status"; "Sepsis"; "Diagnosis1";
+                        "Diagnosis2"; "DiagnosesOther";
+                        "Specialism"
+                    ]
+        
+                let toColumn s =
+                    match s with
+                    | _ when s = "HospitalNumber" ->
+                        { Table.Name = s; Table.Type = Table.VarChar(100); Table.IsKey = true }
+                    | _ when s = "AdmissionDate" ->
+                        { Table.Name = s; Table.Type = Table.DateTime; Table.IsKey = true }
+                    | _ when stringCols |> List.exists ((=) s) ->
+                        { Table.Name = s; Table.Type = Table.VarChar(255); Table.IsKey = false }
+                    | _ ->
+                        { Table.Name = s; Table.Type = Table.Float; Table.IsKey = false }
+        
+                data
+                |> List.head
+                |> List.map toColumn
+        
+        
+            let db = Database.create serverName databaseName
+        
+        
+            headers
+            |> Table.createTable db.ConnectionString tableName
+            |> ignore
+        
+        
+            let createDataTable (headers : Table.Column list) data =
+                let addData (table : DataTable) =
+                    data
+                    |> List.fold (fun (tbl : DataTable) row ->
+                        let xs = List.map2 Table.boxColumn headers row
+                        tbl.Rows.Add(xs |> List.toArray) |> ignore
+                        tbl
+                    ) table
+        
+                use tbl = new DataTable ()
+                headers
+                |> List.fold (fun (tbl: DataTable) h ->
+                    use col = new DataColumn()
+                    col.AllowDBNull <- h.IsKey |> not
+                    col.ColumnName <- h.Name
+                    col.DataType <- h.Type |> Table.columnTypeToType
+                    tbl.Columns.Add(col)
+                    tbl
+                ) tbl
+                |> addData
+        
+        
+            createDataTable headers (data |> List.skip 1)
+            |> fun tbl ->
+                use conn = new SqlConnection(db.ConnectionString)
+                use bulk = new SqlBulkCopy(conn)
+                conn.Open()
+                bulk.BatchSize <- 5000
+                bulk.DestinationTableName <- tableName
+                bulk.WriteToServer(tbl, DataRowState.Added)
+        
+        
+        

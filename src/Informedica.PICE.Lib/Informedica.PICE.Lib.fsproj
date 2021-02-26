@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net472</TargetFrameworks>
+        <TargetFrameworks>net5</TargetFrameworks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
@@ -14,10 +14,13 @@
         <Tailcalls>true</Tailcalls>
     </PropertyGroup>
     <ItemGroup>
+        <None Include="paket.references" />
         <None Include="Scripts\MRDM2.fsx" />
         <None Include="Scripts\countByList.fsx" />
         <None Include="Scripts\Export.fsx" />
         <None Include="Scripts\MVCheck.fsx" />
+        <None Include="Scripts\PIM.fsx" />
+        <None Include="Scripts\PRISM.fsx" />
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="StartUp.fs" />
         <Compile Include="NullCheck.fs" />
@@ -29,6 +32,7 @@
         <Compile Include="Result.fs" />
         <Compile Include="Types.fs" />
         <Compile Include="Utils.fs" />
+        <Compile Include="Database.fs" />
         <Compile Include="Click.fs" />
         <Compile Include="MRDM.fs" />
         <Compile Include="Options.fs" />
@@ -39,9 +43,6 @@
         <Compile Include="Parsing.fs" />
         <Compile Include="Statistics.fs" />
         <Compile Include="Export.fs" />
-    </ItemGroup>
-    <ItemGroup>
-        <Reference Include="System.Data.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
     </ItemGroup>
     <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

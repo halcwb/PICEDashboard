@@ -69,7 +69,7 @@ module Patient =
             | false, true,  true  // asume that post cardiac bypass is always recovery
             | true,  true,  true  // asume that post cardiac bypass has precedence above cardiac
             | true,  true,  false -> PIM.PostCardiacByPass
-            | true,  false, true  -> PIM.PostCariacNonByPass
+            | true,  false, true  -> PIM.PostCardiacNonByPass
             | true,  false, false -> PIM.PostNonCardiacProcedure
                    
         {
@@ -166,6 +166,7 @@ module Patient =
         admissionWeight
         admissionLength
         contReanimation
+        sepsis
         canule
         pim
         prism24
@@ -190,6 +191,7 @@ module Patient =
             AdmissionWeight = admissionWeight
             AdmissionLength = admissionLength
             ContinuousReanimation = contReanimation
+            Sepsis = sepsis
             Canule = canule
             PIM = pim
             PRISM24 = prism24
