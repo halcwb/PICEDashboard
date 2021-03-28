@@ -14,8 +14,8 @@ module Export =
     let serverName = "VOXDB-PICURED01"
     [<Literal>]
     let databaseName = "PICE_MRDM"
-    [<Literal>]
-    let tableName = "PimPrism"
+
+    let tableName = $"""PimPrism_{DateTime.Now.ToString("yy_MM_dd_HHmm")}"""
 
 
     let getPatientState (pa : PICUAdmission) (pat : Patient) =
@@ -213,6 +213,8 @@ module Export =
                         { Table.Name = s; Table.Type = Table.VarChar(100); Table.IsKey = true }
                     | _ when s = "AdmissionDate" ->
                         { Table.Name = s; Table.Type = Table.DateTime; Table.IsKey = true }
+                    | _ when s = "DischargeDate" ->
+                        { Table.Name = s; Table.Type = Table.DateTime; Table.IsKey = false }
                     | _ when stringCols |> List.exists ((=) s) ->
                         { Table.Name = s; Table.Type = Table.VarChar(255); Table.IsKey = false }
                     | _ ->

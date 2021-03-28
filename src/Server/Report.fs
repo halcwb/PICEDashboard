@@ -175,10 +175,12 @@ module Report =
             [ Literals.capAdmission |> box; tots.Admissions |> box ]
             [ Literals.capDischarge |> box; tots.Discharged |> box ]
             [ Literals.capBedDays |> box; tots.PICUDays |> box ]
-            [ Literals.capMortality |> box; calcPerc tots.Patients (float tots.Deaths) |> box ]
-            [ Literals.capPIM2 |> box; calcPerc tots.Patients tots.PIM2Mortality |> box ]
-            [ Literals.capPIM3 |> box; calcPerc tots.Patients tots.PIM3Mortality |> box ]
-            [ Literals.capPRISM |> box; calcPerc tots.Patients tots.PRISM4Mortality |> box ]
+            [ Literals.capAllTimeMortality |> box; calcPerc tots.Patients (float tots.Deaths) |> box ]
+            [ Literals.capHospitalMortality |> box; calcPerc tots.Patients (float tots.HospitalDeaths) |> box ]
+            [ Literals.capPICUMortality |> box; calcPerc tots.Admissions (float tots.PICUDeaths) |> box ]
+            [ Literals.capPIM2 |> box; calcPerc tots.Admissions tots.PIM2Mortality |> box ]
+            [ Literals.capPIM3 |> box; calcPerc tots.Admissions tots.PIM3Mortality |> box ]
+            [ Literals.capPRISM |> box; calcPerc tots.Admissions tots.PRISM4Mortality |> box ]
 
         ]
         |> List.append [ [ "Parameter" |> box; "Aantal" ] ]
@@ -204,7 +206,7 @@ module Report =
                 Literals.capAdmission
                 Literals.capDischarge
                 Literals.capBedDays
-                Literals.capMortality
+                Literals.capPICUMortality
                 Literals.capPIM2
                 Literals.capPIM3
                 Literals.capPRISM
@@ -222,7 +224,7 @@ module Report =
                 stats.YearTotals
                 |> List.sortByDescending (fun t -> t.Year)
                 |> List.fold (fun acc stat ->
-                    let calc = calcPerc stat.Totals.Patients
+                    let calc = calcPerc stat.Totals.Admissions
                     let vals =
                         [
                             stat.Year              |> box
@@ -230,7 +232,7 @@ module Report =
                             stat.Totals.Admissions |> box
                             stat.Totals.Discharged |> box
                             stat.Totals.PICUDays   |> box
-                            calc (float stat.Totals.Deaths) |> box
+                            calc (float stat.Totals.PICUDeaths) |> box
                             calc stat.Totals.PIM2Mortality |> box
                             calc stat.Totals.PIM3Mortality |> box
                             calc stat.Totals.PRISM4Mortality |> box
@@ -240,7 +242,7 @@ module Report =
                     |> StringBuilder.appendLineFormat Literals.columns9 vals
                 ) sb
                 |> fun sb ->
-                    let t = stats.YearTotals |> List.sumBy (fun s -> s.Totals.Patients)
+                    let t = stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions)
                     let calc = calcPerc t
                     let vals =
                         [
@@ -249,7 +251,7 @@ module Report =
                             stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions) |> box
                             stats.YearTotals |> List.sumBy (fun s -> s.Totals.Discharged) |> box
                             stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDays)   |> box
-                            calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.Deaths) |> float) |> box
+                            calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDeaths) |> float) |> box
                             calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM2Mortality)) |> box
                             calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM3Mortality)) |> box
                             calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PRISM4Mortality)) |> box
@@ -280,6 +282,9 @@ module Report =
         |> addSubChapter Literals.sectionPICE Literals.groupMortality Literals.groupSMR
         |> addSubParagraph Literals.sectionPICE Literals.groupMortality Literals.groupSMR Literals.paragraphSMRperYear ""
         |> addSubParagraph Literals.sectionPICE Literals.groupMortality Literals.groupSMR Literals.paragraphSMRfunnel ""
+        |> addSubChapter Literals.sectionPICE Literals.groupMortality Literals.groupDeathMode
+        |> addSubParagraph Literals.sectionPICE Literals.groupMortality Literals.groupDeathMode Literals.paragraphTotals  (printCount stats.Totals.DeathMode true)
+        |> addSubParagraph Literals.sectionPICE Literals.groupMortality Literals.groupDeathMode Literals.paragraphPerYear (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DeathMode))
         |> addChapter Literals.sectionPICE Literals.groupPatient
         |> addSubChapter Literals.sectionPICE Literals.groupPatient Literals.groupGender
         |> addSubParagraph Literals.sectionPICE Literals.groupPatient Literals.groupGender Literals.paragraphTotals  (printCount stats.Totals.Gender true)

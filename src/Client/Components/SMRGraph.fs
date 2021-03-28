@@ -45,7 +45,7 @@ module SMRGraph =
 
             let calcAverage get = 
                 let calc t = 
-                    calcSMR (fun t -> t.Deaths) get t
+                    calcSMR (fun t -> t.PICUDeaths) get t
 
                 props.totals
                 |> Utils.calcAverage (fun _ -> 1) calc
@@ -54,7 +54,7 @@ module SMRGraph =
             let data =
                 props.totals
                 |> List.map (fun tot ->
-                    let calc = calcSMR (fun t -> t.Deaths)
+                    let calc = calcSMR (fun t -> t.PICUDeaths)
                     // Browser.Dom.console.log(tot.Year, tot.Totals.PRISM4Mortality)
                     { 
                         name = tot.Period
@@ -68,7 +68,7 @@ module SMRGraph =
                     }
                 )
 
-            Recharts.composedChart [
+            [
                 barChart.width 1100
                 barChart.height 700
                 barChart.data data
@@ -139,6 +139,9 @@ module SMRGraph =
                     Recharts.legend [ legend.verticalAlign.top ]
                 ]
             ]
+            |> List.map (fun x -> x :?> IComposedChartProperty)
+            |> Recharts.composedChart 
+
     )
 
     let render totals = comp ({| totals = totals |})

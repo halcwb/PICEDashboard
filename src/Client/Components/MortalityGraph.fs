@@ -47,7 +47,7 @@ module MortalityGraph =
                     // Browser.Dom.console.log(tot.Year, tot.Totals.PRISM4Mortality)
                     { 
                         name = tot.Period
-                        mortality = tot.Deaths |> float |> perc
+                        mortality = tot.PICUDeaths |> float |> perc
                         pim2 = tot.PIM2Mortality |> perc
                         pim3 = tot.PIM3Mortality |> perc
                         prism = tot.PRISM4Mortality |> perc
@@ -59,7 +59,7 @@ module MortalityGraph =
                 )
 
             Html.div [
-                Recharts.composedChart [
+                [
                     barChart.width 1100
                     barChart.height 700
                     barChart.data data
@@ -134,6 +134,8 @@ module MortalityGraph =
 
                     ]
                 ]
+                |> List.map (fun x -> x :?> IComposedChartProperty)
+                |> Recharts.composedChart 
 
                 props.content |> Markdown.render
             ]

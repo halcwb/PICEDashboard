@@ -19,7 +19,7 @@ module StackedBarChart =
 
 
     let init last =
-        fun () -> { position = Stopped; last = last; showPercentage = true }, Cmd.none
+        fun () -> { position = Stopped; last = last; showPercentage = false }, Cmd.none
 
     
     let update msg state =

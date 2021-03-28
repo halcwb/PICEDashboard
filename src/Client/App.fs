@@ -27,6 +27,8 @@ type State =
         SideMenuIsOpen : bool
         SelectedFilter : Filter
         SelectedTreeItem : string option
+        ShowDiagnoses : bool
+        SelectedDiagnoses : string list
     }
 
 
@@ -40,6 +42,9 @@ type Msg =
     | PatientCSVCanceled
     | PatientListReceived of string
     | SideMenuOpenToggled
+    | ShowDiagnoses
+    | ShowReport
+    | DiagnosesSelected of string list
 
 
 let init() =
@@ -53,6 +58,8 @@ let init() =
             SideMenuIsOpen = true
             SelectedFilter = NoFilter
             SelectedTreeItem = Some "0"
+            ShowDiagnoses = false
+            SelectedDiagnoses = []
         }
     state, Cmd.ofMsg (LoadStatistics Started)
 
@@ -144,6 +151,12 @@ let update msg state =
     | LoadStatistics (Finished report) ->
         { state with Report = Resolved report} , Cmd.none
 
+    | ShowDiagnoses ->
+        { state with ShowDiagnoses = true }, Cmd.none
+    | ShowReport ->
+        { state with ShowDiagnoses = false }, Cmd.none
+    | DiagnosesSelected dgs ->
+        { state with SelectedDiagnoses = dgs }, Cmd.none
 
 let defaultTheme = 
     Styles.createMuiTheme ()
@@ -167,7 +180,7 @@ let mapToTreeData (sections : Section list) =
         let paragraphs = 
             chapter.Paragraphs
             |> List.mapi (fun i p -> 
-                TreeViewDrawer.createData (sprintf "%s.P|%i" s i) p.Title []
+                ReportMenu.createData (sprintf "%s.P|%i" s i) p.Title []
             )
 
         chapter.Chapters 
@@ -176,7 +189,7 @@ let mapToTreeData (sections : Section list) =
             |> mapChapter (sprintf "%s.C|%i" s i)
         ) 
         |> List.append paragraphs
-        |> TreeViewDrawer.createData s chapter.Title
+        |> ReportMenu.createData s chapter.Title
         
     sections
     |> List.mapi (fun i section ->
@@ -184,7 +197,7 @@ let mapToTreeData (sections : Section list) =
         |> List.mapi (fun i2 chapter ->
             chapter |> mapChapter (sprintf "%i.C|%i" i i2)
         )
-        |> TreeViewDrawer.createData 
+        |> ReportMenu.createData 
             (string i)
             section.Title            
     )
@@ -261,37 +274,70 @@ let display showProgress (s : string) =
     ]
 
 
-let createMainContent report displayTypeAck displayType menuIsOpen filter treeItem dispatch =
-    [
-        match report with
-        | HasNotStartedYet -> display true "De boel wordt opgestart ..."
-        | InProgress       -> display true "Het rapport wordt opgehaald ..."
-        | Resolved (Ok report) -> 
-            let treeData =
-                report.Sections
-                |> mapToTreeData
+let createMainContent (state : State) displayTypeAck displayType menuIsOpen filter treeItem dispatch =
+    if state.ShowDiagnoses then 
+        [
+            match state.Report with
+            | HasNotStartedYet -> display true "De boel wordt opgestart ..."
+            | InProgress       -> display true "Het rapport wordt opgehaald ..."
+            | Resolved (Error e) -> display false (sprintf "Oeps:\n%s" e)
+            | Resolved (Ok report) -> 
+            
+                let dgs =
+                    report.Sections
+                    |> List.head
+                    |> fun section -> section.Totals.Diagnoses
 
-            TreeViewDrawer.render treeData menuIsOpen filter (ReportFilterItemSelected >> dispatch)
+                fun (o : {| showReport : bool; selected : string list |}) ->
+                    if o.showReport then ShowReport |> dispatch
+                    else
+                        o.selected
+                        |> DiagnosesSelected
+                        |> dispatch
+                |> DiagnosesMenu.render menuIsOpen dgs state.SelectedDiagnoses
 
-            Html.div [
-                prop.style [ style.marginLeft 150 ]
-                prop.children [
-                    if displayTypeAck then
-                        Pages.Report.render displayType treeItem report
+                Pages.Diagnoses.render state.DisplayType state.SelectedDiagnoses report
+        ]
+
+    else 
+        [
+            match state.Report with
+            | HasNotStartedYet -> display true "De boel wordt opgestart ..."
+            | InProgress       -> display true "Het rapport wordt opgehaald ..."
+            | Resolved (Ok report) -> 
+
+                let treeData =
+                    report.Sections
+                    |> mapToTreeData
+
+                fun (o : {| filter : Filter; item : string; showDiagnoses : bool |}) ->
+                    if o.showDiagnoses then 
+                        ShowDiagnoses
+                        |> dispatch
                     else 
-                        let content =
-                            match displayType with
-                            | Print -> "Het rapport toont nu een print versie"
-                            | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
-                            | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
-                        Dialog.render "### Verandering van rapport type" content (fun _ -> DisplayTypeAcknowledged |> dispatch)
+                        (o.filter, o.item) 
+                        |> ReportFilterItemSelected |> dispatch
+                |> ReportMenu.render treeData menuIsOpen filter 
 
+                Html.div [
+                    prop.style [ style.marginLeft 150 ]
+                    prop.children [
+                        if displayTypeAck then
+                            Pages.Report.render displayType treeItem report
+                        else 
+                            let content =
+                                match displayType with
+                                | Print -> "Het rapport toont nu een print versie"
+                                | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
+                                | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
+                            Dialog.render "### Verandering van rapport type" content (fun _ -> DisplayTypeAcknowledged |> dispatch)
+
+                    ]
                 ]
-            ]
-        | Resolved (Error err)  ->
-            sprintf "Oeps er ging wat mis:\n%s" err
-            |> display false
-    ]
+            | Resolved (Error err)  ->
+                sprintf "Oeps er ging wat mis:\n%s" err
+                |> display false
+        ]
 
 
 let private comp = 
@@ -326,7 +372,7 @@ let private comp =
 
                         if props.state.RequestPatients then props.dispatch |> createUploadDialog
                         else
-                            yield! createMainContent props.state.Report 
+                            yield! createMainContent props.state 
                                                      props.state.DisplayTypeAcknowledged 
                                                      props.state.DisplayType
                                                      props.state.SideMenuIsOpen

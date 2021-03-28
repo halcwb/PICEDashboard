@@ -204,6 +204,24 @@ module Database =
         }
 
 
+    let listTables (db : Database) =
+        let cmdText = $"""SELECT TABLE_NAME 
+        FROM [{db.Name}].INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_TYPE = 'BASE TABLE'"""
+        use conn = new SqlConnection(db.ConnectionString)
+        conn.Open()
+        use cmd = new SqlCommand(cmdText, conn)
+        use reader = cmd.ExecuteReader()
+
+        let rec read (reader: SqlDataReader) acc =
+            if reader.Read () |> not then acc
+            else
+                reader.GetString(0)::acc
+                |> read reader
+
+        read reader []
+
+
 [<RequireQualifiedAccessAttribute>]
 module Table =
 
@@ -297,8 +315,9 @@ module Table =
         | DateTime
         | Time ->
             match DateTime.TryParse(s) with
-            | true, dt -> dt |> box
-            | false, _ -> null
+            | true, dt when dt >= (new DateTime(2000, 1, 1)) && 
+                            dt <= DateTime.Now -> dt |> box
+            | _ -> null
 
 
     let columnToString (col : Column) =

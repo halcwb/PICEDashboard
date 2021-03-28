@@ -102,20 +102,20 @@ module OccupancyGraph =
             | _ when label = "max" ->
                 line.strokeDasharray [| 15; 5 |]
                 line.stroke (color.red)
-                bar.strokeOpacity 0.5
+                line.strokeOpacity 0.5
                 line.strokeWidth 4
             | _ when label = "min" ->
                 line.strokeDasharray [| 15; 5 |]
                 line.stroke (color.green)
                 line.strokeWidth 4
-                bar.strokeOpacity 0.5
+                line.strokeOpacity 0.5
             | _ when label = "mean" ->
                 line.strokeDasharray [| 15; 5 |]
                 line.stroke (color.gray)
                 line.strokeWidth 4
-                bar.strokeOpacity 0.5
+                line.strokeOpacity 0.5 
             | false -> 
-                bar.strokeOpacity 0.2
+                line.strokeOpacity 0.2
                 line.stroke (color.darkBlue)
             | true  -> 
                 line.strokeWidth 2
@@ -300,7 +300,7 @@ module OccupancyGraph =
                         Recharts.tooltip []
                         Recharts.legend [ 
                             legend.verticalAlign.bottom 
-                            prop.onMouseEnter (fun e -> e?value |> EnterLegend |> dispatch)
+                            prop.onMouseEnter (fun e -> e?value |> EnterLegend |> dispatch) :?> ILegendProperty
                         ]
                         yield! lines
                     ]

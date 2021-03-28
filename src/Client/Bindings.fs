@@ -111,13 +111,14 @@ open Feliz
 open Fable.Core
 open Fable.Core.JsInterop
 
+
 module legend =
 
     [<Erase>]
     type verticalAlign =
-        static member inline top = Interop.mkAttr "verticalAlign" "top"
-        static member inline bottom = Interop.mkAttr "verticalAlign" "bottom"
-        static member inline left = Interop.mkAttr "verticalAlign" "left"
+        static member inline top = Interop.mkAttr "verticalAlign" "top" :?> ILegendProperty
+        static member inline bottom = Interop.mkAttr "verticalAlign" "bottom" :?> ILegendProperty
+        static member inline left = Interop.mkAttr "verticalAlign" "left" :?> ILegendProperty
 
 namespace Feliz.Recharts
 
@@ -125,60 +126,60 @@ open Feliz
 open Fable.Core
 open Fable.Core.JsInterop
 
-[<Erase>]
-type scatterChart =
-    static member inline width (value: int) = Interop.mkAttr "width" value
-    /// The height of chart container.
-    static member inline height (value: int) = Interop.mkAttr "height" value
-    static member inline children (elements: ReactElement list) = prop.children elements
-    /// The sizes of whitespace around the container.
-    ///
-    /// Default value `{ top: 5, right: 5, bottom: 5, left: 5 }`
-    static member inline margin(?top: int, ?right: int, ?left: int, ?bottom: int) =
-        let margin = createObj [
-            "top" ==> Option.defaultValue 0 top
-            "right" ==> Option.defaultValue 0 right
-            "left" ==> Option.defaultValue 0 left
-            "bottom" ==> Option.defaultValue 0 bottom
-        ]
+//[<Erase>]
+//type scatterChart =
+//    static member inline width (value: int) = Interop.mkAttr "width" value
+//    /// The height of chart container.
+//    static member inline height (value: int) = Interop.mkAttr "height" value
+//    static member inline children (elements: ReactElement list) = prop.children elements
+//    /// The sizes of whitespace around the container.
+//    ///
+//    /// Default value `{ top: 5, right: 5, bottom: 5, left: 5 }`
+//    static member inline margin(?top: int, ?right: int, ?left: int, ?bottom: int) =
+//        let margin = createObj [
+//            "top" ==> Option.defaultValue 0 top
+//            "right" ==> Option.defaultValue 0 right
+//            "left" ==> Option.defaultValue 0 left
+//            "bottom" ==> Option.defaultValue 0 bottom
+//        ]
 
-        Interop.mkAttr "margin" margin
+//        Interop.mkAttr "margin" margin
 
-    static member inline onClick (handler: ChartMouseEvent<'label, 'payload> -> unit) =
-        Interop.mkAttr "onClick" <|
-            fun eventArgs ->
-                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
-                then ignore()
-                else handler eventArgs
+//    static member inline onClick (handler: ChartMouseEvent<'label, 'payload> -> unit) =
+//        Interop.mkAttr "onClick" <|
+//            fun eventArgs ->
+//                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
+//                then ignore()
+//                else handler eventArgs
 
-    static member inline onMouseEnter (handler: ChartMouseEvent<'label, 'payload> -> unit) =
-        Interop.mkAttr "onMouseEnter" <|
-            fun eventArgs ->
-                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
-                then ignore()
-                else handler eventArgs
+//    static member inline onMouseEnter (handler: ChartMouseEvent<'label, 'payload> -> unit) =
+//        Interop.mkAttr "onMouseEnter" <|
+//            fun eventArgs ->
+//                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
+//                then ignore()
+//                else handler eventArgs
 
-    static member inline onMouseMove (handler: ChartMouseEvent<'label, 'payload> -> unit) =
-        Interop.mkAttr "onMouseMove" <|
-            fun eventArgs ->
-                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
-                then ignore()
-                else handler eventArgs
+//    static member inline onMouseMove (handler: ChartMouseEvent<'label, 'payload> -> unit) =
+//        Interop.mkAttr "onMouseMove" <|
+//            fun eventArgs ->
+//                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
+//                then ignore()
+//                else handler eventArgs
 
-    static member inline onMouseLeave (handler: unit -> unit) = Interop.mkAttr "onMouseLeave" handler
-    static member inline onMouseUp (handler: ChartMouseEvent<'label, 'payload> -> unit) =
-        Interop.mkAttr "onMouseUp" <|
-            fun eventArgs ->
-                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
-                then ignore()
-                else handler eventArgs
+//    static member inline onMouseLeave (handler: unit -> unit) = Interop.mkAttr "onMouseLeave" handler
+//    static member inline onMouseUp (handler: ChartMouseEvent<'label, 'payload> -> unit) =
+//        Interop.mkAttr "onMouseUp" <|
+//            fun eventArgs ->
+//                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
+//                then ignore()
+//                else handler eventArgs
 
-    static member inline onMouseDown (handler: ChartMouseEvent<'label, 'payload> -> unit) =
-        Interop.mkAttr "onMouseDown" <|
-            fun eventArgs ->
-                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
-                then ignore()
-                else handler eventArgs
+//    static member inline onMouseDown (handler: ChartMouseEvent<'label, 'payload> -> unit) =
+//        Interop.mkAttr "onMouseDown" <|
+//            fun eventArgs ->
+//                if isNullOrUndefined eventArgs || Interop.objectHas [ "isTooltipActive" ] eventArgs
+//                then ignore()
+//                else handler eventArgs
 
 namespace Feliz.Recharts
 
@@ -186,13 +187,14 @@ open System
 open Feliz
 open Fable.Core
 
+
 [<Erase>]
 type scatter =
-    static member inline name (value : string) = Interop.mkAttr "name" value
-    static member inline xAxisId (value: string) = Interop.mkAttr "xAxisId" value
-    static member inline yAxisId (value: string) = Interop.mkAttr "yAxisId" value
-    static member inline xAxisId (value: int) = Interop.mkAttr "xAxisId" value
-    static member inline yAxisId (value: int) = Interop.mkAttr "yAxisId" value
+    static member inline name (value : string) = Interop.mkAttr "name" value :?> IScatterProperty
+    static member inline xAxisId (value: string) = Interop.mkAttr "xAxisId" value :?> IScatterProperty
+    static member inline yAxisId (value: string) = Interop.mkAttr "yAxisId" value :?> IScatterProperty
+    static member inline xAxisId (value: int) = Interop.mkAttr "xAxisId" value :?> IScatterProperty
+    static member inline yAxisId (value: int) = Interop.mkAttr "yAxisId" value :?> IScatterProperty
     ///// The source data, in which each element is an object.
     //static member inline points (points: seq<'a>) = Interop.mkAttr "points" (Seq.toArray points)
     ///// The source data, in which each element is an object.
@@ -200,20 +202,20 @@ type scatter =
     ///// The source data, in which each element is an object.
     //static member inline porints (points: 'a array) = Interop.mkAttr "points" points
     ///// If set false, animation of area will be disabled.
-    static member inline isAnimationActive (value: bool) = Interop.mkAttr "isAnimationActive" value
+    static member inline isAnimationActive (value: bool) = Interop.mkAttr "isAnimationActive" value :?> IScatterProperty
     /// Specifies when the animation should begin, the unit of this option is ms.
-    static member inline animationBegin (value: int) = Interop.mkAttr "animationBegin" value
+    static member inline animationBegin (value: int) = Interop.mkAttr "animationBegin" value :?> IScatterProperty
     /// Specifies the duration of animation, the unit of this option is ms. Default is `1500ms`.
-    static member inline animationDuration (value: int) = Interop.mkAttr "animationDuration" value
+    static member inline animationDuration (value: int) = Interop.mkAttr "animationDuration" value :?> IScatterProperty
     /// Specifies the duration of animation. Default is `1500ms`.
     static member inline animationDuration (value: TimeSpan) = Interop.mkAttr "animationDuration" value.TotalMilliseconds
     /// The source data, in which each element is an object.
-    static member inline data (values: seq<'a>) = Interop.mkAttr "data" (Seq.toArray values)
+    static member inline data (values: seq<'a>) = Interop.mkAttr "data" (Seq.toArray values) :?> IScatterProperty
     /// The source data, in which each element is an object.
-    static member inline data (values: 'a list) = Interop.mkAttr "data" (List.toArray values)
+    static member inline data (values: 'a list) = Interop.mkAttr "data" (List.toArray values) :?> IScatterProperty
     /// The source data, in which each element is an object.
-    static member inline data (values: 'a array) = Interop.mkAttr "data" values
-    static member inline fill (color: string) = Interop.mkAttr "fill" color
+    static member inline data (values: 'a array) = Interop.mkAttr "data" values :?> IScatterProperty
+    static member inline fill (color: string) = Interop.mkAttr "fill" color :?> IScatterProperty
 
 [<Erase>]
 module scatter =
@@ -274,19 +276,19 @@ open Fable.Core
 [<Erase>]
 type yAxis =
 
-    static member inline minTickGap(value : int) = Interop.mkAttr "minTickGap" value
+    static member inline minTickGap(value : int) = Interop.mkAttr "minTickGap" value :?> IYAxisProperty
 
 
 type line =
 
-    static member inline strokeWidth(value : int) = Interop.mkAttr "strokeWidth" value
+    static member inline strokeWidth(value : int) = Interop.mkAttr "strokeWidth" value :?> ILineProperty
     /// The source data, in which each element is an object.
-    static member inline data (values: seq<'a>) = Interop.mkAttr "data" (Seq.toArray values)
+    static member inline data (values: seq<'a>) = Interop.mkAttr "data" (Seq.toArray values) :?> ILineProperty
     /// The source data, in which each element is an object.
-    static member inline data (values: 'a list) = Interop.mkAttr "data" (List.toArray values)
+    static member inline data (values: 'a list) = Interop.mkAttr "data" (List.toArray values) :?> ILineProperty
     /// The source data, in which each element is an object.
-    static member inline data (values: 'a array) = Interop.mkAttr "data" values
-
+    static member inline data (values: 'a array) = Interop.mkAttr "data" values :?> ILineProperty
+    static member inline strokeOpacity (value: float) = Interop.mkAttr "strokeOpacity" value :?> ILineProperty
 
 namespace FileSaver 
 

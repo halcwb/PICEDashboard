@@ -137,6 +137,21 @@ module Report =
                 prop.style [ style.paddingBottom 20 ]
 
                 match dt with
+                | Graph when chapter.Title = Literals.groupDeathMode &&
+                            paragraph.Title = Literals.paragraphTotals ->
+                    prop.children [
+                        section.YearTotals
+                        |> List.map (fun t -> t.Period, t.DeathMode)
+                        |> Components.PieChart.render paragraph.Title section.Totals.DeathMode
+                    ]
+
+                | Graph when chapter.Title = Literals.groupDeathMode &&
+                            paragraph.Title = Literals.paragraphPerYear ->
+                    prop.children [
+                        (fun t -> t.DeathMode)
+                        |> getStackedBarChart section "Reden van Overlijden"
+                    ]
+
                 | Graph when chapter.Title = Literals.groupMortality && 
                                 paragraph.Title = Literals.paragraphPIMandPRISM -> 
                     prop.children [
@@ -170,7 +185,6 @@ module Report =
                 | Graph when chapter.Title = Literals.groupAdmission && 
                                 paragraph.Title = Literals.paragraphOccupancy ->
                     prop.children [
-            
                         section.YearTotals 
                         |> List.map (fun ytot ->
                             ytot.Period

@@ -21,6 +21,7 @@ module Statistics =
         member val Discharged = 0 with get, set
         member val PICUDays = 0 with get, set
         member val Deaths = 0 with get, set
+        member val DeathMode : (string * int) list = [] with get, set
         member val HospitalDeaths = 0 with get, set
         member val PICUDeaths = 0 with get, set
         member val PIM2Mortality = 0. with get, set
@@ -33,6 +34,7 @@ module Statistics =
         member val DischargeReasons : (string * int) list = [] with get, set
         member val HospitalDischargeDestinations : (string * int) list = [] with get, set
         member val DiagnoseGroups : (string * int) list = [] with get, set
+        member val Diagnoses : (string * int) list = [] with get, set
         member val Specialism : (string * int) list = [] with get, set
         member val Occupancy : (DateTime * int) list = [] with get, set
         member val TransportHospital : (string * int) list = [] with get, set
@@ -106,7 +108,7 @@ module Statistics =
 
     let dateFilter yr mo adt =
         match yr, mo with
-        | None,   None -> true
+        | None,   None   -> true
         | Some y, None   -> dateInYear y adt
         | Some y, Some m -> dateInYearMonth y m adt
         | _ -> "not a valid filter" |> failwith
@@ -277,7 +279,7 @@ module Statistics =
                         errs
                         |> List.collect (fun errs ->
                             errs
-                            |> List.collect (fun err -> match err with | IsValid -> [] | NotValid(_, s) -> [s])
+                            |> List.collect (fun err -> match err with | IsValid -> [] | NotValid(_, s) -> [ s ])
                         )
                         |> List.countBy id
 
@@ -295,11 +297,44 @@ module Statistics =
                 |> not 
             )
             |> List.distinctBy (fun p -> p.HospitalNumber)
+            |> fun xs -> 
+                let c = (pats |> List.length) - (xs |> List.length)
+                if c > 0 then 
+                    stats.Totals.InvalidPatients <-
+                        stats.Totals.InvalidPatients
+                        |> List.append [ "Dubbele patienten", c ]
+                xs
             |> List.collect (fun p ->
                 p.HospitalAdmissions
+                |> List.distinctBy (fun ha -> ha.Id)
+                |> fun xs ->
+                    let c = (p.HospitalAdmissions |> List.length) - (xs |> List.length)
+                    if c > 0 then
+                        stats.Totals.InvalidPatients <-
+                            match stats.Totals.InvalidPatients |> List.tryFind (fun (k, _) -> k = "Dubbele ziekenhuisopnames") with
+                            | None   -> stats.Totals.InvalidPatients |> List.append [ "Dubbele ziekenhuisopnames", c ] 
+                            | Some _ -> 
+                                stats.Totals.InvalidPatients 
+                                |> List.fold (fun acc (k, v) ->
+                                    if k = "Dubbele ziekenhuisopnames" then (k, v + c)::acc else (k, v)::acc
+                                ) []
+                    xs
                 |> List.collect (fun ha ->
                     ha.PICUAdmissions
+                    |> List.filter(fun pa -> pa.AdmissionDate.Value.Year >= 2003 && pa.DischargeDate.IsSome)
                     |> List.distinct
+                    |> fun xs ->
+                        let c = (ha.PICUAdmissions |> List.length) - (xs |> List.length)
+                        if c > 0 then
+                            stats.Totals.InvalidPatients <-
+                                match stats.Totals.InvalidPatients |> List.tryFind (fun (k, _) -> k = "Niet analyseerbare PICU opnames") with
+                                | None   -> stats.Totals.InvalidPatients |> List.append [ "Niet analyseerbare PICU opnames", c ] 
+                                | Some _ -> 
+                                    stats.Totals.InvalidPatients 
+                                    |> List.fold (fun acc (k, v) ->
+                                        if k = "Niet analyseerbare PICU opnames" then (k, v + c)::acc else (k, v)::acc
+                                    ) []
+                        xs
                     |> List.map (fun pa ->
                         {|
                             patient = p
@@ -326,24 +361,31 @@ module Statistics =
                         | _ -> false
 
                     match a with
-                    | Neonate -> checkAge 0. 29.
-                    | Infant -> checkAge 29. 366.
-                    | Toddler -> checkAge 365. (4. * 365. + 1.)
-                    | EarlyChildhood -> checkAge (4. * 365.) (12. * 365. + 1.)
+                    | Neonate         -> checkAge 0. 29.
+                    | Infant          -> checkAge 29. 366.
+                    | Toddler         -> checkAge 365. (4. * 365. + 1.)
+                    | EarlyChildhood  -> checkAge (4. * 365.) (12. * 365. + 1.)
                     | MiddleChildhood -> checkAge (12. * 365.) (18. * 365. + 1.)
-                    | Adolescence -> checkAge (18. * 365.) (365. * 100.)
+                    | Adolescence     -> checkAge (18. * 365.) (365. * 100.)
+
                 | DiagnoseFilter d ->
                     let isOncology =
                         p.picuAdmission.PrimaryDiagnosis
+                        |> List.append p.picuAdmission.SecondaryDiagnosis
+                        |> List.append p.picuAdmission.Diagnoses
                         |> List.exists (fun pd -> 
                             pd.Id = "2600" ||
                             pd.Id = "2730" ||
-                            pd.Id = "2840"
+                            pd.Id = "2840" ||
+                            pd.Id = "3740" ||
+                            pd.Id = "920"
                         ) ||
                         p.picuAdmission.ReferingSpecialism
                         |> function 
                         | None -> false
-                        | Some d -> d.Id = "30"
+                        | Some d -> d.Id = "30" 
+                        ||
+                        (match p.picuAdmission.PRISM24 with | Some prism -> prism.Cancer | None -> false)
                     let isCardiac =
                         p.picuAdmission.PrimaryDiagnosis
                         |> List.exists (fun pd -> 
@@ -370,7 +412,6 @@ module Statistics =
         stats.Totals.Admissions <-
             pats
             |> List.map (fun p -> p.picuAdmission)
-            |> List.distinct
             |> List.length
 
         stats.Totals.Discharged <-
@@ -379,32 +420,40 @@ module Statistics =
             |> List.filter (fun pa -> pa.DischargeDate |>  Option.isSome)
             |> List.length
 
+        stats.Totals.PICUDeaths <-
+            pats
+            |> List.map (fun p -> p.patient)
+            |> List.filter Patient.patientPICUDeath
+            |> List.distinctBy (fun p -> p.HospitalNumber)
+            |> List.length
+
+        stats.Totals.HospitalDeaths <-
+            pats
+            |> List.map (fun p -> p.patient)
+            |> List.filter Patient.patientHospitalDeath
+            |> List.distinctBy (fun p -> p.HospitalNumber)
+            |> List.length
+
         stats.Totals.Deaths <-
             pats
             |> List.map (fun p -> p.patient)
-            |> List.filter (fun p -> 
-                p.PatientState = Dead || 
-                p.DateOfDeath |> Option.isSome ||
-//                p.DeathMode <> "" ||
-//                p.DeathLocation <> "Niet overleden" ||
-                p.HospitalAdmissions
-                |> List.exists (fun ha ->
-                    (ha.DischargeDestination |> DataOption.EqsIdOpt "128") ||
-                    ha.PICUAdmissions
-                    |> List.exists (fun pa ->
-                        pa.AdmissionType = DOA ||
-                        (pa.DischargeReason |> DataOption.EqsIdOpt "100")
-                    )
-                )
-            )
+            |> List.filter Patient.patientAllTimeDeath
             |> List.distinctBy (fun p -> p.HospitalNumber)
             |> List.length
+
+        stats.Totals.DeathMode <-
+            pats
+            |> List.map (fun p -> p.patient)
+            |> List.filter Patient.patientPICUDeath
+            |> List.map (fun pat  -> pat.DeathMode)
+            |> fun xs ->
+                xs
+                |> countBy "Onbekend" (xs |> getCaps) 
 
         stats.Totals.PIM2Mortality <-
             pats
             |> List.map (fun p -> p.picuAdmission)
             |> List.filter (fun pa ->
-                pa.DischargeDate |>  Option.isSome &&
                 pa.PIM.PIM2Mortality |> Option.isSome
             )
             |> List.map (fun pa -> pa.PIM.PIM2Mortality |> Option.get)
@@ -415,7 +464,6 @@ module Statistics =
             pats
             |> List.map (fun p -> p.picuAdmission)
             |> List.filter (fun pa ->
-                pa.DischargeDate |>  Option.isSome &&
                 pa.PIM.PIM3Mortality |> Option.isSome
             )
             |> List.map (fun pa -> pa.PIM.PIM3Mortality |> Option.get)
@@ -426,14 +474,13 @@ module Statistics =
             pats
             |> List.map (fun p -> p.picuAdmission)
             |> List.filter (fun pa ->
-                pa.DischargeDate   |> Option.isSome &&
                 pa |> getPRISMMort |> Option.isSome
             )
             |> List.map (fun pa -> pa |> getPRISMMort |> Option.get)
             |> List.filter (Double.IsNaN >> not)
             |> List.sum
 
-        stats.Totals.DischargeReasons <-            
+        stats.Totals.DischargeReasons <- 
             pats
             |> List.map (fun p  -> p.picuAdmission.DischargeReason)
             |> fun xs ->
@@ -514,6 +561,19 @@ module Statistics =
             )
             |> List.countBy id
 
+        stats.Totals.Diagnoses <-
+            pats
+            |> List.collect (fun p ->
+                [ 
+                    yield! p.picuAdmission.PrimaryDiagnosis
+                    yield! p.picuAdmission.SecondaryDiagnosis
+                    yield! p.picuAdmission.Diagnoses
+                ]
+                |> List.distinct
+                |> List.map (fun d -> d.Name)
+            )
+            |> List.countBy id
+
         stats.Totals.PICUDays <-
             pats
             |> List.map (fun p -> p.picuAdmission)
@@ -550,7 +610,6 @@ module Statistics =
                 xs 
                 |> countBy "Onbekend" caps
             
-
         let yrTots =
             [ 2003..DateTime.Now.Year - 1 ]
             |> List.map (fun yr ->
@@ -595,7 +654,7 @@ module Statistics =
         |> List.iter (fun tot ->
             let yr = Some tot.Year
             let admitted = 
-                filterAdmitted (periodFilter yr None) (fun d -> d.patient)
+                filterAdmission (dateFilter yr None) (fun d -> d.patient)
                 |> List.distinctBy (fun p -> p.HospitalNumber)
 
             tot.Totals.Patients <-
@@ -604,18 +663,35 @@ module Statistics =
 
             tot.Totals.Deaths <-
                 admitted
-                |> List.filter (fun p ->
-                    match p.DateOfDeath with
-                    | None    -> false
-                    | Some dt -> dt.Year = tot.Year
-                )
+                |> List.filter Patient.patientAllTimeDeath
+                |> List.length
+
+            tot.Totals.Occupancy <- 
+                pats
+                |> List.map (fun p -> p.picuAdmission)
+                |> calculateOccupancey tot.Year
+        )
+
+        // PICU admission statistics
+        yrTots
+        |> List.iter (fun tot ->
+            let yr = Some tot.Year
+            let admissions = 
+                filterAdmission (dateFilter yr None) (fun d -> d.picuAdmission)
+                |> List.filter (fun pa -> pa.DischargeDate.IsSome)
+
+            tot.Totals.Admissions <-
+                admissions
+                |> List.length
+
+            tot.Totals.PICUDeaths <-
+                admissions
+                |> List.filter (fun p -> p.DischargeReason |> DataOption.EqsIdOpt "100")
                 |> List.length
 
             tot.Totals.PIM2Mortality <-
-                pats
-                |> List.map (fun p -> p.picuAdmission)
+                admissions
                 |> List.filter (fun pa ->
-                    pa.DischargeDate |>  Option.isSome &&
                     pa.PIM.PIM2Mortality |> Option.isSome
                 )
                 |> List.filter (fun pa -> pa.DischargeDate.Value.Year = yr.Value)
@@ -624,10 +700,8 @@ module Statistics =
                 |> List.sum
 
             tot.Totals.PIM3Mortality <-
-                pats
-                |> List.map (fun p -> p.picuAdmission)
+                admissions
                 |> List.filter (fun pa ->
-                    pa.DischargeDate |>  Option.isSome &&
                     pa.PIM.PIM3Mortality |> Option.isSome
                 )
                 |> List.filter (fun pa -> pa.DischargeDate.Value.Year = yr.Value)
@@ -636,31 +710,14 @@ module Statistics =
                 |> List.sum
 
             tot.Totals.PRISM4Mortality <-
-                pats
-                |> List.map (fun p -> p.picuAdmission)
+                admissions
                 |> List.filter (fun pa ->
-                    pa.DischargeDate   |> Option.isSome &&
                     pa |> getPRISMMort |> Option.isSome
                 )
                 |> List.filter (fun pa -> pa.DischargeDate.Value.Year = yr.Value)
                 |> List.map (fun pa -> pa |> getPRISMMort |> Option.get)
                 |> List.filter (Double.IsNaN >> not)
                 |> List.sum
-
-            tot.Totals.Occupancy <- 
-                pats
-                |> List.map (fun p -> p.picuAdmission)
-                |> calculateOccupancey tot.Year
-        )
-        // PICU admission statistics
-        yrTots
-        |> List.iter (fun tot ->
-            let yr = Some tot.Year
-            let admissions = filterAdmission (dateFilter yr None) (fun d -> d.picuAdmission)
-
-            tot.Totals.Admissions <-
-                admissions
-                |> List.length
 
             tot.Totals.Gender <-
                 filterAdmission (dateFilter yr None) id
@@ -682,6 +739,21 @@ module Statistics =
                     |> List.map (fun d -> d.Group)
                 )
                 |> List.countByList grps
+
+            tot.Totals.Diagnoses <-
+                let dgs =
+                    stats.Totals.Diagnoses
+                    |> List.map fst
+                filterAdmission (dateFilter yr None) id
+                |> List.collect (fun p ->
+                    [
+                        yield! p.picuAdmission.PrimaryDiagnosis
+                        yield! p.picuAdmission.SecondaryDiagnosis
+                        yield! p.picuAdmission.Diagnoses
+                    ]
+                    |> List.map (fun d -> d.Name)
+                )
+                |> List.countByList dgs
 
             tot.Totals.Specialism <-
                 admissions
@@ -728,6 +800,12 @@ module Statistics =
                 |> List.map (fun pa -> pa.DischargeDate, pa.AdmissionDate)
                 |> stayToCount
 
+            tot.Totals.DeathMode <-
+                filterAdmission (dateFilter yr None) (fun p -> p.patient)
+                |> List.filter Patient.patientPICUDeath
+                |> List.map (fun pa -> pa.DeathMode)
+                |> countBy "Onbekend" (stats.Totals.DeathMode |> List.map fst |> List.distinct)
+
             tot.Totals.Readmission <-
                 admissions
                 |> List.map (fun pa -> 
@@ -735,7 +813,6 @@ module Statistics =
                     else "Geen heropname"
                 )
                 |> List.countByList ["Heropname"; "Geen heropname"]
-
         )
         // PICU discharge statistics
         yrTots
@@ -809,7 +886,12 @@ module Statistics =
 
                     moTot.Totals.Deaths <-
                         filterAdmitted (periodFilter yr mo) (fun d -> d.patient)
-                        |> List.filter (fun p -> p.DateOfDeath |> Option.isSome)
+                        |> List.filter Patient.patientAllTimeDeath
+                        |> List.length
+
+                    moTot.Totals.PICUDeaths <-
+                        filterAdmitted (periodFilter yr mo) (fun d -> d.picuAdmission)
+                        |> List.filter (fun pa -> pa.DischargeReason |> DataOption.EqsIdOpt "100")
                         |> List.length
 
                     moTot.Totals.Admissions <-
@@ -888,6 +970,21 @@ module Statistics =
                             |> List.map (fun d -> d.Group)
                         )
                         |> List.countByList grps
+
+                    moTot.Totals.Diagnoses <-
+                        let dgs = 
+                            stats.Totals.Diagnoses
+                            |> List.map fst
+                        filterAdmission (dateFilter yr mo) id
+                        |> List.collect (fun p ->
+                            [
+                                yield! p.picuAdmission.PrimaryDiagnosis
+                                yield! p.picuAdmission.SecondaryDiagnosis
+                                yield! p.picuAdmission.Diagnoses
+                            ]
+                            |> List.map (fun d -> d.Name)
+                        )
+                        |> List.countByList dgs
                     
                     moTot.Totals.DischargeReasons <- 
                         filterDischarged (dateFilter yr mo) (fun p -> p.picuAdmission)
@@ -931,11 +1028,11 @@ module Statistics =
         [<Literal>]
         let dayTot = "* Totaal aantal verpleegdagen: {0}"
         [<Literal>]
-        let estPIM2 = "* Geschatte PIM2 mortaliteit: {0:F0}"
+        let estPIM2 = "* Geschatte PIM2 mortaliteit: {0:F1}"
         [<Literal>]
-        let estPIM3 = "* Geschatte PIM3 mortaliteit: {0:F0}"
+        let estPIM3 = "* Geschatte PIM3 mortaliteit: {0:F1}"
         [<Literal>]
-        let estPRISM = "* Geschatte PRISM4 mortaliteit: {0:F0}"
+        let estPRISM = "* Geschatte PRISM4 mortaliteit: {0:F1}"
         [<Literal>]
         let yearTitle = "#### Totalen van {0}"
         [<Literal>]
@@ -948,7 +1045,7 @@ module Statistics =
         try
             if t > 0 then
                 StringBuilder.builder ""
-                |> StringBuilder.appendFormat "{0:F0} ({1:F0}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
+                |> StringBuilder.appendFormat "{0:F0} ({1:F1}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
                 |> StringBuilder.toString
             else
                 sprintf "%A" n 
@@ -1044,11 +1141,11 @@ module Statistics =
         |> StringBuilder.appendLineFormat Literals.adsTot [ totals.Admissions |> box ]
         |> StringBuilder.appendLineFormat Literals.disTot [ totals.Discharged |> box ]
         |> StringBuilder.appendLineFormat Literals.dayTot [ totals.PICUDays |> box ]
-        |> StringBuilder.appendLineFormat Literals.dthTot [ calc (float totals.Deaths) |> box ]
+        |> StringBuilder.appendLineFormat Literals.dthTot [ calc (float totals.PICUDeaths) |> box ]
         |> StringBuilder.appendLineFormat Literals.estPIM2 [ calc totals.PIM2Mortality |> box ]
         |> StringBuilder.appendLineFormat Literals.estPIM3 [ calc totals.PIM3Mortality |> box ]
         |> StringBuilder.newLine2
-        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de ziekenhuis mortaliteit"
+        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de PICU mortaliteit"
 
 
     let toMarkdown (stats : Statistics) =
@@ -1105,12 +1202,12 @@ module Statistics =
         |> StringBuilder.appendLineFormat Literals.adsTot [ stats.Totals.Admissions |> box ]
         |> StringBuilder.appendLineFormat Literals.disTot [ stats.Totals.Discharged |> box ]
         |> StringBuilder.appendLineFormat Literals.dayTot [ stats.Totals.PICUDays |> box ]
-        |> StringBuilder.appendLineFormat Literals.dthTot [ calcPerc stats.Totals.Patients (float stats.Totals.Deaths) |> box ]
+        |> StringBuilder.appendLineFormat Literals.dthTot [ calcPerc stats.Totals.Patients (float stats.Totals.PICUDeaths) |> box ]
         |> StringBuilder.appendLineFormat Literals.estPIM2 [ calcPerc stats.Totals.Patients stats.Totals.PIM2Mortality |> box ]
         |> StringBuilder.appendLineFormat Literals.estPIM3 [ calcPerc stats.Totals.Patients stats.Totals.PIM3Mortality |> box ]
         |> StringBuilder.appendLineFormat Literals.estPRISM [ calcPerc stats.Totals.Patients stats.Totals.PRISM4Mortality |> box ]
         |> StringBuilder.newLine2
-        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de totale mortaliteit"
+        |> StringBuilder.appendLine "De getoonde mortaliteit in bovenstaande lijst is de PICU mortaliteit"
         |> StringBuilder.newLine2
         |> StringBuilder.appendLine "##### Per jaar"
         |> fun sb ->
@@ -1129,7 +1226,7 @@ module Statistics =
                         stat.Totals.Admissions |> box
                         stat.Totals.Discharged |> box
                         stat.Totals.PICUDays   |> box
-                        calc (float stat.Totals.Deaths) |> box
+                        calc (float stat.Totals.PICUDeaths) |> box
                         calc stat.Totals.PIM2Mortality |> box
                         calc stat.Totals.PIM3Mortality |> box
                         calc stat.Totals.PRISM4Mortality |> box
@@ -1148,7 +1245,7 @@ module Statistics =
                         stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions) |> box
                         stats.YearTotals |> List.sumBy (fun s -> s.Totals.Discharged) |> box
                         stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDays)   |> box
-                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.Deaths) |> float) |> box
+                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDeaths) |> float) |> box
                         calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM2Mortality)) |> box
                         calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM3Mortality)) |> box
                         calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PRISM4Mortality)) |> box

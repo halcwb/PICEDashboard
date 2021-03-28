@@ -6,7 +6,7 @@ module Patient =
 
     open System
     open Types
-    
+    open Utils
 
     let create id 
                hosptitalNumber 
@@ -226,3 +226,48 @@ module Patient =
                 |> hospitalAdmissionToString
                 |> List.map (sprintf "%s %s" s))
 
+    
+    let patientDeath (pat : Patient) =
+        let picuDeath = 
+            pat.HospitalAdmissions
+            |> List.exists (fun ha ->
+                ha.PICUAdmissions
+                |> List.exists(fun pa ->
+                    pa.DischargeReason |> DataOption.EqsIdOpt "100"
+                )
+            )
+
+        let hospitalDeath =
+            pat.HospitalAdmissions
+            |> List.exists (fun ha ->
+                ha.DischargeDestination |> DataOption.EqsIdOpt "128"
+            )
+
+        let doa =
+            pat.HospitalAdmissions
+            |> List.exists (fun ha ->
+                ha.PICUAdmissions
+                |> List.exists (fun pa ->
+                    pa.AdmissionType = DOA
+                )
+            )
+
+        let allTime =
+            pat.PatientState = Dead ||
+            pat.DateOfDeath |> Option.isSome ||
+            pat.DeathMode.IsSome || doa || hospitalDeath || picuDeath
+
+        (doa, picuDeath, hospitalDeath, allTime)
+
+
+    let patientDOA = 
+        patientDeath >> (fun (b, _, _, _) -> b)
+
+    let patientPICUDeath = 
+        patientDeath >> (fun (_, b, _, _) -> b)
+
+    let patientHospitalDeath = 
+        patientDeath >> (fun (_, _, b, _) -> b)
+
+    let patientAllTimeDeath = 
+        patientDeath >> (fun (_, _, _, b) -> b)

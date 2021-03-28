@@ -16,3 +16,4 @@ group Client
     Feliz.MaterialUI.Pickers
     Feliz.Markdown
     Feliz.Recharts
+    Feliz.Plotly

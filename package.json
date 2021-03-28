@@ -37,10 +37,12 @@
         "@material-ui/pickers": "^3.2.10",
         "date-fns": "^2.16.1",
         "file-saver": "^2.0.2",
+        "plotly.js": "^1.58.4",
         "prop-types": "^15.7.2",
-        "react": "^16.13.1",
-        "react-dom": "^16.13.1",
+        "react": "^17.0.1",
+        "react-dom": "^17.0.1",
         "react-markdown": "^4.2.2",
+        "react-plotly.js": "^2.5.1",
         "recharts": "^1.8.5",
         "remark-toc": "^7.0.0"
     }

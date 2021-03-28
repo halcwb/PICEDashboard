@@ -19,6 +19,7 @@ group Client
     nuget Fable.React 
     nuget Thoth.Fetch 
     nuget Fable.Remoting.Client
+    nuget Feliz.Plotly
 
 group Server
     source https://api.nuget.org/v3/index.json

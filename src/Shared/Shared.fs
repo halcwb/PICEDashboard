@@ -70,6 +70,8 @@ module Literals =
     [<Literal>]
     let paragraphPIMandPRISM = "PIM en PRISM"
     [<Literal>]
+    let groupDeathMode = "Reden van Overlijden"
+    [<Literal>]
     let groupSMR = "Standardized Mortality Ratio"
     [<Literal>]
     let paragraphSMRperYear = "SMR per jaar"
@@ -102,7 +104,11 @@ module Literals =
     [<Literal>]
     let capBedDays = "Ligdagen"
     [<Literal>]
-    let capMortality = "Mortaliteit"
+    let capAllTimeMortality = "Totale Mortaliteit"
+    [<Literal>]
+    let capHospitalMortality = "Ziekenhuis Mortaliteit"
+    [<Literal>]
+    let capPICUMortality = "PICU Mortaliteit"
     [<Literal>]
     let capPIM2 = "PIM-2"
     [<Literal>]
@@ -126,6 +132,7 @@ module Types =
             PICUDays : int
             Deaths : int
             PICUDeaths : int
+            DeathMode : (string * int) list
             PIM2Mortality : float
             PIM3Mortality : float
             PRISM4Mortality : float
@@ -135,6 +142,7 @@ module Types =
             DischargeReasons : (string * int) list
             HospitalDischargeDestinations : (string * int) list
             DiagnoseGroups : (string * int) list
+            Diagnoses : (string * int) list
             Specialisme : (string * int) list
             Occupancy : (DateTime * int) list
             Cannule : (string * int) list

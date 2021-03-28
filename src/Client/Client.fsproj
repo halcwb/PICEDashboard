@@ -5,6 +5,7 @@
         <DefineConstants>FABLE_COMPILER</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
+        <None Include="paket.references" />
         <None Include="index.html" />
         <Compile Include="..\Shared\Shared.fs" />
         <Compile Include="..\Shared\Api.fs" />
@@ -30,9 +31,12 @@
         <Compile Include="Components\StackedAgeChart.fs" />
         <Compile Include="Components\StackedDischargeChart.fs" />
         <Compile Include="Components\StackedDiagnoseChart.fs" />
+        <Compile Include="Components\DiagnosesChart.fs" />
         <Compile Include="Components\Dialog.fs" />
-        <Compile Include="Components\TreeViewDrawer.fs" />
+        <Compile Include="Components\ReportMenu.fs" />
+        <Compile Include="Components\DiagnosesMenu.fs" />
         <Compile Include="Pages\Report.fs" />
+        <Compile Include="Pages\Diagnoses.fs" />
         <Compile Include="App.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>

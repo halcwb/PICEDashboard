@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net5</TargetFrameworks>
+        <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
@@ -21,6 +21,7 @@
         <None Include="Scripts\MVCheck.fsx" />
         <None Include="Scripts\PIM.fsx" />
         <None Include="Scripts\PRISM.fsx" />
+        <None Include="Scripts\Statistics.fsx" />
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="StartUp.fs" />
         <Compile Include="NullCheck.fs" />

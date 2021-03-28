@@ -29,8 +29,8 @@ module FunnelPlot =
                 |> List.map (fun tot ->
                     { 
                         name = tot.Period
-                        mortality = tot.Deaths |> float 
-                        smr = (tot.Deaths |> float) / tot.PIM2Mortality
+                        mortality = tot.PICUDeaths |> float 
+                        smr = (tot.PICUDeaths |> float) / tot.PIM2Mortality
                         reference = 1.
                         upper = 0.
                         lower = 0.
@@ -42,8 +42,8 @@ module FunnelPlot =
                 |> List.map (fun tot ->
                     { 
                         name = tot.Period
-                        mortality = tot.Deaths |> float 
-                        smr = (tot.Deaths |> float) / tot.PIM3Mortality
+                        mortality = tot.PICUDeaths |> float 
+                        smr = (tot.PICUDeaths |> float) / tot.PIM3Mortality
                         reference = 1.
                         upper = 0.
                         lower = 0.
@@ -55,8 +55,8 @@ module FunnelPlot =
                 |> List.map (fun tot ->
                     { 
                         name = tot.Period
-                        mortality = tot.Deaths |> float 
-                        smr = (tot.Deaths |> float) / tot.PRISM4Mortality
+                        mortality = tot.PICUDeaths |> float 
+                        smr = (tot.PICUDeaths |> float) / tot.PRISM4Mortality
                         reference = 1.
                         upper = 0.
                         lower = 0.

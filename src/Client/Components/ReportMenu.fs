@@ -1,6 +1,6 @@
 ﻿namespace Components
 
-module TreeViewDrawer =
+module ReportMenu =
 
     open Elmish
     open Feliz
@@ -13,9 +13,15 @@ module TreeViewDrawer =
 
     let drawerWidth = 300
 
-    type State = Filter * string
+    type State = 
+        {| 
+            filter: Filter 
+            item : string 
+            showDiagnoses : bool
+        |} 
 
     type Msg = 
+        | ShowDiagnoses
         | FilterChanged of Filter
 
     type Data =
@@ -25,15 +31,18 @@ module TreeViewDrawer =
             children : Data list
         }
 
-    let init filter = (filter, "0"), Cmd.none
+    let init filter = {| filter = filter; item = "0"; showDiagnoses = false |}, Cmd.none
 
 
-    let update dispatch msg state =
+    let update dispatch msg (state : {| filter : Filter; item: string; showDiagnoses : bool |}) =
         match msg with
         | FilterChanged f -> 
             printfn "filter changed to: %A" f
-            let state = (f, state |> snd)
+            let state = {| state with filter = f |}
             state, Cmd.ofSub (fun _ -> state |> dispatch)
+        | ShowDiagnoses ->
+            let state = {| state with showDiagnoses = true |}
+            state, Cmd.ofSub(fun _ -> state |> dispatch)
 
 
     let createData id label children =
@@ -65,14 +74,24 @@ module TreeViewDrawer =
     )
 
     let private comp =
-        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; filter : Filter; dispatch : (Filter * string) -> unit |}) ->
+        React.functionComponent("treeview", fun (props : {| data: Data list; isOpen : bool; filter : Filter; dispatch : State -> unit |}) ->
             let classes = useStyles ()
             let state, dispatch = React.useElmish(init props.filter, update props.dispatch, [||])
-            
+
+            let showDiagnoses =
+                Mui.button [
+                    prop.onClick (fun _ -> ShowDiagnoses |> dispatch)
+                    prop.children [
+                        Mui.typography [
+                            typography.color.textPrimary
+                            prop.text "ga naar diagnoses"
+                        ]
+                    ]
+                ]
+
             let dropdown =
                 let value = 
-                    state
-                    |> fst
+                    state.filter
                     |> Filter.filterToString
                     |> function 
                     | Some (_, s) -> s
@@ -101,7 +120,7 @@ module TreeViewDrawer =
                                 prop.text d.label 
                             ]
                         ]
-                        treeItem.onLabelClick (fun _ -> props.dispatch (state |> fst, d.id))
+                        treeItem.onLabelClick (fun _ -> props.dispatch ({| state with item = d.id|}))
                         treeItem.children (d.children |> create)
                     ]
                 )
@@ -128,6 +147,7 @@ module TreeViewDrawer =
                             // this makes sure that the content of the drawer is
                             // below the app bar
                             Html.div [ prop.className classes.toolbar ]
+                            showDiagnoses
                             dropdown
                             Html.div [ 
                                 prop.style [ style.marginTop 20 ]
