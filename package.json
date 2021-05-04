@@ -13,8 +13,6 @@
         "copy-webpack-plugin": "^6.1.0",
         "core-js": "^3.3.2",
         "css-loader": "^4.2.1",
-        "fable-compiler": "^2.10.2",
-        "fable-loader": "^2.1.8",
         "file-loader": "^4.2.0",
         "html-webpack-plugin": "^3.2.0",
         "remotedev": "^0.2.9",
@@ -43,7 +41,7 @@
         "react-dom": "^17.0.1",
         "react-markdown": "^4.2.2",
         "react-plotly.js": "^2.5.1",
-        "recharts": "^1.8.5",
+        "recharts": "^2.0.9",
         "remark-toc": "^7.0.0"
     }
 }

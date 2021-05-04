@@ -8,16 +8,16 @@
         "paket"
       ]
     },
-    "fake-cli": {
-      "version": "5.20.3",
-      "commands": [
-        "fake"
-      ]
-    },
     "femto": {
       "version": "0.8.6",
       "commands": [
         "femto"
+      ]
+    },
+    "fable": {
+      "version": "3.1.15",
+      "commands": [
+        "fable"
       ]
     }
   }
