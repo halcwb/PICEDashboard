@@ -32,18 +32,12 @@ group Server
     nuget Serilog.Sinks.Console    
     nuget Fable.Remoting.Giraffe
 
-group PICELib
-    source https://api.nuget.org/v3/index.json
-    framework: auto-detect
+# Need to add these because of https://github.com/fsprojects/ExcelProvider/issues/67
+    nuget ExcelDataReader
+    nuget ExcelDataReader.DataSet
 
-    nuget ExcelDataReader 3.4.1.0
-    nuget ExcelDataReader.DataSet 3.4.1.0
     nuget ExcelProvider 
     nuget Newtonsoft.Json
-    nuget FSharp.Core
-    nuget FSharp.Data copy_local: true
-    nuget FSharpComposableQuery copy_local: true
-    nuget FSharp.Data.TypeProviders copy_local: true
     nuget Markdig
     nuget Microsoft.Data.SqlClient
 

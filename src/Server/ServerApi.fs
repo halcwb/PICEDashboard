@@ -12,6 +12,9 @@ module ServerApi =
 
     module PICETypes = Informedica.PICE.Lib.Types
 
+    let cachePath = "./../../mrdm/data.cache"
+    let exportPath = "./../../mrdm/Export_PICE.xlsx"
+
     let mapTotals (totals : Statistics.Totals) =
         {
             Period = totals.Period
@@ -44,9 +47,10 @@ module ServerApi =
         }
 
     let createReport filter =
-        let path = 
+        let filterPath = 
             (sprintf "%A" filter).ToLower()
-            |> sprintf "../mrdm/%s.report.cache"
+            |> sprintf "./../../mrdm/%s.report.cache"
+
 
         let mapParagraph (p : Report.Paragraph) =
             {
@@ -70,11 +74,11 @@ module ServerApi =
                     Paragraphs = chapter.Paragraphs |> List.map mapParagraph
                 }
 
-        match path |> Cache.getCache<Report> with
+        match filterPath |> Cache.getCache<Report> with
         | Some report -> report
         | None        ->
             printfn "creating report ..."
-            Parsing.parseMRDM ()
+            Parsing.parseMRDM exportPath cachePath
             |> Result.valueOrDefault (fun _ -> [||])
             |> Array.toList
             |> Statistics.calculate filter
@@ -104,7 +108,7 @@ module ServerApi =
                     Markdown = rep.Markdown
                 }
             |> fun report ->
-                report |> Cache.cache path
+                report |> Cache.cache filterPath
                 report
 
 
@@ -161,7 +165,7 @@ module ServerApi =
             async {
                 try
                     let csv =
-                        Parsing.parseMRDM ()
+                        Parsing.parseMRDM exportPath cachePath
                         |> Export.export
                         |> fun xs ->
                             let headings = [ xs |> List.head ]

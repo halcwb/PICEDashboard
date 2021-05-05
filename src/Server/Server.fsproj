@@ -5,15 +5,16 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-      <Compile Include="..\Shared\Shared.fs" />
-      <Compile Include="..\Shared\Api.fs" />
-      <Compile Include="Env.fs" />
-      <Compile Include="Report.fs" />
-      <Compile Include="ServerApi.fs" />
-      <Compile Include="Server.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Informedica.PICE.Lib\Informedica.PICE.Lib.fsproj" />
+    <Compile Include="..\Shared\Shared.fs" />
+    <Compile Include="..\Shared\Api.fs" />
+    <Compile Include="Env.fs" />
+    <Compile Include="Report.fs" />
+    <Compile Include="ServerApi.fs" />
+    <Compile Include="Server.fs" />
+    <Reference Include="Informedica.PICE.Lib">
+      <HintPath>..\..\libs\Informedica.PICE.Lib.dll</HintPath>
+      <Private>true</Private>
+    </Reference>    
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

@@ -1,9 +1,0 @@
-group PICELib
-     ExcelDataReader 
-     ExcelDataReader.DataSet
-     ExcelProvider 
-     Newtonsoft.Json
-     FSharp.Core
-     FSharp.Data
-     Markdig
-     Microsoft.Data.SqlClient

@@ -5,3 +5,9 @@ group Server
     FSharp.Core
     Serilog.AspNetCore
     Serilog.Sinks.Console    
+    ExcelDataReader
+    ExcelDataReader.DataSet
+    ExcelProvider 
+    Newtonsoft.Json
+    Markdig
+    Microsoft.Data.SqlClient
