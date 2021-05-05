@@ -89,20 +89,9 @@ publishnuget.cmd
 
 # Add test files
 
-# Ignore generated documentation files
-/docs/content/**/*.md
-
-# Add documentation
-!/docs/
-!/docs/content/
-!/docs/tools/
-!/docs/tools/templates/
-!/docs/tools/templates/*.cshtml
-!/docs/files/
-!/docs/files/img/
-!/docs/files/img/*.png
-!/docs/files/img/*.gif
-
+# Add lib references
+!/libs/
+!/libs/*.dll
 
 # data folder and files
 !/resources/
