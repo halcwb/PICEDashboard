@@ -12,8 +12,8 @@ module ServerApi =
 
     module PICETypes = Informedica.PICE.Lib.Types
 
-    let cachePath = "./../../mrdm/data.cache"
-    let exportPath = "./../../mrdm/Export_PICE.xlsx"
+    let cachePath = "./../../data/data.cache"
+    let exportPath = "./../../data/Export_PICE.xlsx"
 
     let mapTotals (totals : Statistics.Totals) =
         {

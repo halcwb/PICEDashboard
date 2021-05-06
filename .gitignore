@@ -84,7 +84,7 @@ publishnuget.cmd
 !/src/Client/Pages/
 !/src/Informedica.PICE.Lib/
 !/src/Informedica.PICE.Lib/Scripts/
-!/mrdm/
+!/data/
 
 
 # Add test files
