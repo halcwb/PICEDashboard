@@ -24,13 +24,22 @@ Open a browser to `http://localhost:8080` to view the site.
 
 ## Deploying the application
 
-1. Bundle the client application: `npm run build` in the root folder. This will build the client application according to the specs in the `webpack.config.js`.
+1. Bundle the client application in the root folder. This will build the client application according to the specs in the `webpack.config.js`, using the following commands:
+```bash
+# make sure that the client is build
+dotnet fable src/Client/Client.fsproj
+# bundles the client
+npm run build
+```
 
 2. Build the server application using the following commands:
 ```bash
 cd src/Server
 dotnet publish -c release -o ../../deploy/Server
 ```
+
+3. Copy the data folder to the root of application folder
+
 
 The result is the following folder structure:
 > deploy/<hr>
@@ -49,3 +58,7 @@ You will find more documentation about the used F# components at the following p
 * [Saturn](https://saturnframework.org/docs/)
 * [Fable](https://fable.io/docs/)
 * [Elmish](https://elmish.github.io/elmish/)
+
+## Things to do
+- [ ] Need to nuget the libs in the libs folder, i.e. `Informedica.PICE.Lib`
+- [ ] Maybe make the data folder relative to the deploy folder (currently in the root of the repository)
