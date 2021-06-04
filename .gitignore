@@ -78,13 +78,10 @@ publishnuget.cmd
 !/src/Server/Scripts/resources/
 !/src/Server/Scripts/resources/*.csv
 !/src/Client/
+!/src/Client/public/
 !/src/Client/public/*.*
-!/src/Client/index.html
-!/src/Client/style.scss
 !/src/Client/Components/
 !/src/Client/Pages/
-!/src/Informedica.PICE.Lib/
-!/src/Informedica.PICE.Lib/Scripts/
 !/data/
 
 

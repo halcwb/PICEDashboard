@@ -12,7 +12,7 @@ function resolve(filePath) {
 var htmlPlugin =
     new HtmlWebpackPlugin({
         filename: 'index.html',
-        template: resolve('./src/Client/index.html')
+        template: resolve('./src/Client/public/index.html')
     });
 
 // Copies static assets to output directory
