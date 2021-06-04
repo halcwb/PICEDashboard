@@ -22,6 +22,25 @@ dotnet fable watch src\Client --run webpack-dev-server
 
 Open a browser to `http://localhost:8080` to view the site.
 
+## Deploying the application
+
+1. Bundle the client application: `npm run build` in the root folder. This will build the client application according to the specs in the `webpack.config.js`.
+
+2. Build the server application using the following commands:
+```bash
+cd src/Server
+dotnet publish -c release -o ../../deploy/Server
+```
+
+The result is the following folder structure:
+> deploy/<hr>
+>   Client/<hr>
+>       public/<hr>
+>   Server/<hr>
+
+
+
+
 ## SAFE Stack Documentation
 If you want to know more about the full Azure Stack and all of its components (including Azure) visit the official [SAFE documentation](https://safe-stack.github.io/docs/).
 
