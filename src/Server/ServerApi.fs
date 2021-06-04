@@ -49,7 +49,7 @@ module ServerApi =
     let createReport filter =
         let filterPath = 
             (sprintf "%A" filter).ToLower()
-            |> sprintf "./../../mrdm/%s.report.cache"
+            |> sprintf "./../../data/%s.report.cache"
 
 
         let mapParagraph (p : Report.Paragraph) =

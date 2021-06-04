@@ -20,6 +20,7 @@
 
 # Add package.json and webpackconfig
 !package.json
+!package-lock.json
 !webpack.config.js
 
 # Add command and batch files
