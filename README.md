@@ -48,6 +48,9 @@ The result is the following folder structure:
 >   Server/<hr>
 
 
+## Using IIS
+
+For IIS to run the application you need to install the [ASP.NET CORE hosting bundle](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-aspnetcore-5.0.6-windows-hosting-bundle-installer)
 
 
 ## SAFE Stack Documentation
