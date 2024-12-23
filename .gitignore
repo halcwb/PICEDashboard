@@ -17,11 +17,21 @@
 # Add fsx files
 !*.fsx
 
+# add editorconfig
+!.editorconfig
+
+# add eslint
+!.eslint.config.js
+
+# add global.json
+!global.json
 
 # Add package.json and webpackconfig
 !package.json
 !package-lock.json
-!webpack.config.js
+!vite.config.js
+!vite.config.ts
+!vite.config.mjs
 
 # Add command and batch files
 !*.cmd
@@ -50,10 +60,6 @@ publishnuget.cmd
 !paket.references
 !paket.template
 
-# Add yml files to ci on appveyor and travis
-!appveyor.yml
-!.travis.yml
-
 # Add solution file
 !*.sln
 
@@ -78,6 +84,10 @@ publishnuget.cmd
 !/src/Server/Scripts/resources/
 !/src/Server/Scripts/resources/*.csv
 !/src/Client/
+!/src/Client/*.css
+!/src/Client/*.html
+!/src/Client/assets/
+!/src/Client/assets/*
 !/src/Client/public/
 !/src/Client/public/*.*
 !/src/Client/Components/

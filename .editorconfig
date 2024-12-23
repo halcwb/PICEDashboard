@@ -1,0 +1,5 @@
+[*.{fs,fsx}]
+fsharp_multiline_bracket_style = aligned
+fsharp_align_function_signature_to_indentation = true
+fsharp_keep_max_number_of_blank_lines = 2
+
