@@ -1,47 +1,34 @@
 {
-    "private": true,
-    "scripts": {
-        "start": "webpack-dev-server",
-        "build": "webpack -p"
-    },
-    "devDependencies": {
-        "@babel/core": "^7.6.4",
-        "@babel/plugin-transform-runtime": "^7.6.2",
-        "@babel/runtime": "^7.6.3",
-        "@types/file-saver": "^2.0.1",
-        "babel-loader": "^8.0.5",
-        "copy-webpack-plugin": "^6.1.0",
-        "core-js": "^3.3.2",
-        "css-loader": "^4.2.1",
-        "file-loader": "^4.2.0",
-        "html-webpack-plugin": "^3.2.0",
-        "remotedev": "^0.2.9",
-        "resolve-url-loader": "^3.1.0",
-        "sass": "^1.26.10",
-        "sass-loader": "^9.0.3",
-        "selfsigned": "^1.10.8",
-        "style-loader": "^1.2.1",
-        "terser": "^4.3.9",
-        "webpack": "^4.41.2",
-        "webpack-cli": "^3.3.9",
-        "webpack-dev-server": "^3.11.0"
-    },
-    "dependencies": {
-        "@date-io/core": "^1.3.13",
-        "@date-io/date-fns": "^1.3.13",
-        "@material-ui/core": "^4.11.0",
-        "@material-ui/icons": "^4.9.1",
-        "@material-ui/lab": "^4.0.0-alpha.56",
-        "@material-ui/pickers": "^3.2.10",
-        "date-fns": "^2.16.1",
-        "file-saver": "^2.0.2",
-        "plotly.js": "^1.58.4",
-        "prop-types": "^15.7.2",
-        "react": "^17.0.1",
-        "react-dom": "^17.0.1",
-        "react-markdown": "^4.2.2",
-        "react-plotly.js": "^2.5.1",
-        "recharts": "^2.0.9",
-        "remark-toc": "^7.0.0"
-    }
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build-vite": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "init-assets": "[ -d dist ] || mkdir dist && cp src/Client/public/*.* dist/.",
+    "watch-server": "dotnet watch --project src/Server/Server.fsproj",
+    "start": "npm run init-assets && dotnet fable watch src/Client -o dist -e .jsx --run vite",
+    "build": "dotnet fable src/Client -o dist -e .jsx && npm run init-assets && vite build --outDir ./../deploy"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.13.0",
+    "vite": "^6.0.5",
+    "vite-plugin-fable": "^0.0.32",
+    "vite-plugin-inspect": "^0.10.6"
+  }
 }

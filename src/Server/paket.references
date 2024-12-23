@@ -1,13 +1,2 @@
-group Server
-    Saturn
-    Thoth.Json.Giraffe
-    Fable.Remoting.Giraffe
-    FSharp.Core
-    Serilog.AspNetCore
-    Serilog.Sinks.Console    
-    ExcelDataReader
-    ExcelDataReader.DataSet
-    ExcelProvider 
-    Newtonsoft.Json
-    Markdig
-    Microsoft.Data.SqlClient
+Saturn
+Fable.Remoting.Giraffe

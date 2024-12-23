@@ -1,58 +1,46 @@
-namespace Informedica.PICE.Server
+﻿module Server
 
-module Server =
-
-    open System
-    open System.IO
-    open Saturn
-    open Giraffe
-    open ServerApi
-    open Fable.Remoting.Server
-    open Fable.Remoting.Giraffe
-    open Microsoft.Extensions.DependencyInjection
-    open Microsoft.AspNetCore.Http
-
-    open Informedica.PICE.Shared.Api
-
-    Text.Encoding.RegisterProvider(Text.CodePagesEncodingProvider.Instance)
-
-    let tryGetEnv key = 
-        match Environment.GetEnvironmentVariable key with
-        | x when String.IsNullOrWhiteSpace x -> None 
-        | x -> Some x
+open System
+open Giraffe
+open Saturn
+open Fable.Remoting.Server
+open Fable.Remoting.Giraffe
 
 
-    let port =
-        "SERVER_PORT"
-        |> tryGetEnv |> Option.map uint16 |> Option.defaultValue 8085us
+let tryGetEnv key =
+    match Environment.GetEnvironmentVariable key with
+    | x when String.IsNullOrWhiteSpace x -> None
+    | x -> Some x
 
 
-    let publicPath = Path.GetFullPath "../Client/public"
+let port =
+    "SERVER_PORT" |> tryGetEnv |> Option.map uint16 |> Option.defaultValue 8085us
 
 
-    let webApi =
-        Remoting.createApi()
-        |> Remoting.fromContext (fun (ctx : HttpContext) -> ctx.GetService<ServerApi>().Build())
-        |> Remoting.withRouteBuilder routerPaths
-        |> Remoting.buildHttpHandler
+let webApi =
+    Remoting.createApi ()
+    |> Remoting.fromValue ServerApiImpl.serverApi
+    |> Remoting.withRouteBuilder Api.routerPaths
+    |> Remoting.buildHttpHandler
 
-    let webApp = choose [ webApi; GET >=> text "PICE Dashboard app. Use localhost: 8080 for the GUI" ]
 
-    let serviceConfig (services: IServiceCollection) =
-        services
-          .AddSingleton<ServerApi>()
-          .AddLogging()
-      
+let webApp =
+    choose [ webApi; GET >=> text "PICE Dashboard App. Use localhost: 8080 for the GUI" ]
 
-    let application = application {
-        url ("http://0.0.0.0:" + port.ToString() + "/")
+
+let application =
+    application {
+        url ("http://*:" + port.ToString() + "/")
+        use_mime_types [ ".svg", "image/svg+xml"; ".png", "image/png" ]
+        use_static "public" //publicPath
         use_router webApp
-        use_static publicPath
+        memory_cache
         use_gzip
-        use_iis
-    
-        service_config serviceConfig
-        webhost_config Env.configureHost
+    //use_iis
+
+    //service_config configureServices
+    //host_config Env.configureHost
     }
 
-    run application
+
+run application
