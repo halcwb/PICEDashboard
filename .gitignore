@@ -4,6 +4,7 @@
 # Add .gitignore and .gitattributes
 !.gitignore
 !.gitattributes
+!.fantomasignore
 
 # Add license
 !LICENSE.txt

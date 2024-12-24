@@ -3,11 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "init-assets": "[ -d dist ] || mkdir dist && cp public/*.* dist/.",
-    "dev": "npm run init-assets && dotnet fable watch . -o dist -e .jsx --run vite",
-    "build": "dotnet fable . -o dist -e .jsx && npm run init-assets && vite build"
-},
+  "scripts": {},
   "dependencies": {
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.2.1",

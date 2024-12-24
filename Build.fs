@@ -16,43 +16,41 @@ let serverTestsPath = Path.getFullName "tests/Server"
 let clientTestsPath = Path.getFullName "tests/Client"
 
 
-Target.create "Clean" (fun _ ->
+Target.create "clean" (fun _ ->
     Shell.cleanDir deployPath
     run dotnet [ "fable"; "clean"; "--yes" ] clientPath // Delete *.fs.js files created by Fable
 )
 
 
-Target.create "RestoreClientDependencies" (fun _ -> run npm [ "ci" ] clientPath)
+Target.create "restoreclient" (fun _ -> run npm [ "ci" ] clientPath)
 
 
-Target.create "Bundle" (fun _ ->
+Target.create "bundle" (fun _ ->
     [
         "server", dotnet [ "publish"; "-c"; "Release"; "-o"; deployPath ] serverPath
-        "client", npm [ "run"; "build" ] clientPath
+        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "-e"; ".jsx"; "--run"; "npx"; "vite"; "build"; "--emptyOutDir" ] clientPath
     ]
-    |> runParallel
-
-    Shell.cp_r (Path.combine clientPath "dist") deployPath)
+    |> runParallel)
 
 
 Target.create "Build" (fun _ -> run dotnet [ "build"; sln ] ".")
 
 
-Target.create "Run" (fun _ ->
+Target.create "run" (fun _ ->
     [
         "server", dotnet [ "run"; "--no-restore" ] serverPath
-        "client", npm [ "run"; "dev" ] clientPath
+        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "-e"; ".jsx"; "--run"; "npx"; "vite" ] clientPath
     ]
     |> runParallel)
 
 
-Target.create "RunTestsHeadless" (fun _ ->
+Target.create "testheadless" (fun _ ->
     run dotnet [ "run" ] serverTestsPath
     run dotnet [ "fable"; "-o"; "output" ] clientTestsPath
 //    run npx [ "mocha"; "output" ] clientTestsPath
 )
 
-Target.create "WatchRunTests" (fun _ ->
+Target.create "watchtests" (fun _ ->
     [
         "server", dotnet [ "watch"; "run"; "--no-restore" ] serverTestsPath
         "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "--run"; "npx"; "vite" ] clientTestsPath
@@ -67,11 +65,11 @@ open Fake.Core.TargetOperators
 
 let dependencies =
     [
-        "Clean" ==> "RestoreClientDependencies" ==> "Bundle"
-        "Clean" ==> "RestoreClientDependencies" ==> "Build" ==> "Run"
+        "clean" ==> "restoreclient" ==> "bundle"
+        "clean" ==> "restoreclient" ==> "build" ==> "run"
 
-        "RestoreClientDependencies" ==> "Build" ==> "RunTestsHeadless"
-        "RestoreClientDependencies" ==> "Build" ==> "WatchRunTests"
+        "restoreclient" ==> "build" ==> "testheadless"
+        "restoreclient" ==> "build" ==> "watchtests"
     ]
 
 

@@ -1,0 +1,4 @@
+# ignore fable
+.fable/
+dist/
+fable_modules/

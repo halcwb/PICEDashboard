@@ -8,7 +8,9 @@ console.log("proxying to", proxyTarget);
 
 // https://vite.dev/config/
 export default defineConfig({
-  root : "dist",
+  build: {
+    outDir: "../../deploy/public",
+  },
   server: {
     proxy: {
         // redirect requests that start with /api/ to the server on port 8085

@@ -19,11 +19,7 @@ jobs:
     - name: Build
       if: runner.os != 'Windows'
       run: |
-        dotnet tool restore
-        dotnet build -c Release
-        cd src/Client
-        npm install
-        npm run build
+        dotnet run bundle
       env:
         # Work around https://github.com/actions/setup-dotnet/issues/29
         # DOTNET_ROOT: ${{ runner.tool_cache }}/dncs/${{ matrix.dotnet }}/x64
@@ -31,11 +27,7 @@ jobs:
     - name: Build
       if: runner.os == 'Windows'
       run: |
-        dotnet tool restore
-        dotnet build -c Release
-        cd src/Client
-        npm install
-        npm run build
+        dotnet run bundle
       env:
         # Work around https://github.com/actions/setup-dotnet/issues/29
         # DOTNET_ROOT: ${{ runner.tool_cache }}/dncs/${{ matrix.dotnet }}/x64

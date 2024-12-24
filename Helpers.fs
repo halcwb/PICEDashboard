@@ -6,23 +6,32 @@ let initializeContext () =
     let execContext = Context.FakeExecutionContext.Create false "Build.fs" []
     Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
 
+
 module Proc =
+    
+    
     module Parallel =
+    
+    
         open System
 
+        
         let locker = obj ()
 
-        let colors = [|
-            ConsoleColor.Blue
-            ConsoleColor.Yellow
-            ConsoleColor.Magenta
-            ConsoleColor.Cyan
-            ConsoleColor.DarkBlue
-            ConsoleColor.DarkYellow
-            ConsoleColor.DarkMagenta
-            ConsoleColor.DarkCyan
-        |]
+        
+        let colors =
+            [|
+                ConsoleColor.Blue
+                ConsoleColor.Yellow
+                ConsoleColor.Magenta
+                ConsoleColor.Cyan
+                ConsoleColor.DarkBlue
+                ConsoleColor.DarkYellow
+                ConsoleColor.DarkMagenta
+                ConsoleColor.DarkCyan
+            |]
 
+        
         let print color (colored: string) (line: string) =
             lock locker (fun () ->
                 let currentColor = Console.ForegroundColor
@@ -31,6 +40,7 @@ module Proc =
                 Console.ForegroundColor <- currentColor
                 Console.WriteLine line)
 
+        
         let onStdout index name (line: string) =
             let color = colors[index % colors.Length]
 
@@ -39,17 +49,20 @@ module Proc =
             else if String.isNotNullOrEmpty line then
                 print color $"{name}: " line
 
+        
         let onStderr name (line: string) =
             let color = ConsoleColor.Red
 
             if isNull line |> not then
                 print color $"{name}: " line
 
+        
         let redirect (index, (name, createProcess)) =
             createProcess
             |> CreateProcess.redirectOutputIfNotRedirected
             |> CreateProcess.withOutputEvents (onStdout index name) (onStderr name)
 
+        
         let printStarting indexed =
             for index, (name, c: CreateProcess<_>) in indexed do
                 let color = colors[index % colors.Length]
@@ -58,6 +71,7 @@ module Proc =
                 let args = c.Command.Arguments.ToStartInfo
                 print color $"{name}: {wd}> {exe} {args}" ""
 
+        
         let run cs =
             cs
             |> Seq.toArray
@@ -68,6 +82,7 @@ module Proc =
             |> Array.map redirect
             |> Array.Parallel.map Proc.run
 
+
 let createProcess exe args dir =
     // Use `fromRawCommand` rather than `fromRawCommandLine`, as its behaviour is less likely to be misunderstood.
     // See https://github.com/SAFE-Stack/SAFE-template/issues/551.
@@ -75,7 +90,9 @@ let createProcess exe args dir =
     |> CreateProcess.withWorkingDirectory dir
     |> CreateProcess.ensureExitCode
 
+
 let dotnet args dir = createProcess "dotnet" args dir
+
 
 let createProcessFromPath processName args dir =
     let path =
@@ -88,20 +105,22 @@ let createProcessFromPath processName args dir =
 
     createProcess path args dir
 
+
 let npm args dir = createProcessFromPath "npm" args dir
 
 let npx args dir = createProcessFromPath "npx" args dir
 
 let run proc arg dir = proc arg dir |> Proc.run |> ignore
 
+
 let runParallel processes =
     processes |> Proc.Parallel.run |> ignore
+
 
 let runOrDefault args =
     try
         match args with
-        | [| list |] when list = "list" ->
-                Target.listAvailable ()
+        | [| list |] when list = "list" -> Target.listAvailable ()
         | [| target |] -> Target.runOrDefault target
         | _ -> Target.runOrDefault "Run"
 
