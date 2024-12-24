@@ -5,9 +5,8 @@ import react from '@vitejs/plugin-react'
 import fable from "vite-plugin-fable"
 import Inspect from "vite-plugin-inspect"
 
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const root = path.join(currentDir, "src/Client");
-const fsproj = path.join(root, "Client.fsproj");
+const root = path.dirname(fileURLToPath(import.meta.url));
+const fsproj = path.resolve(root, "./Client.fsproj");
 console.log("transpilling fsproj", fsproj);
 
 const proxyPort = process.env.SERVER_PROXY_PORT || "8085";

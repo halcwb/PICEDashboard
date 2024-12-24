@@ -61,11 +61,54 @@ let View () =
 
     Logging.log "Hello World" state.HelloWorld
 
+    let data =
+        [|
+            {|
+                x = [| 1; 2; 3 |]
+                y = [| 2; 1; 2 |]
+                ``type`` = "scatter"
+                ``mode`` = "lines+markers"
+                marker = {| color = "red" |}
+            |}
+            |> box
+            {|
+                ``type`` = "bar"
+                x = [| 1; 2; 3 |]
+                y = [| 2; 1; 2 |]
+            |}
+            |> box
+        |]
+
+    let layout =
+        {|
+            width = 320
+            height = 240
+            title = "A Fancy Plot!"
+        |}
+
+    let sx = {| flexGrow = 1 |}
+
     JSX.jsx
-        """
-        <div>
-            <h1>Hello World</h1>
-        </div>
+        $"""
+        import CssBaseline from '@mui/material/CssBaseline';
+        import Typography from '@mui/material/Typography';
+        import Container from '@mui/material/Container';
+        import Box from '@mui/material/Box';
+        import React from 'react';
+        import Plot from 'react-plotly.js';
+        
+        <React.Fragment>
+            <CssBaseline enableColorScheme />
+            <Container>
+                <Typography variant="h3" component="div" sx={sx}>
+                    Hello World
+                </Typography>
+                <Plot
+                    data= {data}
+                    layout= {layout}
+                />            
+            </Container>
+        </React.Fragment>
     """
 
 

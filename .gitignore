@@ -21,7 +21,7 @@
 !.editorconfig
 
 # add eslint
-!.eslint.config.js
+!eslint.config.js
 
 # add global.json
 !global.json
@@ -86,8 +86,6 @@ publishnuget.cmd
 !/src/Client/
 !/src/Client/*.css
 !/src/Client/*.html
-!/src/Client/assets/
-!/src/Client/assets/*
 !/src/Client/public/
 !/src/Client/public/*.*
 !/src/Client/Components/

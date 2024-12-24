@@ -5,17 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build-vite": "vite build",
+    "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "init-assets": "[ -d dist ] || mkdir dist && cp src/Client/public/*.* dist/.",
-    "watch-server": "dotnet watch --project src/Server/Server.fsproj",
-    "start": "npm run init-assets && dotnet fable watch src/Client -o dist -e .jsx --run vite",
-    "build": "dotnet fable src/Client -o dist -e .jsx && npm run init-assets && vite build --outDir ./../deploy"
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.2.1",
+    "@mui/material": "^6.2.1",
+    "plotly.js": "^2.35.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-plotly.js": "^2.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
