@@ -14,7 +14,17 @@
 # Add md files
 !*.md
 
-# Add fsx files
+# Add solution file
+!*.sln
+
+# Add fsharp project files
+!*.fsproj
+
+# Add configurarion files
+!*app.config
+
+# Add fsharp source files
+!*.fs
 !*.fsx
 
 # add editorconfig
@@ -60,18 +70,13 @@ publishnuget.cmd
 !paket.references
 !paket.template
 
-# Add solution file
-!*.sln
 
-# Add fsharp project files
-!*.fsproj
+# Add github actions
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
+!.github/ISSUE_TEMPLATE/
 
-# Add configurarion files
-!*app.config
-
-# Add fsharp source files
-!*.fs
-!*.fsx
 
 # Add source files
 !/scripts/

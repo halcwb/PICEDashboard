@@ -4,11 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+    "init-assets": "[ -d dist ] || mkdir dist && cp public/*.* dist/.",
+    "dev": "npm run init-assets && dotnet fable watch . -o dist -e .jsx --run vite",
+    "build": "dotnet fable . -o dist -e .jsx && npm run init-assets && vite build"
+},
   "dependencies": {
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.2.1",
@@ -29,7 +28,6 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.13.0",
     "vite": "^6.0.5",
-    "vite-plugin-fable": "^0.0.32",
-    "vite-plugin-inspect": "^0.10.6"
+    "vite-plugin-inspect": "^0.10.6"  
   }
 }
