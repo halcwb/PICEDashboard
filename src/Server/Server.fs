@@ -43,4 +43,5 @@ let application =
     }
 
 
+System.Console.WriteLine("Starting server on port " + port.ToString())
 run application

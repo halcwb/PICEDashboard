@@ -1,7 +1,8 @@
-Feliz
-Feliz.Router
-FSharp.Core
-Fable.SimpleHTTP
-Fable.Elmish.React
-Fable.Remoting.Client
-Fable.React.UseElmish
+group Client
+    Feliz
+    Feliz.Router
+    FSharp.Core
+    Fable.SimpleHTTP
+    Fable.Elmish.React
+    Fable.Remoting.Client
+    Fable.React.UseElmish

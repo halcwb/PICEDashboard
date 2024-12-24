@@ -1,13 +1,33 @@
-source https://www.nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 framework: 9.0
 storage: none
 
-nuget Fable.Elmish.React
-nuget Fable.React.UseElmish
-nuget Fable.Remoting.Client
-nuget Fable.Remoting.Giraffe
-nuget Fable.SimpleHTTP
-nuget Feliz.Router
 nuget FSharp.Core
-nuget Feliz 2.9.0
-nuget Saturn
+
+group Build
+    source https://api.nuget.org/v3/index.json
+    framework: 9.0
+    storage: none
+
+    nuget Fake.Core.Target
+    nuget Fake.IO.FileSystem
+
+group Client
+    source https://api.nuget.org/v3/index.json
+    framework: 9.0
+    storage: none
+
+    nuget Fable.Elmish.React
+    nuget Fable.React.UseElmish
+    nuget Fable.Remoting.Client
+    nuget Fable.SimpleHTTP
+    nuget Feliz.Router
+    nuget Feliz
+
+group Server
+    source https://api.nuget.org/v3/index.json
+    framework: 9.0
+    storage: none
+
+    nuget Fable.Remoting.Giraffe
+    nuget Saturn
