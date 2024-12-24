@@ -28,12 +28,12 @@ Target.create "restoreclient" (fun _ -> run npm [ "ci" ] clientPath)
 Target.create "bundle" (fun _ ->
     [
         "server", dotnet [ "publish"; "-c"; "Release"; "-o"; deployPath ] serverPath
-        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "-e"; ".jsx"; "--run"; "npx"; "vite"; "build"; "--emptyOutDir" ] clientPath
+        "client", dotnet [ "fable"; "-o"; "output"; "-s"; "-e"; ".jsx"; "--run"; "npx"; "vite"; "build"; "--emptyOutDir" ] clientPath
     ]
     |> runParallel)
 
 
-Target.create "Build" (fun _ -> run dotnet [ "build"; sln ] ".")
+Target.create "build" (fun _ -> run dotnet [ "build"; sln ] ".")
 
 
 Target.create "run" (fun _ ->
@@ -46,14 +46,14 @@ Target.create "run" (fun _ ->
 
 Target.create "testheadless" (fun _ ->
     run dotnet [ "run" ] serverTestsPath
-    run dotnet [ "fable"; "-o"; "output" ] clientTestsPath
+    run dotnet [ "fable"; "-o"; "output"; "-e"; ".jsx" ] clientTestsPath
 //    run npx [ "mocha"; "output" ] clientTestsPath
 )
 
 Target.create "watchtests" (fun _ ->
     [
         "server", dotnet [ "watch"; "run"; "--no-restore" ] serverTestsPath
-        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "--run"; "npx"; "vite" ] clientTestsPath
+        "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "-e"; ".jsx"; "--run"; "npx"; "vite" ] clientTestsPath
     ]
     |> runParallel)
 
