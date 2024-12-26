@@ -1,9 +1,5 @@
 ﻿module App
 
-open Fable.Core
-open Browser
-open Fable.React
-
 
 module private Elmish =
 
@@ -48,11 +44,31 @@ module private Elmish =
         | HelloWorld(Finished value) ->
             Logging.log "Hello World Finished" value
 
-            { model with
-                HelloWorld = Resolved value
+            {
+                model with
+                    HelloWorld = Resolved value
             },
             Cmd.none
         | NoOp -> failwith "Not Implemented"
+
+
+open Fable.Core
+open Browser
+open Fable.React
+
+open Elmish
+
+
+[<Literal>]
+let private themeDef =
+    """
+responsiveFontSizes(createTheme(), { factor : 2 })
+"""
+
+
+[<Import("createTheme", from = "@mui/material/styles")>]
+[<Emit(themeDef)>]
+let private theme: obj = jsNative
 
 
 [<JSX.Component>]
@@ -61,54 +77,87 @@ let View () =
 
     Logging.log "Hello World" state.HelloWorld
 
-    let data =
-        [|
-            {|
-                x = [| 1; 2; 3 |]
-                y = [| 2; 1; 2 |]
-                ``type`` = "scatter"
-                ``mode`` = "lines+markers"
-                marker = {| color = "red" |}
-            |}
-            |> box
-            {|
-                ``type`` = "bar"
-                x = [| 1; 2; 3 |]
-                y = [| 2; 1; 2 |]
-            |}
-            |> box
-        |]
+    let xs = [| 1..5 |]
+    let ys = [| 2..2..8 |]
 
-    let layout =
-        {|
-            width = 320
-            height = 240
-            title = "A Fancy Plot!"
+    let data = [|
+        for i in 0..4 do
+            {| name = string i; uv = i * i |}
+    |]
+
+    let typoSx = {| flexGrow = 1 |}
+
+    let contSx = {| height = "100vh"; mt = 3 |}
+
+    let stckSx = {|
+        display = "flex"
+        justifyContent = "center"
+        alignItems = "center"
+        height = "87%"
+    |}
+
+    let titleBar =
+        Components.TitleBar.View {|
+            title = "PICE Dashboard"
+            toggleSideMenu = (fun () -> ())
         |}
 
-    let sx = {| flexGrow = 1 |}
+    let sideMenu =
+        Components.SideMenu.View(
+            {|
+                anchor = "left"
+                isOpen = false
+                toggle = fun () -> ()
+                menuClick = fun _ -> ()
+                items = [| (None, "Home", false); (None, "About", false); (None, "Contact", false) |]
+            |}
+        )
+
+    let margin = {|
+        top = 5
+        right = 5
+        bottom = 5
+        left = 0
+    |}
 
     JSX.jsx
         $"""
+        import {{ ThemeProvider }} from '@mui/material/styles';
+        import {{ responsiveFontSizes }} from '@mui/material/styles';
         import CssBaseline from '@mui/material/CssBaseline';
         import Typography from '@mui/material/Typography';
         import Container from '@mui/material/Container';
-        import Box from '@mui/material/Box';
+        import Stack from '@mui/material/Stack';
         import React from 'react';
-        import Plot from 'react-plotly.js';
-        
-        <React.Fragment>
+        import {{ LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip }} from 'recharts';
+
+        <React.StrictMode>
             <CssBaseline enableColorScheme />
-            <Container>
-                <Typography variant="h3" component="div" sx={sx}>
-                    Hello World
-                </Typography>
-                <Plot
-                    data= {data}
-                    layout= {layout}
-                />            
-            </Container>
-        </React.Fragment>
+            <ThemeProvider theme={theme}>
+                <React.Fragment>
+                    <React.Fragment>
+                        {titleBar}
+                    </React.Fragment>
+                    <React.Fragment>
+                        {sideMenu}
+                    </React.Fragment>
+                    <Container sx={contSx}>
+                        <Stack sx={stckSx}>
+                            <Typography variant="h5" sx={typoSx}>
+                                Hello World
+                            </Typography>
+                            <LineChart width={500} height={300} data={data} margin={margin}>
+                                <Line type="monotone" dataKey="uv" stroke="#8884d8" />
+                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip />
+                            </LineChart>
+                        </Stack>
+                    </Container>
+                </React.Fragment>
+            </ThemeProvider>
+        </React.StrictMode>
     """
 
 

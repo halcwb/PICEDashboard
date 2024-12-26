@@ -8,7 +8,12 @@
     <Compile Include="./../Shared/Api.fs" />
     <Compile Include="Extensions.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Mui.fs" />
+    <Compile Include="./Components/SelectableList.fs" />
+    <Compile Include="./Components/TitleBar.fs" />
+    <Compile Include="./Components/SideMenu.fs" />
     <Compile Include="App.fs" />
+    <Folder Include="Components\" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
