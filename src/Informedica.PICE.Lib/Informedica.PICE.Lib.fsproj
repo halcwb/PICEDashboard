@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="StartUp.fs" />
+    <Compile Include="NullCheck.fs" />
+    <Compile Include="String.fs" />
+    <Compile Include="StringBuilder.fs" />
+    <Compile Include="File.fs" />
+    <Compile Include="Cache.fs" />
+    <Compile Include="Markdown.fs" />
+    <Compile Include="Result.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Database.fs" />
+    <Compile Include="MRDM.fs" />
+    <Compile Include="Options.fs" />
+    <Compile Include="Patient.fs" />
+    <Compile Include="Validation.fs" />
+    <Compile Include="Parsing.fs" />
+    <Compile Include="Statistics.fs" />
+    <Compile Include="Export.fs" />
+    <None Include="Scripts/Scripts.fsx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Informedica.Utils.Lib\Informedica.Utils.Lib.fsproj" />
+    <ProjectReference Include="..\Informedica.PimPrism.Lib\Informedica.PimPrism.Lib.fsproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

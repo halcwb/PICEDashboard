@@ -1,0 +1,6 @@
+group Informedica.PICE.Lib
+    FSharp.Core
+    Microsoft.Data.SqlClient
+    Newtonsoft.Json
+    Markdig
+    ExcelProvider

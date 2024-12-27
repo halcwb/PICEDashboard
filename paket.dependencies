@@ -31,3 +31,23 @@ group Server
 
     nuget Fable.Remoting.Giraffe
     nuget Saturn
+    
+group Informedica.PICE.Lib
+    source https://api.nuget.org/v3/index.json
+    framework: 9.0
+    storage: none
+
+    nuget Microsoft.Data.SqlClient
+    nuget Newtonsoft.Json   
+    nuget Markdig
+    nuget ExcelProvider
+
+group Informedica.Utils.Lib
+    source https://api.nuget.org/v3/index.json
+    framework: 9.0
+    storage: none
+
+    nuget MathNet.Numerics.FSharp
+    nuget Newtonsoft.Json   
+    nuget Unquote
+
