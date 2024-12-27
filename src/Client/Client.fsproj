@@ -5,6 +5,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="./../Shared/Shared.fs" />
     <Compile Include="./../Shared/Api.fs" />
     <Compile Include="Extensions.fs" />
     <Compile Include="Utils.fs" />

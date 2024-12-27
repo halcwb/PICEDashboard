@@ -5,6 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="./../Shared/Shared.fs" />
     <Compile Include="./../Shared/Api.fs" />
     <Compile Include="ServerApiImpl.fs" />
     <Compile Include="Server.fs" />

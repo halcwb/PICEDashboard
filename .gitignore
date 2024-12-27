@@ -105,6 +105,7 @@ publishnuget.cmd
 !/src/Informedica.PimPrism.Lib/
 !/src/Informedica.PimPrism.Lib/Scripts
 !/src/Informedica.Utils.Lib/
+!/src/Informedica.Utils.Lib/BCL/
 !/src/Informedica.Utils.Lib/Scripts/
 
 # Add test files
