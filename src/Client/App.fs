@@ -8,7 +8,7 @@ module private Elmish =
     open Feliz
     open Feliz.Router
     open Fable.Remoting.Client
-
+    open Fable.Core
     open Shared
 
 
@@ -207,37 +207,12 @@ module private Elmish =
         | NoOp -> failwith "Not Implemented"
 
 
-    let private createData id label children = {
-        id = id
-        label = label
-        children = children
-
-    }
-
-
-    let private mapToTreeData (sections: Section list) =
-        let rec mapChapter s (chapter: Chapter) =
-            let paragraphs =
-                chapter.Paragraphs
-                |> List.mapi (fun i p -> createData (sprintf "%s.P|%i" s i) p.Title [])
-
-            chapter.Chapters
-            |> List.mapi (fun i chapter -> chapter |> mapChapter (sprintf "%s.C|%i" s i))
-            |> List.append paragraphs
-            |> createData s chapter.Title
-
-        sections
-        |> List.mapi (fun i section ->
-            section.Chapters
-            |> List.mapi (fun i2 chapter -> chapter |> mapChapter (sprintf "%i.C|%i" i i2))
-            |> createData (string i) section.Title)
-
-
 open Fable.Core
 open Browser
 open Fable.React
 
 open Elmish
+open Shared
 
 
 [<Literal>]
@@ -258,17 +233,118 @@ let View () =
 
     Logging.log "Hello World" state.HelloWorld
 
-    let xs = [| 1..5 |]
-    let ys = [| 2..2..8 |]
+    let createData id label children = {
+        id = id
+        label = label
+        children = children
 
-    let data = [|
-        for i in 0..4 do
-            {| name = string i; uv = i * i |}
-    |]
+    }
 
-    let typoSx = {| flexGrow = 1 |}
+    let mapToTreeData (sections: Section list) =
+        let rec mapChapter s (chapter: Chapter) =
+            let paragraphs =
+                chapter.Paragraphs
+                |> List.mapi (fun i p -> createData (sprintf "%s.P|%i" s i) p.Title [])
 
-    let contSx = {| height = "100vh"; mt = 3 |}
+            chapter.Chapters
+            |> List.mapi (fun i chapter -> chapter |> mapChapter (sprintf "%s.C|%i" s i))
+            |> List.append paragraphs
+            |> createData s chapter.Title
+
+        sections
+        |> List.mapi (fun i section ->
+            section.Chapters
+            |> List.mapi (fun i2 chapter -> chapter |> mapChapter (sprintf "%i.C|%i" i i2))
+            |> createData (string i) section.Title)
+
+    let display showProgress (s: string) =
+
+        if showProgress then
+            JSX.jsx
+                $"""
+                import LinearProgress from '@mui/material/LinearProgress';
+                <LinearProgress>{s}</LinearProgress>
+                """
+        else
+            JSX.jsx
+                $"""
+                import Typography from '@mui/material/Typography';
+
+                <React.Fragment>
+                    <Typography variant="h6" gutterBottom >
+                        {s}
+                    </Typography>
+                </React.Fragment>
+                """
+
+    let createMainContent (state: Model) displayTypeAck displayType menuIsOpen filter treeItem dispatch =
+        if state.ShowDiagnoses then
+            match state.Report with
+            | HasNotStartedYet -> display true "De boel wordt opgestart ..."
+            | InProgress -> display true "Het rapport wordt opgehaald ..."
+            | Resolved(Error e) -> display false $"Oeps:\n%s{e}"
+            | Resolved(Ok report) -> display false "Diagnoses"
+        (*
+                    let dgs = report.Sections |> List.head |> (fun section -> section.Totals.Diagnoses)
+
+                    fun
+                        (o:
+                            {|
+                                showReport: bool
+                                selected: string list
+                            |}) ->
+                        if o.showReport then
+                            ShowReport |> dispatch
+                        else
+                            o.selected |> DiagnosesSelected |> dispatch
+                    |> DiagnosesMenu.render menuIsOpen dgs state.SelectedDiagnoses
+
+                    Pages.Diagnoses.render state.DisplayType state.SelectedDiagnoses report
+                    *)
+
+        else
+            match state.Report with
+            | HasNotStartedYet -> display true "De boel wordt opgestart ..."
+            | InProgress -> display true "Het rapport wordt opgehaald ..."
+            | Resolved(Ok report) -> display false "Het rapport is klaar"
+
+            (*
+                let treeData = report.Sections |> mapToTreeData
+
+                fun
+                    (o:
+                        {|
+                            filter: Filter
+                            item: string
+                            showDiagnoses: bool
+                        |}) ->
+                    if o.showDiagnoses then
+                        ShowDiagnoses |> dispatch
+                    else
+                        (o.filter, o.item) |> ReportFilterItemSelected |> dispatch
+                |> ReportMenu.render treeData menuIsOpen filter
+
+                Html.div [
+                    prop.style [ style.marginLeft 150 ]
+                    prop.children [
+                        if displayTypeAck then
+                            Pages.Report.render displayType treeItem report
+                        else
+                            let content =
+                                match displayType with
+                                | Print -> "Het rapport toont nu een print versie"
+                                | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
+                                | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
+
+                            Dialog.render "### Verandering van rapport type" content (fun _ ->
+                                DisplayTypeAcknowledged |> dispatch)
+
+                    ]
+                ]
+                *)
+            | Resolved(Error err) -> $"Oeps er ging wat mis:\n%s{err}" |> display false
+
+    let contSx = {| height = "100vh" |}
 
     let stckSx = {|
         display = "flex"
@@ -294,12 +370,24 @@ let View () =
             |}
         )
 
-    let margin = {|
-        top = 5
-        right = 5
-        bottom = 5
-        left = 0
-    |}
+    let buttonsL = [ Mui.Icons.Menu, (fun _ -> SideMenuOpenToggled |> dispatch) ]
+
+
+    let buttonsR = [ Mui.Icons.PublishIcon, (fun _ -> PatientCSVRequested |> dispatch) ]
+
+    let content =
+        if state.RequestPatients then
+            let s = "Patienten worden opgehaald ..."
+            JSX.jsx $"""<React.Fragment>{s}</React.Fragment>""" //props.dispatch |> createUploadDialog
+        else
+            createMainContent
+                state
+                state.DisplayTypeAcknowledged
+                state.DisplayType
+                state.SideMenuIsOpen
+                state.SelectedFilter
+                state.SelectedTreeItem
+                dispatch
 
     JSX.jsx
         $"""
@@ -314,26 +402,17 @@ let View () =
 
         <React.StrictMode>
             <CssBaseline enableColorScheme />
-            <ThemeProvider theme={theme}>
+            <ThemeProvider theme={theme} >
                 <React.Fragment>
-                    <React.Fragment>
-                        {titleBar}
-                    </React.Fragment>
-                    <React.Fragment>
-                        {sideMenu}
-                    </React.Fragment>
-                    <Container sx={contSx}>
+                    <Container sx={contSx} disableGutters={true} component="main" maxWidth="xl" > 
+                        <React.Fragment>
+                            {titleBar}
+                        </React.Fragment>
+                        <React.Fragment>
+                            {sideMenu}
+                        </React.Fragment>
                         <Stack sx={stckSx}>
-                            <Typography variant="h5" sx={typoSx}>
-                                Hello World
-                            </Typography>
-                            <LineChart width={500} height={300} data={data} margin={margin}>
-                                <Line type="monotone" dataKey="uv" stroke="#8884d8" />
-                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                            </LineChart>
+                            {content}
                         </Stack>
                     </Container>
                 </React.Fragment>

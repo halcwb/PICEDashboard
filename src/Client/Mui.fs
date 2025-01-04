@@ -369,6 +369,11 @@ module Icons =
         <CalculateIcon/>
     """
 
+    let PublishIcon =
+        JSX.jsx """
+        import PublishIcon from '@mui/icons-material/Publish';
+        <PublishIcon />
+        """
 
 type Color = {|
     ``50``: string
