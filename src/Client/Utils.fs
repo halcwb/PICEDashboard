@@ -9,6 +9,24 @@ module String =
     let replace (oldS: string) newS (s: string) = s.Replace(oldS, newS)
 
 
+    let split (s: string) = s.Split('.') |> Array.toList
+
+    let split2 (s: String) = s.Split('|') |> Array.toList
+
+
+module Math =
+
+    let round (n: int) (c: float) = Math.Round(c, n)
+
+    let calcAverage getTotal getCount tots =
+        let t =
+            tots
+            |> List.sumBy (fun t -> (t |> getCount) / (t |> getTotal |> float))
+            |> float
+
+        t / (tots |> List.length |> float)
+
+
 open Fable.Core
 open Feliz
 open Browser.Types

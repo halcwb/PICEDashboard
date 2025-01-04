@@ -8,17 +8,17 @@ let initializeContext () =
 
 
 module Proc =
-    
-    
+
+
     module Parallel =
-    
-    
+
+
         open System
 
-        
+
         let locker = obj ()
 
-        
+
         let colors =
             [|
                 ConsoleColor.Blue
@@ -31,7 +31,7 @@ module Proc =
                 ConsoleColor.DarkCyan
             |]
 
-        
+
         let print color (colored: string) (line: string) =
             lock locker (fun () ->
                 let currentColor = Console.ForegroundColor
@@ -40,7 +40,7 @@ module Proc =
                 Console.ForegroundColor <- currentColor
                 Console.WriteLine line)
 
-        
+
         let onStdout index name (line: string) =
             let color = colors[index % colors.Length]
 
@@ -49,20 +49,20 @@ module Proc =
             else if String.isNotNullOrEmpty line then
                 print color $"{name}: " line
 
-        
+
         let onStderr name (line: string) =
             let color = ConsoleColor.Red
 
             if isNull line |> not then
                 print color $"{name}: " line
 
-        
+
         let redirect (index, (name, createProcess)) =
             createProcess
             |> CreateProcess.redirectOutputIfNotRedirected
             |> CreateProcess.withOutputEvents (onStdout index name) (onStderr name)
 
-        
+
         let printStarting indexed =
             for index, (name, c: CreateProcess<_>) in indexed do
                 let color = colors[index % colors.Length]
@@ -71,7 +71,7 @@ module Proc =
                 let args = c.Command.Arguments.ToStartInfo
                 print color $"{name}: {wd}> {exe} {args}" ""
 
-        
+
         let run cs =
             cs
             |> Seq.toArray

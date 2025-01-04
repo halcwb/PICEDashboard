@@ -1,3 +1,5 @@
 group Server
     Saturn
     Fable.Remoting.Giraffe
+    Serilog.AspNetCore
+    Serilog.Sinks.Console

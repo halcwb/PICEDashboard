@@ -5,6 +5,9 @@ open Giraffe
 open Saturn
 open Fable.Remoting.Server
 open Fable.Remoting.Giraffe
+open Microsoft.Extensions.DependencyInjection
+open Microsoft.AspNetCore.Http
+open Serilog
 
 
 let tryGetEnv key =
@@ -19,7 +22,7 @@ let port =
 
 let webApi =
     Remoting.createApi ()
-    |> Remoting.fromValue ServerApiImpl.serverApi
+    |> Remoting.fromContext (fun (ctx : HttpContext) -> ctx.GetService<ServerApi.ServerApi>().Build())
     |> Remoting.withRouteBuilder Api.routerPaths
     |> Remoting.buildHttpHandler
 
@@ -27,6 +30,16 @@ let webApi =
 let webApp =
     choose [ webApi; GET >=> text "PICE Dashboard App. Use localhost: 8080 for the GUI" ]
 
+let serviceConfig (services: IServiceCollection) =
+    services
+        .AddSingleton<ServerApi.ServerApi>()
+        .AddSerilog(fun loggerConfiguration ->
+            loggerConfiguration
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+            |> ignore
+        )
 
 let application =
     application {
@@ -36,10 +49,10 @@ let application =
         use_router webApp
         memory_cache
         use_gzip
-    //use_iis
+        //use_iis
 
-    //service_config configureServices
-    //host_config Env.configureHost
+        service_config serviceConfig
+        host_config Env.configureHost
     }
 
 
