@@ -490,15 +490,15 @@ module Parsing =
                         |})
 
                 let parsePat i =
-                    timer.ElapsedMilliseconds |> printfn "%i: %i parse patient" i
+                    Console.Write($"\r{i}: {timer.ElapsedMilliseconds} parse patient")
                     parsePatient hospData
 
                 let parseHosp i =
-                    timer.ElapsedMilliseconds |> printfn "%i: %i parse hospital admission" i
+                    Console.Write($"\r{i}: {timer.ElapsedMilliseconds} parse hospital admission")
                     parseHospAdm hospData
 
                 let addPICU i =
-                    timer.ElapsedMilliseconds |> printfn "%i: %i add picu admission" i
+                    Console.Write($"\r{i}: {timer.ElapsedMilliseconds} add picu admission")
                     addPICUAdmissions picuAdms diagnoses
 
                 // let validClick i =

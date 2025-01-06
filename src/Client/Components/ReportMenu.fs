@@ -61,7 +61,7 @@ module ReportMenu =
 
 
     [<JSX.Component>]
-    let private View
+    let View
         (props:
             {|
                 data: TreeData list
@@ -74,11 +74,83 @@ module ReportMenu =
         let state, dispatch =
             React.useElmish (init props.filter, update props.dispatch, [||])
 
+        let showDiagnoses =
+            JSX.jsx
+                $"""
+            import Button from '@mui/material/Button';
+            import Typography from '@mui/material/Typography';
+
+            <Button onClick={fun _ -> ShowDiagnoses |> dispatch} >
+                <Typography color="textPrimary">ga naar diagnoses</Typography>
+            </Button>
+            """
+
+        let dropDown =
+            let value =
+                state.filter
+                |> Filter.filterToString
+                |> function
+                    | Some(_, s) -> s
+                    | None -> ""
+
+            let dispatch s =
+                match s |> Filter.stringToFilter with
+                | Some(f, _) -> f
+                | _ -> NoFilter
+                |> FilterChanged
+                |> dispatch
+
+            DropDownBox.View
+                {
+                    Items = Filter.mapping |> List.map snd
+                    Value = value
+                    Dispatch = dispatch
+                    Label = "Filter"
+                    FirstIsNone = true
+                }
+
+        let handleKeyDown id =
+            fun _ -> props.dispatch ({| state with item = id |})
+
+        let rec treeItems data =
+            data
+            |> List.map (fun d ->
+                JSX.jsx
+                    $""" 
+                    <TreeItem key={d.id} itemId={d.id} label= {d.label} onKeyDown = {handleKeyDown} >
+                        {d.children |> treeItems}
+                    </TreeItem>
+                    """)
+
+        let bxSx = {| width = drawerWidth; padding = 1 |}
+        let dbSx = {| padding = 2 |}
 
         JSX.jsx
             $"""
-            
-        """
+            import Drawer from '@mui/material/Drawer';
+            import Box from '@mui/material/Box';
+            import Divider from '@mui/material/Divider';
+            import Typography from '@mui/material/Typography';
+            import {{ SimpleTreeView }} from '@mui/x-tree-view/SimpleTreeView';
+            import {{ TreeItem }} from '@mui/x-tree-view/TreeItem';
+
+            <Drawer
+                open={props.isOpen}
+                anchor="left"
+                variant="persistent">
+                <Box sx={bxSx} role="presentation" >
+                    {showDiagnoses}
+                    <Divider />
+                    <Box sx={dbSx} >
+                        {dropDown}
+                    </Box>
+                    <Divider />
+                    <SimpleTreeView>
+                        {props.data |> treeItems}
+                    </SimpleTreeView>
+                </Box>
+            </Drawer>
+            """
 
 
 (*
@@ -100,12 +172,6 @@ module ReportMenu =
                     | Some(_, s) -> s
                     | None -> ""
 
-            let dispatch s =
-                match s |> Filter.stringToFilter with
-                | Some(f, _) -> f
-                | _ -> NoFilter
-                |> FilterChanged
-                |> dispatch
 
             Filter.mapping
             |> List.map snd

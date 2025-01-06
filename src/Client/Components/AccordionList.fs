@@ -13,51 +13,41 @@ module AccordionList =
             {|
                 items:
                     {|
-                        summary: string * ReactElement
+                        summary: ReactElement
                         details: ReactElement list
                     |} list
             |})
         =
 
+        let accordion summary details =
+            JSX.jsx
+                $"""
+            import Accordion from '@mui/material/Accordion';
+            import AccordionDetails from '@mui/material/AccordionDetails';
+            import AccordionSummary from '@mui/material/AccordionSummary';
+            
+            <Accordion
+                defaultExpanded={false}
+                square={true}
+                elevation={0}
+            >
+                <AccordionSummary>
+                    {summary}
+                </AccordionSummary>
+                <AccordionDetails>
+                    {details}
+                </AccordionDetails>
+            </Accordion>
+            """
+
+        let items =
+            props.items |> List.map (fun item -> accordion item.summary item.details)
+
         JSX.jsx
             $"""
-        import Accorion from '@mui/Accorion';
-        import Container from '@mui/Container';
+        import Stack from '@mui/material/Stack';
 
-        <Container>
-            
-        </Container>
+        <Stack >
+            {items}
+        </Stack>
         """
-(*
-            Mui.container [
-                prop.style [
-                    style.display.flex
-                    style.flexDirection.column
-                ]
-                container.disableGutters true
-                container.children [
-                    for item in props.items do
-                        Mui.accordion [
-                            accordion.defaultExpanded true
-                            accordion.square true
-                            accordion.elevation 0
-                            accordion.children [
-                                Mui.accordionSummary [
-//                                    accordionSummary.expandIcon (expandMoreIcon "")
-                                    item.summary |> fst |> prop.className 
-                                    accordionSummary.children [ 
-                                        item.summary |> snd
-                                    ]
-                                ]
-                                Mui.accordionDetails [
-                                    prop.style [ 
-                                        style.flexDirection.column
-                                    ]
-                                    accordionDetails.children item.details
-                                ]
-                            ]
-                        ]
-                    ]
-                ]           
-        )
-            *)

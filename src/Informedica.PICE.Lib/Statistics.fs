@@ -1064,6 +1064,7 @@ module Statistics =
             |> printCount "#### Leeftijdsgroup" stat.Totals.AgeGroup false
             |> StringBuilder.newLine2
             |> printCount "#### PICU Ontslag redenen" stat.Totals.DischargeReasons true
+            |> StringBuilder.newLine2
 
         let yrs =
             stats.YearTotals
@@ -1185,8 +1186,11 @@ module Statistics =
         |> countToTable stats.YearTotals _.Year _.Totals.HospitalDischargeDestinations
         |> StringBuilder.newLine2
         |> StringBuilder.appendLine "#### PICU ontslag redenen"
+        |> StringBuilder.newLine2
         |> printCount "##### Totalen" stats.Totals.DischargeReasons true
+        |> StringBuilder.newLine2
         |> StringBuilder.appendLine "##### Per Jaar"
+        |> StringBuilder.newLine2
         |> countToTable stats.YearTotals _.Year _.Totals.DischargeReasons
         |> StringBuilder.newLine2
         |> StringBuilder.appendLine yrs

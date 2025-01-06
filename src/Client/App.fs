@@ -11,13 +11,6 @@ module private Elmish =
     open Fable.Core
     open Shared
 
-
-    type DisplayType =
-        | Print
-        | Table
-        | Graph
-
-
     type Model = {
         HelloWorld: Deferred<string>
         Report: Deferred<Result<Report, string>>
@@ -64,7 +57,7 @@ module private Elmish =
             RequestPatients = false
             DisplayType = Graph
             DisplayTypeAcknowledged = true
-            SideMenuIsOpen = true
+            SideMenuIsOpen = false
             SelectedFilter = NoFilter
             SelectedTreeItem = Some "0"
             ShowDiagnoses = false
@@ -98,10 +91,12 @@ module private Elmish =
                         | Error value -> value
                         |> Resolved
             },
-            Cmd.none
+            Cmd.ofMsg (LoadStatistics Started)
 
 
         | SideMenuOpenToggled ->
+            Logging.log "SideMenuOpenToggled" state.SideMenuIsOpen
+
             {
                 state with
                     SideMenuIsOpen = state.SideMenuIsOpen |> not
@@ -174,6 +169,7 @@ module private Elmish =
 
             {
                 state with
+                    SideMenuIsOpen = false
                     Report =
                         if state.SelectedFilter = f then
                             state.Report
@@ -262,8 +258,14 @@ let View () =
         if showProgress then
             JSX.jsx
                 $"""
+                import Box from '@mui/material/Box';
                 import LinearProgress from '@mui/material/LinearProgress';
-                <LinearProgress>{s}</LinearProgress>
+                <Box>
+                    <Typography variant="h6" gutterBottom >
+                        {s}
+                    </Typography>
+                    <LinearProgress />
+                </Box>
                 """
         else
             JSX.jsx
@@ -277,7 +279,7 @@ let View () =
                 </React.Fragment>
                 """
 
-    let createMainContent (state: Model) displayTypeAck displayType menuIsOpen filter treeItem dispatch =
+    let createMainContent (state: Model) dispatch =
         if state.ShowDiagnoses then
             match state.Report with
             | HasNotStartedYet -> display true "De boel wordt opgestart ..."
@@ -305,23 +307,52 @@ let View () =
         else
             match state.Report with
             | HasNotStartedYet -> display true "De boel wordt opgestart ..."
-            | InProgress -> display true "Het rapport wordt opgehaald ..."
-            | Resolved(Ok report) -> display false "Het rapport is klaar"
+            | InProgress ->
+                printfn "InProgress"
+                display true "Het rapport wordt opgehaald ..."
+            | Resolved(Ok report) ->
 
-            (*
                 let treeData = report.Sections |> mapToTreeData
 
-                fun
-                    (o:
-                        {|
-                            filter: Filter
-                            item: string
-                            showDiagnoses: bool
-                        |}) ->
-                    if o.showDiagnoses then
-                        ShowDiagnoses |> dispatch
-                    else
-                        (o.filter, o.item) |> ReportFilterItemSelected |> dispatch
+                let reportMenu =
+                    Components.ReportMenu.View {|
+                        data = treeData
+                        isOpen = state.SideMenuIsOpen
+                        filter = state.SelectedFilter
+                        dispatch =
+                            fun
+                                (o:
+                                    {|
+                                        filter: Filter
+                                        item: string
+                                        showDiagnoses: bool
+                                    |}) ->
+                                if o.showDiagnoses then
+                                    ShowDiagnoses |> dispatch
+                                else
+                                    (o.filter, o.item) |> ReportFilterItemSelected |> dispatch
+                    |}
+
+                let reportPage =
+                    Pages.Report.View {|
+                        displayType = state.DisplayType
+                        selected = state.SelectedTreeItem
+                        report = report
+                    |}
+
+
+                JSX.jsx
+                    $"""
+                import Box from '@mui/material/Box';
+
+                <Box>
+                    {reportMenu}
+                    {reportPage}
+                </Box>
+                """
+
+            (*
+
                 |> ReportMenu.render treeData menuIsOpen filter
 
                 Html.div [
@@ -346,48 +377,18 @@ let View () =
 
     let contSx = {| height = "100vh" |}
 
-    let stckSx = {|
-        display = "flex"
-        justifyContent = "center"
-        alignItems = "center"
-        height = "87%"
-    |}
-
     let titleBar =
         Components.TitleBar.View {|
             title = "PICE Dashboard"
-            toggleSideMenu = (fun () -> ())
+            toggleSideMenu = fun () -> SideMenuOpenToggled |> dispatch
         |}
-
-    let sideMenu =
-        Components.SideMenu.View(
-            {|
-                anchor = "left"
-                isOpen = false
-                toggle = fun () -> ()
-                menuClick = fun _ -> ()
-                items = [| (None, "Home", false); (None, "About", false); (None, "Contact", false) |]
-            |}
-        )
-
-    let buttonsL = [ Mui.Icons.Menu, (fun _ -> SideMenuOpenToggled |> dispatch) ]
-
-
-    let buttonsR = [ Mui.Icons.PublishIcon, (fun _ -> PatientCSVRequested |> dispatch) ]
 
     let content =
         if state.RequestPatients then
             let s = "Patienten worden opgehaald ..."
             JSX.jsx $"""<React.Fragment>{s}</React.Fragment>""" //props.dispatch |> createUploadDialog
         else
-            createMainContent
-                state
-                state.DisplayTypeAcknowledged
-                state.DisplayType
-                state.SideMenuIsOpen
-                state.SelectedFilter
-                state.SelectedTreeItem
-                dispatch
+            createMainContent state dispatch
 
     JSX.jsx
         $"""
@@ -396,24 +397,15 @@ let View () =
         import CssBaseline from '@mui/material/CssBaseline';
         import Typography from '@mui/material/Typography';
         import Container from '@mui/material/Container';
-        import Stack from '@mui/material/Stack';
         import React from 'react';
-        import {{ LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip }} from 'recharts';
 
         <React.StrictMode>
             <CssBaseline enableColorScheme />
             <ThemeProvider theme={theme} >
                 <React.Fragment>
                     <Container sx={contSx} disableGutters={true} component="main" maxWidth="xl" > 
-                        <React.Fragment>
-                            {titleBar}
-                        </React.Fragment>
-                        <React.Fragment>
-                            {sideMenu}
-                        </React.Fragment>
-                        <Stack sx={stckSx}>
-                            {content}
-                        </Stack>
+                        {titleBar}
+                        {content}
                     </Container>
                 </React.Fragment>
             </ThemeProvider>

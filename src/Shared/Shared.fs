@@ -15,7 +15,6 @@ module Utils =
 /// Utility functions to apply memoization
 module Memoization =
 
-    open System.Collections.Generic
 
     /// Memoize a function `f` according
     /// to its parameter
@@ -23,11 +22,11 @@ module Memoization =
         let cache = ref Map.empty
 
         fun x ->
-            match (!cache).TryFind(x) with
+            match (cache.Value).TryFind(x) with
             | Some r -> r
             | None ->
                 let r = f x
-                cache := (!cache).Add(x, r)
+                cache.Value <- (cache.Value).Add(x, r)
                 r
 
 module Literals =
@@ -209,7 +208,7 @@ module Types =
             Totals: Totals
             YearTotals: Totals list
             // string = year to which totals belong
-            MonthTotals: (string * (Totals list)) list
+            MonthTotals: (string * Totals list) list
         }
 
     and Chapter =
@@ -256,6 +255,11 @@ module Types =
             Label: string
             Dispatch: string -> unit
         }
+
+    type DisplayType =
+        | Print
+        | Table
+        | Graph
 
 
 module Filter =

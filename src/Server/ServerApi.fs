@@ -16,6 +16,9 @@ let cachePath = "./../../data/cache/data.cache"
 let exportPath = "./../../data/mrdm/Export_PICE.xlsx"
 
 
+let init = Parsing.parseMRDM exportPath cachePath 
+
+
 let mapTotals (totals: Statistics.Totals) =
     {
         Period = totals.Period
@@ -50,8 +53,7 @@ let mapTotals (totals: Statistics.Totals) =
 
 let createReport filter =
     let filterPath =
-        (sprintf "%A" filter).ToLower() |> sprintf "./../../data/%s.report.cache"
-
+        (sprintf "%A" filter).ToLower() |> sprintf "./../../data/cache/%s.report.cache"
 
     let mapParagraph (p: Report.Paragraph) =
         { Title = p.Title; Content = p.Content }
@@ -76,7 +78,7 @@ let createReport filter =
     | None ->
         printfn "creating report ..."
 
-        Parsing.parseMRDM exportPath cachePath
+        init
         |> Result.valueOrDefault (fun _ -> [||])
         |> Array.toList
         |> Statistics.calculate filter

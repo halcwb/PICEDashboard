@@ -11,14 +11,16 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Bindings.fs" />
     <Compile Include="Mui.fs" />
+    <Compile Include="./Components/Markdown.fs" />
     <Compile Include="./Components/DropDownBox.fs" />
     <Compile Include="./Components/AccordionList.fs" />
-    <Compile Include="./Components/StackedBarChart.fs" />
     <Compile Include="./Components/SelectableList.fs" />
     <Compile Include="./Components/TitleBar.fs" />
-    <Compile Include="./Components/SideMenu.fs" />
     <Compile Include="./Components/ReportMenu.fs" />
+    <Compile Include="./Components/ColoredList.fs" />
+    <Compile Include="./Components/PieChart.fs" />
     <Compile Include="./Components/AdmissionGraph.fs" />
+    <Compile Include="./Components/StackedBarChart.fs" />
     <Compile Include="./Pages/Report.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>

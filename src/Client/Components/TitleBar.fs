@@ -36,6 +36,7 @@ module TitleBar =
         import Button from '@mui/material/Button';
         import IconButton from '@mui/material/IconButton';
         import MenuIcon from '@mui/icons-material/Menu';
+        import PublishIcon from '@mui/icons-material/Publish';
         import Menu from '@mui/material/Menu';
         import MenuItem from '@mui/material/MenuItem';
 
@@ -51,12 +52,20 @@ module TitleBar =
                         onClick={props.toggleSideMenu}
                         >
                         <MenuIcon />
-
                     </IconButton>
                     <Typography variant="body1" component="div" sx={sx1}>
                         {props.title}
                     </Typography>
+                    <IconButton
+                        size="large"
+                        edge="start"
+                        color="inherit"
+                        aria-label="menu"
+                        sx={sx2}
+                        >
+                        <PublishIcon />
 
+                    </IconButton>
                 </Toolbar>
             </AppBar>
         </Box>

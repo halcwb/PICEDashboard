@@ -99,3 +99,29 @@ module GoogleDocs =
 
     let createUrl sheet id =
         $"https://docs.google.com/spreadsheets/d/{id}/gviz/tq?tqx=out:csv&sheet={sheet}"
+
+
+module Colors =
+
+
+    let bgColors = [|
+        color.darkBlue
+        color.darkGreen
+        color.darkRed
+        color.darkOrange
+        color.darkOrchid
+        color.darkSeaGreen
+        color.darkCyan
+        color.darkGoldenRod
+        color.darkViolet
+        color.darkGray
+        color.darkOliveGreen
+        color.darkKhaki
+        color.darkMagenta
+        color.darkSalmon
+        color.darkSlateBlue
+        color.darkSlateGray
+        color.darkTurqouise
+    |]
+
+    let getColor i = bgColors.[i % bgColors.Length]
