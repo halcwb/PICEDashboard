@@ -108,6 +108,7 @@ module PieChart =
     open Elmish
 
 
+    [<JSX.Component>]
     let View
         (props:
             {|
@@ -180,7 +181,18 @@ module PieChart =
                 spacing = 8
             |}
 
-        let tpSx = {| flexGrow = 1 |}
+        let navBar =
+            NavigationBar.View(
+                {|
+                    title = toolbarTitle
+                    showPerc = None
+                    skipFirst = fun _ -> SkipFirst |> dispatch
+                    skipPrev = fun _ -> SkipPrevious |> dispatch
+                    skipNext = fun _ -> SkipNext |> dispatch
+                    skipLast = fun _ -> SkipLast |> dispatch
+                    stop = fun _ -> Stop |> dispatch
+                |}
+            )
 
         JSX.jsx
             $"""
@@ -197,26 +209,7 @@ module PieChart =
         import StopIcon from '@mui/icons-material/Stop';
 
         <Box sx = {bxSx}>
-            <Toolbar disableGutters={true}>
-                <Typography sx={tpSx}>
-                    {toolbarTitle}
-                </Typography>
-                <IconButton onClick={fun _ -> SkipPrevious |> dispatch}>
-                    <FirstPageIcon/>
-                </IconButton>
-                <IconButton onClick={fun _ -> SkipPrevious |> dispatch}>
-                    <SkipPreviousIcon/>
-                </IconButton>
-                <IconButton onClick={fun _ -> SkipNext |> dispatch}>
-                    <SkipNextIcon/>
-                </IconButton>
-                <IconButton onClick={fun _ -> SkipLast |> dispatch}>
-                    <LastPageIcon/>
-                </IconButton>
-                <IconButton onClick={fun _ -> Stop |> dispatch}>
-                    <StopIcon/>
-                </IconButton>
-            </Toolbar>
+            {navBar}
             <Grid sx ={gdSx} container >
                 {coloredList}
                 {pieChart}

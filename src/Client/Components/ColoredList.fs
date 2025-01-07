@@ -28,6 +28,7 @@ module ColoredList =
             |> coloredItemList
 
 
+    [<JSX.Component>]
     let View
         (props:
             {|

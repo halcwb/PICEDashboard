@@ -7,7 +7,6 @@ module AdmissionsGraph =
     open Shared
     open Fable.Core
     open System
-    open Types
 
     type private Point =
         {
@@ -17,68 +16,36 @@ module AdmissionsGraph =
             picuDays: int
         }
 
-    //let useStyles = Styles.makeStyles(fun styles theme ->
-    //    {|
-    //        theme = theme
-    //    |}
-    //)
-
 
     [<JSX.Component>]
     let View (props: {| totals: Totals list |}) =
-        //            let classes = useStyles ()
-        //            Browser.Dom.console.log("color", classes.barColor)
-        let round (n: int) (c: float) = Math.Round(c, n)
 
         let data =
             props.totals
             |> List.map (fun tot ->
-                let perc c =
-                    Math.Round(100. * c / float tot.Admissions, 1)
-                // Browser.Dom.console.log(tot.Year, tot.Totals.PRISM4Mortality)
                 {
                     name = tot.Period
                     admitted = tot.Admissions
                     discharged = tot.Discharged
                     picuDays = tot.PICUDays
                 })
+            |> List.toArray
 
         JSX.jsx
             $"""
-            import {{ BarChart, CartesianGrid }} from 'recharts';
+            import {{ BarChart, CartesianGrid, YAxis, XAxis, Tooltip, Bar, Legend }} from 'recharts';
 
-            <BarChart width={1100} height={700} data={data}>
+            <BarChart
+                width={1100}
+                height={700}
+                data={data}>
                 <CartesianGrid strokeDasharray="1 1" />
+                <XAxis dataKey={fun p -> p.name} />
+                <YAxis />
+                <Tooltip />
+                <Bar name="Opnames" dataKey={fun p -> p.admitted} fill={color.darkBlue} />
+                <Bar name="Ontslagen" dataKey={fun p -> p.discharged} fill={color.darkGreen} />
+                <Bar name="Ligdagen" dataKey={fun p -> p.picuDays} fill={color.darkMagenta} />
+                <Legend verticalAlign="top" />
+            </BarChart>
         """
-
-(*
-            Recharts.barChart [
-                barChart.width 1100
-                barChart.height 700
-                barChart.data data
-                barChart.children [
-                    Recharts.cartesianGrid [ cartesianGrid.strokeDasharray(1, 1)]
-                    Recharts.xAxis [ xAxis.dataKey (fun p -> p.name ) ]
-                    Recharts.yAxis []
-                    Recharts.tooltip []
-                    Recharts.bar [
-                        bar.name "Opnames"
-                        bar.dataKey (fun p -> p.admitted)
-                        bar.fill color.darkBlue
-                    ]
-                    Recharts.bar [
-                        bar.name "Ontslagen"
-                        bar.dataKey (fun p -> p.discharged)
-                        bar.fill color.darkGreen
-                    ]
-                    Recharts.bar [
-                        bar.name "Ligdagen"
-                        bar.dataKey (fun p -> p.picuDays)
-                        bar.fill color.darkMagenta
-                    ]
-
-                    Recharts.legend [ legend.verticalAlign.top ]
-
-                ]
-            ]
-            *)

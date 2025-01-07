@@ -3,8 +3,6 @@ namespace Components
 
 module StackedBarChart =
 
-    open System
-    open Feliz
     open Elmish
     open Fable.Core
     open Fable.React
@@ -78,18 +76,29 @@ module StackedBarChart =
                 Cmd.none
 
 
-    let private createBars labels = []
-    (*
-        labels
-        |> List.mapi (fun i label ->
-            Recharts.bar [
-                bar.name label
-                bar.dataKey (fun (_, xs) -> xs |> List.item i |> snd |> float)
-                bar.stackId "a"
-                bar.fill (Utils.getColor i)
-            ]
-        )
-        *)
+    let private createBars labels =
+        let create i label =
+            let getKey =
+                fun (_, xs) ->
+                    if xs |> Array.length <= i then
+                        0.
+                    else
+                        xs |> Array.item i |> snd |> float
+
+            JSX.jsx
+                $"""
+            import React from 'react';
+            import {{ Bar }} from 'recharts';
+            <Bar
+                key={i}
+                name={label}
+                dataKey={getKey}
+                stackId="a"
+                fill={Colors.getColor (i)}
+            />
+            """
+
+        labels |> List.mapi create |> List.toArray
 
 
     open Elmish
@@ -137,77 +146,52 @@ module StackedBarChart =
 
                 xs |> fst, xs |> snd |> map
 
-
         let bars =
             props.perYear |> List.collect snd |> List.map fst |> List.distinct |> createBars
 
+        let toolbarTitle = $"{props.title} {p}"
+
+        let toolBar =
+            NavigationBar.View(
+                {|
+
+                    title = toolbarTitle
+                    showPerc = Some(fun _ -> ShowPercentage |> dispatch)
+                    skipFirst = (fun _ -> SkipFirst |> dispatch)
+                    skipPrev = (fun _ -> SkipPrevious |> dispatch)
+                    skipNext = (fun _ -> SkipNext |> dispatch)
+                    skipLast = (fun _ -> SkipLast |> dispatch)
+                    stop = (fun _ -> Stop |> dispatch)
+                |}
+            )
+
+        let getDataKey = fun (k, _) -> k.ToString()
+
+        let data = data |> List.toArray |> Array.map (fun (k, xs) -> k, xs |> List.toArray)
+
+        if p <> "" then
+            Logging.log $"data fro {p}" data
+
         JSX.jsx
             $"""
-            """
-(*
-            Html.div [
-                Mui.toolbar [
-                    toolbar.disableGutters true
-                    toolbar.children [
-                        Mui.typography [
-                            prop.style [ style.flexGrow 1]
-                            typography.color.primary
-                            typography.variant.h6
-                            prop.text (sprintf "%s %s" props.title p)
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> ShowPercentage |> dispatch)
-                            iconButton.children [
-                                Icons.equalizerIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> SkipFirst |> dispatch)
-                            iconButton.children [
-                                Icons.firstPageIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> SkipPrevious |> dispatch)
-                            iconButton.children [
-                                Icons.skipPreviousIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> SkipNext |> dispatch)
-                            iconButton.children [
-                                Icons.skipNextIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> SkipLast |> dispatch)
-                            iconButton.children [
-                                Icons.lastPageIcon []
-                            ]
-                        ]
-                        Mui.iconButton [
-                            prop.onClick (fun _ -> Stop |> dispatch)
-                            iconButton.children [
-                                Icons.stopIcon []
-                            ]
-                        ]
-                    ]
-                ]
+        import React from 'react';
+        import Box from '@mui/material/Box';
+        import {{ BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend }} from 'recharts';
 
-                Recharts.barChart [
-                    barChart.width 1100
-                    barChart.height 500
-                    barChart.data data
-                    barChart.children [
-                        Recharts.cartesianGrid [ cartesianGrid.strokeDasharray(1, 1) ]
-                        Recharts.xAxis [ xAxis.dataKey (fun (k, _) -> k |> string) ]
-                        Recharts.yAxis []
-                        Recharts.tooltip []
-                        Recharts.legend [ legend.verticalAlign.bottom ]
+        <Box>
+            {toolBar}
+            <BarChart
+                width={1100}
+                height={500}
+                data={data}
+            >
+                <CartesianGrid strokeDasharray="1 1" />
+                <XAxis dataKey={getDataKey} />
+                <YAxis />
+                <Tooltip />
+                <Legend verticalAlign="bottom" />
 
-                        yield! bars
-                    ]
-                ]
-            ]
-        
-            *)
+                {bars}
+            </BarChart>
+        </Box>
+        """

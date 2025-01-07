@@ -21,7 +21,11 @@ module Math =
     let calcAverage getTotal getCount tots =
         let t =
             tots
-            |> List.sumBy (fun t -> (t |> getCount) / (t |> getTotal |> float))
+            |> List.sumBy (fun t ->
+                if t |> getTotal = 0 then
+                    0.
+                else
+                    (t |> getCount) / (t |> getTotal |> float))
             |> float
 
         t / (tots |> List.length |> float)

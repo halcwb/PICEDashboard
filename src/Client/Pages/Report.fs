@@ -13,6 +13,11 @@ module Report =
     module private Utils =
 
 
+        let renderMarkdown (md: string) =
+            let props = {| md = md |}
+            Components.Markdown.View(props) |> toReact
+
+
         let selectReport (s: string) (report: Report) =
             Browser.Dom.console.log ("selecting", s)
 
@@ -82,6 +87,34 @@ module Report =
             | _ -> report
 
 
+        let getPieChart title (section: Section) get =
+            let props =
+                {|
+                    title = title
+                    data = section.Totals |> get
+                    periods = section.YearTotals |> List.map (fun t -> t.Period, t |> get)
+                |}
+
+            Components.PieChart.View(props)
+
+
+        let getStackedBarChart title section get =
+            let perYr = section.YearTotals |> List.map (fun t -> t.Period, t |> get)
+
+            let perMo =
+                section.MonthTotals
+                |> List.map (fun (yr, xs) -> yr, xs |> List.map (fun t -> t.Period, t |> get))
+
+            let props =
+                {|
+                    title = title
+                    perYear = perYr
+                    perMonth = perMo
+                |}
+
+            Components.StackedBarChart.View(props)
+
+
         let layoutDetails (dt: DisplayType) (section: Section) =
 
             let mapParagraph (chapter: Chapter) paragraph =
@@ -94,212 +127,250 @@ module Report =
                             chapter.Title = Literals.groupDeathMode
                             && paragraph.Title = Literals.paragraphTotals
                             ->
+                            prop.children [ (fun t -> t.DeathMode) |> getPieChart paragraph.Title section |> toReact ]
+
+                        | Graph when
+                            chapter.Title = Literals.groupDeathMode
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
                             prop.children
                                 [
+                                    (fun t -> t.DeathMode)
+                                    |> getStackedBarChart "Reden van Overlijden" section
+                                    |> toReact
+                                ]
+
+                        | Graph when
+                            chapter.Title = Literals.groupMortality
+                            && paragraph.Title = Literals.paragraphPIMandPRISM
+                            ->
+                            prop.children
+                                [
+                                    paragraph.Title |> sprintf "#### %s" |> renderMarkdown
+                                    "##### Mortaliteit" |> renderMarkdown
+
+                                    let props =
+                                        {|
+                                            totals = section.YearTotals
+                                            content = paragraph.Content
+                                        |}
+
+                                    Components.MortalityGraph.View(props) |> toReact
+                                ]
+
+                        | Graph when
+                            chapter.Title = Literals.groupSMR
+                            && paragraph.Title = Literals.paragraphSMRperYear
+                            ->
+                            prop.children
+                                [
+                                    "##### SMR per Jaar" |> renderMarkdown
+
+                                    let props = {| totals = section.YearTotals |}
+
+                                    Components.SMRGraph.View(props) |> toReact
+                                ]
+
+                        | Graph when
+                            chapter.Title = Literals.groupSMR
+                            && paragraph.Title = Literals.paragraphSMRfunnel
+                            ->
+                            prop.children
+                                [
+                                    "##### SMR Funnelplot " |> renderMarkdown
+
+                                    let props = {| totals = section.YearTotals |}
+
+                                    Components.FunnelPlot.View(props) |> toReact
+                                ]
+
+                        | Graph when
+                            chapter.Title = Literals.groupAdmission
+                            && paragraph.Title = Literals.paragraphAdmDisch
+                            ->
+                            prop.children
+                                [
+                                    "#### Opnames/ontslagen en ligdagen" |> renderMarkdown
+
+                                    let props = {| totals = section.YearTotals |}
+
+                                    Components.AdmissionsGraph.View(props) |> toReact
+                                ]
+
+
+                        | Graph when
+                            chapter.Title = Literals.groupAdmission
+                            && paragraph.Title = Literals.paragraphOccupancy
+                            ->
+                            prop.children
+                                [
+
                                     let props =
                                         {|
                                             title = paragraph.Title
-                                            data = section.Totals.DeathMode
-                                            periods = section.YearTotals |> List.map (fun t -> t.Period, t.DeathMode)
+                                            data =
+                                                section.YearTotals |> List.map (fun ytot -> ytot.Period, ytot.Occupancy)
                                         |}
 
-                                    Components.PieChart.View props |> toReact
+                                    Components.OccupancyGraph.View props |> toReact
+
+                                    """Ga met de muis over de labels onderaan om de x-as om
+                                    het gemiddelde of een jaar uit te lichten. Gebruik de bovenste 
+                                    knoppen om door de jaren heen te lopen en een specifiek jaar te bekijken.
+                                    """
+                                    |> renderMarkdown
                                 ]
 
-                        (*
-                    | Graph when chapter.Title = Literals.groupDeathMode &&
-                                paragraph.Title = Literals.paragraphPerYear ->
-                        prop.children [
-                            (fun t -> t.DeathMode)
-                            |> getStackedBarChart section "Reden van Overlijden"
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.groupAdmission
+                            && paragraph.Title = Literals.paragraphUrgency
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.Urgency) |> getStackedBarChart "Opname Urgentie" section |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupMortality && 
-                                    paragraph.Title = Literals.paragraphPIMandPRISM -> 
-                        prop.children [
-                            paragraph.Title |> sprintf "#### %s" |> Markdown.render
-                            "##### Mortaliteit" |> Markdown.render
-                            section.YearTotals |> Components.MortalityGraph.render paragraph.Content
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.groupAdmission
+                            && paragraph.Title = Literals.paragraphReadmission
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.Readmission) |> getStackedBarChart "Heropnames" section |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupSMR && 
-                                    paragraph.Title = Literals.paragraphSMRperYear -> 
-                        prop.children [
-                            "##### SMR per Jaar" |> Markdown.render
-                            section.YearTotals |> Components.SMRGraph.render
-                        ]
-
-                    | Graph when chapter.Title = Literals.groupSMR && 
-                                    paragraph.Title = Literals.paragraphSMRfunnel -> 
-                        prop.children [
-                            "##### SMR Funnelplot " |> Markdown.render
-                            section.YearTotals |> Components.FunnelPlot.render
-                        ]
-
-                    | Graph when chapter.Title = Literals.groupAdmission && 
-                                    paragraph.Title = Literals.paragraphAdmDisch ->
-                        prop.children [
-                            "#### Opnames/ontslagen en ligdagen" |> Markdown.render
-                            section.YearTotals |> Components.AdmissionsGraph.render                                    
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.groupAdmission
+                            && paragraph.Title = Literals.paragraphLengthOfStay
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.LengthOfStay) |> getStackedBarChart "Opname duur" section |> toReact
+                                ]
 
 
-                    | Graph when chapter.Title = Literals.groupAdmission && 
-                                    paragraph.Title = Literals.paragraphOccupancy ->
-                        prop.children [
-                            section.YearTotals 
-                            |> List.map (fun ytot ->
-                                ytot.Period
-                                , ytot.Occupancy
-                            )
-                            |> OccupancyGraph.render paragraph.Title
-                        ]
-                    
-                    | Graph when chapter.Title = Literals.groupAdmission && 
-                                    paragraph.Title = Literals.paragraphUrgency ->
-                        prop.children [
-                            (fun t -> t.Urgency)
-                            |> getStackedBarChart section "Opname Urgentie"
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.subGroupTransportHospital
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.TransportHospital) |> getPieChart paragraph.Title section |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupAdmission && 
-                                    paragraph.Title = Literals.paragraphReadmission ->
-                        prop.children [
-                            section.YearTotals
-                            |> List.map (fun t -> t.Period, t.Readmission)
-                            |> Components.PieChart.render paragraph.Title section.Totals.Readmission
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.subGroupTransportHospital
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.TransportHospital)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupAdmission && 
-                                    paragraph.Title = Literals.paragraphLengthOfStay ->
-                        prop.children [
-                            (fun t -> t.LengthOfStay)
-                            |> getStackedBarChart section "Opname duur"
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.subGroupTransportTeam
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children
+                                [ (fun t -> t.TransportTeam) |> getPieChart paragraph.Title section |> toReact ]
 
-                    | Graph when chapter.Title = Literals.subGroupTransportHospital &&
-                                paragraph.Title = Literals.paragraphTotals ->
-                            prop.children [
-                                section.YearTotals
-                                |> List.map (fun t -> t.Period, t.TransportHospital)
-                                |> Components.PieChart.render paragraph.Title section.Totals.TransportHospital
-                            ]
+                        | Graph when
+                            chapter.Title = Literals.subGroupTransportTeam
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.TransportTeam)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.subGroupTransportHospital &&
-                                paragraph.Title = Literals.paragraphPerYear ->
-                            prop.children [
-                                (fun t -> t.TransportHospital)
-                                |> getStackedBarChart section paragraph.Title
-                            ]
+                        | Graph when
+                            chapter.Title = Literals.groupGender
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children [ (fun t -> t.Gender) |> getPieChart paragraph.Title section |> toReact ]
 
-                    | Graph when chapter.Title = Literals.subGroupTransportTeam &&
-                                paragraph.Title = Literals.paragraphTotals ->
-                            prop.children [
-                                section.YearTotals
-                                |> List.map (fun t -> t.Period, t.TransportTeam)
-                                |> Components.PieChart.render paragraph.Title section.Totals.TransportTeam
-                            ]
+                        | Graph when
+                            chapter.Title = Literals.groupGender
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+                            prop.children
+                                [ (fun t -> t.Gender) |> getStackedBarChart paragraph.Title section |> toReact ]
 
-                    | Graph when chapter.Title = Literals.subGroupTransportTeam &&
-                                paragraph.Title = Literals.paragraphPerYear ->
-                            prop.children [
-                                (fun t -> t.TransportTeam)
-                                |> getStackedBarChart section paragraph.Title
-                            ]
+                        | Graph when chapter.Title = Literals.groupAge && paragraph.Title = Literals.paragraphTotals ->
+                            prop.children [ (fun t -> t.AgeGroup) |> getPieChart paragraph.Title section |> toReact ]
 
-                    | Graph when chapter.Title = Literals.groupGender && 
-                                    paragraph.Title = Literals.paragraphTotals ->
-                        prop.children [ 
-                            section.YearTotals
-                            |> List.map (fun t ->
-                                t.Period, t.Gender
-                            )
-                            |> Components.PieChart.render paragraph.Title section.Totals.Gender
-                        ]
+                        | Graph when chapter.Title = Literals.groupAge && paragraph.Title = Literals.paragraphPerYear ->
+                            prop.children
+                                [
+                                    (fun t -> t.AgeGroup) |> getStackedBarChart paragraph.Title section |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupGender && 
-                                    paragraph.Title = Literals.paragraphPerYear ->
-                        prop.children [
-                            (fun t -> t.Gender)
-                            |> getStackedBarChart section paragraph.Title
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.groupDischargeReason
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.DischargeReasons) |> getPieChart paragraph.Title section |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupAge && 
-                                    paragraph.Title = Literals.paragraphTotals ->
-                        prop.children [ 
-                            section.YearTotals
-                            |> List.map (fun t ->
-                                t.Period, t.AgeGroup
-                            )
-                            |> Components.PieChart.render paragraph.Title section.Totals.AgeGroup
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.groupDischargeReason
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.DischargeReasons)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupAge && 
-                                    paragraph.Title = Literals.paragraphPerYear ->
-                        prop.children [
-                            (fun t -> t.AgeGroup)
-                            |> getStackedBarChart section paragraph.Title
-                            ]
+                        | Graph when
+                            chapter.Title = Literals.groupDiagnoseGroup
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children
+                                [
 
-                    | Graph when chapter.Title = Literals.groupDischargeReason && 
-                                    paragraph.Title = Literals.paragraphTotals ->
-                        prop.children [ 
-                            section.YearTotals
-                            |> List.map (fun t ->
-                                t.Period, t.DischargeReasons
-                            )
-                            |> Components.PieChart.render paragraph.Title section.Totals.DischargeReasons
-                        ]
+                                    (fun t -> t.DiagnoseGroups) |> getPieChart paragraph.Title section |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupDischargeReason && 
-                                    paragraph.Title = Literals.paragraphPerYear ->
-                        prop.children [
-                            (fun t -> t.DischargeReasons)
-                            |> getStackedBarChart section paragraph.Title
-                            ]
+                        | Graph when
+                            chapter.Title = Literals.groupDiagnoseGroup
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.DiagnoseGroups)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
 
-                    | Graph when chapter.Title = Literals.groupDiagnoseGroup && 
-                                    paragraph.Title = Literals.paragraphTotals ->
-                        prop.children [ 
-                            section.YearTotals
-                            |> List.map (fun t ->
-                                t.Period, t.DiagnoseGroups
-                            )
-                            |> Components.PieChart.render paragraph.Title section.Totals.DiagnoseGroups
-                        ]
+                        | Graph when
+                            chapter.Title = Literals.groupSpecialism
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children [ (fun t -> t.Specialisme) |> getPieChart paragraph.Title section |> toReact ]
 
-                    | Graph when chapter.Title = Literals.groupDiagnoseGroup  && 
-                                    paragraph.Title = Literals.paragraphPerYear ->
-                        prop.children [
-                            (fun t -> t.DiagnoseGroups)
-                            |> getStackedBarChart section paragraph.Title
-                            ]
-
-                    | Graph when chapter.Title = Literals.groupSpecialism && 
-                                    paragraph.Title = Literals.paragraphTotals ->
-                        prop.children [ 
-                            section.YearTotals
-                            |> List.map (fun t ->
-                                t.Period, t.Specialisme
-                            )
-                            |> Components.PieChart.render paragraph.Title section.Totals.Specialisme
-                        ]
-
-                    | Graph when chapter.Title = Literals.groupSpecialism  && 
-                                    paragraph.Title = Literals.paragraphPerYear ->
-                        prop.children [
-                            (fun t -> t.Specialisme)
-                            |> getStackedBarChart section paragraph.Title
-                            ]
-
-                    | Graph when chapter.Title = Literals.subGroupCanule &&
-                                paragraph.Title = Literals.paragraphTotals ->
-                        prop.children [
-                            section.YearTotals 
-                            |> List.map (fun t -> t.Period, t.Cannule)
-                            |> Components.PieChart.render paragraph.Title section.Totals.Cannule
-                        ]
-                    *)
+                        | Graph when
+                            chapter.Title = Literals.groupSpecialism
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.Specialisme)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
+                        | Graph when
+                            chapter.Title = Literals.subGroupCanule
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children [ (fun t -> t.Cannule) |> getPieChart paragraph.Title section |> toReact ]
 
                         | _ ->
                             Browser.Dom.console.log ("couldn't find: ", chapter.Title, paragraph.Title)
