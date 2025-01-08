@@ -12,8 +12,8 @@ open Informedica.PICE.Lib
 module PICETypes = Informedica.PICE.Lib.Types
 
 
-let cachePath = "./../../data/cache/data.cache"
-let exportPath = "./../../data/mrdm/Export_PICE.xlsx"
+let cachePath = "data/cache/data.cache"
+let exportPath = "data/mrdm/Export_PICE.xlsx"
 
 
 let init = Parsing.parseMRDM exportPath cachePath 
@@ -53,7 +53,7 @@ let mapTotals (totals: Statistics.Totals) =
 
 let createReport filter =
     let filterPath =
-        (sprintf "%A" filter).ToLower() |> sprintf "./../../data/cache/%s.report.cache"
+        $"%A{filter}".ToLower() |> sprintf "data/cache/%s.report.cache"
 
     let mapParagraph (p: Report.Paragraph) =
         { Title = p.Title; Content = p.Content }

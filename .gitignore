@@ -89,6 +89,9 @@ publishnuget.cmd
 !/src/Server/Scripts/
 !/src/Server/Scripts/resources/
 !/src/Server/Scripts/resources/*.csv
+!/src/Server/data/
+!/src/Server/data/mrdm/
+!/src/Server/data/cache/
 !/src/Client/
 !/src/Client/*.css
 !/src/Client/*.html
@@ -96,9 +99,6 @@ publishnuget.cmd
 !/src/Client/public/*.*
 !/src/Client/Components/
 !/src/Client/Pages/
-!/data/
-!/data/mrdm/
-!/data/cache/
 !/src/Informedica.PICE.Lib/
 !/src/Informedica.PICE.Lib/pice.xlsx
 !/src/Informedica.PICE.Lib/Scripts/

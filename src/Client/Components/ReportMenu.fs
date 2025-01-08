@@ -66,6 +66,7 @@ module ReportMenu =
             {|
                 data: TreeData list
                 isOpen: bool
+                toggle: unit -> unit
                 filter: Filter
                 dispatch: State -> unit
             |})
@@ -136,8 +137,9 @@ module ReportMenu =
 
             <Drawer
                 open={props.isOpen}
+                onClose={props.toggle}
                 anchor="left"
-                variant="persistent">
+                >
                 <Box sx={bxSx} role="presentation" >
                     {showDiagnoses}
                     <Divider />

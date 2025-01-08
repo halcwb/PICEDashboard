@@ -285,24 +285,49 @@ let View () =
             | HasNotStartedYet -> display true "De boel wordt opgestart ..."
             | InProgress -> display true "Het rapport wordt opgehaald ..."
             | Resolved(Error e) -> display false $"Oeps:\n%s{e}"
-            | Resolved(Ok report) -> display false "Diagnoses"
-        (*
-                    let dgs = report.Sections |> List.head |> (fun section -> section.Totals.Diagnoses)
+            | Resolved(Ok report) ->
 
-                    fun
-                        (o:
-                            {|
-                                showReport: bool
-                                selected: string list
-                            |}) ->
-                        if o.showReport then
-                            ShowReport |> dispatch
-                        else
-                            o.selected |> DiagnosesSelected |> dispatch
-                    |> DiagnosesMenu.render menuIsOpen dgs state.SelectedDiagnoses
+                let dgs = report.Sections |> List.head |> (fun section -> section.Totals.Diagnoses)
 
-                    Pages.Diagnoses.render state.DisplayType state.SelectedDiagnoses report
-                    *)
+                let diagMenu =
+                    let props = {|
+                        isOpen = state.SideMenuIsOpen
+                        toggle = fun () -> SideMenuOpenToggled |> dispatch
+                        diagnoses = dgs
+                        selected = state.SelectedDiagnoses
+                        dispatch =
+                            fun
+                                (o:
+                                    {|
+                                        showReport: bool
+                                        selected: string list
+                                    |}) ->
+                                if o.showReport then
+                                    ShowReport |> dispatch
+                                else
+                                    o.selected |> DiagnosesSelected |> dispatch
+                    |}
+
+                    Components.DiagnosesMenu.View(props)
+
+                let diagPage =
+                    let props = {|
+                        displayType = state.DisplayType
+                        selected = state.SelectedDiagnoses
+                        report = report
+                    |}
+
+                    Pages.Diagnoses.View(props)
+
+                JSX.jsx
+                    $"""
+                    import Box from '@mui/material/Box';
+
+                    <Box>
+                        {diagMenu}
+                        {diagPage}
+                    </Box>
+                    """
 
         else
             match state.Report with
@@ -310,6 +335,7 @@ let View () =
             | InProgress ->
                 printfn "InProgress"
                 display true "Het rapport wordt opgehaald ..."
+            | Resolved(Error err) -> $"Oeps er ging wat mis:\n%s{err}" |> display false
             | Resolved(Ok report) ->
 
                 let treeData = report.Sections |> mapToTreeData
@@ -318,6 +344,7 @@ let View () =
                     Components.ReportMenu.View {|
                         data = treeData
                         isOpen = state.SideMenuIsOpen
+                        toggle = fun () -> SideMenuOpenToggled |> dispatch
                         filter = state.SelectedFilter
                         dispatch =
                             fun
@@ -341,39 +368,39 @@ let View () =
                     |}
 
 
-                JSX.jsx
-                    $"""
-                import Box from '@mui/material/Box';
+                if state.DisplayTypeAcknowledged then
 
-                <Box>
-                    {reportMenu}
-                    {reportPage}
-                </Box>
-                """
+                    JSX.jsx
+                        $"""
+                    import Box from '@mui/material/Box';
 
-            (*
+                    <Box>
+                        {reportMenu}
+                        {reportPage}
+                    </Box>
+                    """
+                else
+                    let content =
+                        match state.DisplayType with
+                        | Print -> "Het rapport toont nu een print versie"
+                        | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
+                        | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
 
-                |> ReportMenu.render treeData menuIsOpen filter
+                    let dialog =
+                        Components.Dialog.View {|
+                            title = "### Verandering van rapport type"
+                            content = content
+                            dispatch = fun _ -> DisplayTypeAcknowledged |> dispatch
+                        |}
 
-                Html.div [
-                    prop.style [ style.marginLeft 150 ]
-                    prop.children [
-                        if displayTypeAck then
-                            Pages.Report.render displayType treeItem report
-                        else
-                            let content =
-                                match displayType with
-                                | Print -> "Het rapport toont nu een print versie"
-                                | Graph -> "Het rapport bevat nu grafieken i.p.v. tabellen"
-                                | Table -> "Het rapport vertoont nu tabellen i.p.v. grafieken"
+                    JSX.jsx
+                        $"""
+                    import Box from '@mui/material/Box';
 
-                            Dialog.render "### Verandering van rapport type" content (fun _ ->
-                                DisplayTypeAcknowledged |> dispatch)
-
-                    ]
-                ]
-                *)
-            | Resolved(Error err) -> $"Oeps er ging wat mis:\n%s{err}" |> display false
+                    <Box>
+                        {dialog}
+                    </Box>
+                    """
 
     let contSx = {| height = "100vh" |}
 

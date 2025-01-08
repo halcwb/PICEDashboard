@@ -12,7 +12,10 @@ let sln = "PICEDashboard.sln"
 let sharedPath = Path.getFullName "src/Shared"
 let serverPath = Path.getFullName "src/Server"
 let clientPath = Path.getFullName "src/Client"
+let dataPath = Path.getFullName "src/Server/data"
+
 let deployPath = Path.getFullName "deploy"
+
 let sharedTestsPath = Path.getFullName "tests/Shared"
 let serverTestsPath = Path.getFullName "tests/Server"
 let clientTestsPath = Path.getFullName "tests/Client"
@@ -48,7 +51,9 @@ Target.create "bundle" (fun _ ->
             ]
             clientPath
     ]
-    |> runParallel)
+    |> runParallel
+    Shell.copyDir dataPath deployPath (fun _ -> true)
+)
 
 
 Target.create "build" (fun _ -> run dotnet [ "build"; sln ] ".")

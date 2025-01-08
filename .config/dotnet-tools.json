@@ -29,6 +29,13 @@
         "fable"
       ],
       "rollForward": false
+    },
+    "dotnet-proj": {
+      "version": "0.44.0",
+      "commands": [
+        "dotnet-proj"
+      ],
+      "rollForward": false
     }
   }
 }
