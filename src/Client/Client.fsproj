@@ -13,6 +13,7 @@
     <Compile Include="Mui.fs" />
     <Compile Include=".\Components\Markdown.fs" />
     <Compile Include=".\Components\DropDownBox.fs" />
+    <Compile Include=".\Components\Accordion.fs" />
     <Compile Include=".\Components\AccordionList.fs" />
     <Compile Include=".\Components\SelectableList.fs" />
     <Compile Include=".\Components\TitleBar.fs" />

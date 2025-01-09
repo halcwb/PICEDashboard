@@ -15,7 +15,7 @@ module ReportMenu =
     module private Elmish =
 
 
-        let drawerWidth = 200
+        let drawerWidth = 250
 
         type State =
             {|
@@ -132,6 +132,7 @@ module ReportMenu =
 
 
         let bxSx = {| width = drawerWidth; padding = 1 |}
+
         let dbSx = {| padding = 2 |}
 
         JSX.jsx

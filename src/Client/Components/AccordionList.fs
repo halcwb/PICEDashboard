@@ -18,34 +18,19 @@ module AccordionList =
                     |} list
             |})
         =
-        let (value, setValue) = React.useState (false)
-        let expanded = props.items.Length = 1
-
-        if value <> expanded then
-            setValue (expanded)
-
-        Logging.log "value" value
 
         let accordion summary details =
-            JSX.jsx
-                $"""
-            import Accordion from '@mui/material/Accordion';
-            import AccordionDetails from '@mui/material/AccordionDetails';
-            import AccordionSummary from '@mui/material/AccordionSummary';
-            
-            <Accordion
-                expanded={value}
-                square={true}
-                elevation={0}
-            >
-                <AccordionSummary>
-                    {summary}
-                </AccordionSummary>
-                <AccordionDetails>
-                    {details}
-                </AccordionDetails>
-            </Accordion>
-            """
+            let props =
+                {|
+                    item =
+                        {|
+                            summary = summary
+                            details = details
+                        |}
+                    isOpen = props.items.Length = 1
+                |}
+
+            Accordion.View(props)
 
         let items =
             props.items |> List.map (fun item -> accordion item.summary item.details)

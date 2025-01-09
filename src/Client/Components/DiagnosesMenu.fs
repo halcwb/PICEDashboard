@@ -12,7 +12,7 @@ module DiagnosesMenu =
 
     module private Elmish =
 
-        let drawerWidth = 200
+        let drawerWidth = 250
 
 
         type Msg = | ShowReport
@@ -35,6 +35,7 @@ module DiagnosesMenu =
             | ShowReport ->
                 let state = {| state with showReport = true |}
                 state, Cmd.ofEffect (fun _ -> state |> dispatch)
+
 
     open Elmish
 
@@ -80,6 +81,8 @@ module DiagnosesMenu =
 
                 let onChange =
                     fun b ->
+                        Logging.log "onchange" b
+
                         if b then
                             {|
                                 showReport = false
@@ -122,8 +125,8 @@ module DiagnosesMenu =
 
         let sx =
             {|
-                width = drawerWidth
-                flexShrink = 0
+                maxWidth = drawerWidth
+            //                flexShrink = 0
             |}
 
         JSX.jsx
@@ -140,7 +143,9 @@ module DiagnosesMenu =
             sx={sx}
         >
             {goToReportButton}
-            {diagnosesList}
+            <List sx={sx}>
+                {diagnosesList}
+            </List>
         </Drawer>
 
         """

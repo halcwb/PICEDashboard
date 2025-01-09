@@ -39,7 +39,7 @@ module DropDownBox =
             // display nothing of no value can be found
             | None -> ""
 
-        let sxFc = {| padding = 1; minWidth = 100 |}
+        let sxFc = {| padding = 1; minWidth = 200 |}
         let sxIl = {| padding = 0 |}
         let sxSl = {| padding = 1 |}
 
