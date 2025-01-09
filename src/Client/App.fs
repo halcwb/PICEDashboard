@@ -160,22 +160,23 @@ module private Elmish =
             },
             Cmd.none
 
-        | ReportFilterItemSelected(f, s) ->
+        | ReportFilterItemSelected(filter, s) ->
+            Logging.log "ReportFilterItemSelected" (filter, s)
+
             let cmd =
-                if state.SelectedFilter = f then
+                if state.SelectedFilter = filter then
                     Cmd.none
                 else
                     Cmd.ofMsg (LoadStatistics Started)
 
             {
                 state with
-                    SideMenuIsOpen = false
                     Report =
-                        if state.SelectedFilter = f then
+                        if state.SelectedFilter = filter then
                             state.Report
                         else
                             HasNotStartedYet
-                    SelectedFilter = f
+                    SelectedFilter = filter
                     SelectedTreeItem = Some s
             },
             cmd
@@ -204,6 +205,7 @@ module private Elmish =
 
 
 open Fable.Core
+open Fable.Core.JsInterop
 open Browser
 open Fable.React
 
@@ -211,16 +213,12 @@ open Elmish
 open Shared
 
 
-[<Literal>]
-let private themeDef =
-    """
-responsiveFontSizes(createTheme(), { factor : 2 })
-"""
-
-
 [<Import("createTheme", from = "@mui/material/styles")>]
-[<Emit(themeDef)>]
-let private theme: obj = jsNative
+let private createTheme props = emitJsExpr props "($1, { factor : 2 })"
+
+
+[<Import("responsiveFontSizes", from = "@mui/material/styles")>]
+let private responsiveFontSizes theme = emitJsExpr theme "($1)"
 
 
 [<JSX.Component>]
@@ -346,6 +344,7 @@ let View () =
                         isOpen = state.SideMenuIsOpen
                         toggle = fun () -> SideMenuOpenToggled |> dispatch
                         filter = state.SelectedFilter
+                        currentItem = state.SelectedTreeItem |> Option.defaultValue "0"
                         dispatch =
                             fun
                                 (o:
@@ -417,10 +416,21 @@ let View () =
         else
             createMainContent state dispatch
 
+    let theme =
+        createTheme {|
+            components = {|
+                MuiAccordionSummary = {|
+                    styleOverrides = {|
+                        root = {| backgroundColor = "#f5f5f5" |}
+                    |}
+                |}
+            |}
+        |}
+
     JSX.jsx
         $"""
         import {{ ThemeProvider }} from '@mui/material/styles';
-        import {{ responsiveFontSizes }} from '@mui/material/styles';
+        import {{ responsiveFontSizes, createTheme }} from '@mui/material/styles';
         import CssBaseline from '@mui/material/CssBaseline';
         import Typography from '@mui/material/Typography';
         import Container from '@mui/material/Container';
@@ -428,7 +438,7 @@ let View () =
 
         <React.StrictMode>
             <CssBaseline enableColorScheme />
-            <ThemeProvider theme={theme} >
+            <ThemeProvider theme={responsiveFontSizes theme} >
                 <React.Fragment>
                     <Container sx={contSx} disableGutters={true} component="main" maxWidth="xl" > 
                         {titleBar}

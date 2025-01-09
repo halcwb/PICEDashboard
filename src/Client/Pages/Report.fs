@@ -99,11 +99,18 @@ module Report =
 
 
         let getStackedBarChart title section get =
-            let perYr = section.YearTotals |> List.map (fun t -> t.Period, t |> get)
+            let perYr =
+                section.YearTotals
+                |> List.map (fun t -> t.Period, t |> get)
+                |> List.filter (fun (_, tots) -> tots |> List.sumBy snd > 0)
 
             let perMo =
                 section.MonthTotals
-                |> List.map (fun (yr, xs) -> yr, xs |> List.map (fun t -> t.Period, t |> get))
+                |> List.map (fun (yr, xs) ->
+                    yr,
+                    xs
+                    |> List.map (fun t -> t.Period, t |> get)
+                    |> List.filter (fun (p, tots) -> tots |> List.sumBy snd > 0))
 
             let props =
                 {|

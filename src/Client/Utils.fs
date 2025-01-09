@@ -32,6 +32,7 @@ module Math =
 
 
 open Fable.Core
+open Fable.Core.JsInterop
 open Feliz
 open Browser.Types
 
@@ -40,6 +41,8 @@ let inline toReact (el: JSX.Element) : ReactElement = unbox el
 
 /// Enables use of Feliz styles within a JSX hole
 let inline toStyle (styles: IStyleAttribute list) : obj = JsInterop.createObj (unbox styles)
+
+let inline spread (value: obj) : obj = emitJsStatement value """...$0"""
 
 
 let toClass (classes: (string * bool) list) : string =

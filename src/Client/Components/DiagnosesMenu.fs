@@ -12,7 +12,7 @@ module DiagnosesMenu =
 
     module private Elmish =
 
-        let drawerWidth = 300
+        let drawerWidth = 200
 
 
         type Msg = | ShowReport
@@ -136,6 +136,7 @@ module DiagnosesMenu =
             open={props.isOpen}
             onClose={props.toggle}
             anchor="left"
+            variant="persistent"
             sx={sx}
         >
             {goToReportButton}

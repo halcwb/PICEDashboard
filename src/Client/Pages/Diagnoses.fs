@@ -79,37 +79,3 @@ module Diagnoses =
                 <Typography variant="body1" sx={sx}>{selectTxt}</Typography>
             </Box>
             """
-
-
-(*
-        Html.div [
-                prop.style [ style.paddingLeft 20 ]
-                prop.children [
-                    match props.selected with
-                    | [] -> 
-                        Mui.typography [
-                            typography.variant.h4
-                            prop.text "Selecteer 1 of meerdere diagnoses"
-                        ]
-                    | _ -> 
-                        Html.div [
-                        ]
-                        fun totals ->
-                            totals.Diagnoses
-                            |> List.filter (fun (k, v) ->
-                                props.selected
-                                |> List.exists ((=) k)
-                            )
-                        |> getStackedBarChart (props.report.Sections |> List.head) "Selectie"
-
-                        Mui.typography [
-                            typography.variant.body1
-                            prop.style [
-                                style.paddingTop 10
-                            ]
-                            prop.text selectTxt
-                        ]
-                    ]
-            ]
-        )
-*)

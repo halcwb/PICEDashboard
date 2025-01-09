@@ -6,6 +6,7 @@ module ReportMenu =
     open Elmish
     open Feliz
     open Fable.Core
+    open Fable.Core.JsInterop
     open Fable.React
 
     open Shared
@@ -14,7 +15,7 @@ module ReportMenu =
     module private Elmish =
 
 
-        let drawerWidth = 300
+        let drawerWidth = 200
 
         type State =
             {|
@@ -28,10 +29,10 @@ module ReportMenu =
             | FilterChanged of Filter
 
 
-        let init filter =
+        let init filter item =
             {|
                 filter = filter
-                item = "0"
+                item = item
                 showDiagnoses = false
             |},
             Cmd.none
@@ -48,9 +49,9 @@ module ReportMenu =
                 |})
             =
             match msg with
-            | FilterChanged f ->
-                printfn "filter changed to: %A" f
-                let state = {| state with filter = f |}
+            | FilterChanged filter ->
+                printfn "filter changed to: %A" filter
+                let state = {| state with filter = filter |}
                 state, Cmd.ofEffect (fun _ -> state |> dispatch)
             | ShowDiagnoses ->
                 let state = {| state with showDiagnoses = true |}
@@ -68,12 +69,13 @@ module ReportMenu =
                 isOpen: bool
                 toggle: unit -> unit
                 filter: Filter
+                currentItem: string
                 dispatch: State -> unit
             |})
         =
 
         let state, dispatch =
-            React.useElmish (init props.filter, update props.dispatch, [||])
+            React.useElmish (init props.filter props.currentItem, update props.dispatch, [||])
 
         let showDiagnoses =
             JSX.jsx
@@ -110,18 +112,24 @@ module ReportMenu =
                     FirstIsNone = true
                 }
 
-        let handleKeyDown id =
-            fun _ -> props.dispatch ({| state with item = id |})
+        let dispatchItem id =
+            fun _ ->
+                Logging.log "dispatchItem" id
+                Logging.log "current item" props.currentItem
+
+                if id <> props.currentItem then
+                    props.dispatch ({| state with item = id |})
 
         let rec treeItems data =
             data
             |> List.map (fun d ->
                 JSX.jsx
                     $""" 
-                    <TreeItem key={d.id} itemId={d.id} label= {d.label} onKeyDown = {handleKeyDown} >
+                    <TreeItem key={d.id} itemId={d.id} id={d.id} label= {d.label} onClick={dispatchItem d.id} >
                         {d.children |> treeItems}
                     </TreeItem>
                     """)
+
 
         let bxSx = {| width = drawerWidth; padding = 1 |}
         let dbSx = {| padding = 2 |}
@@ -139,6 +147,7 @@ module ReportMenu =
                 open={props.isOpen}
                 onClose={props.toggle}
                 anchor="left"
+                variant="persistent"
                 >
                 <Box sx={bxSx} role="presentation" >
                     {showDiagnoses}
@@ -147,88 +156,9 @@ module ReportMenu =
                         {dropDown}
                     </Box>
                     <Divider />
-                    <SimpleTreeView>
+                    <SimpleTreeView >
                         {props.data |> treeItems}
                     </SimpleTreeView>
                 </Box>
             </Drawer>
             """
-
-
-(*
-        let showDiagnoses =
-            Mui.button
-                [
-                    prop.onClick (fun _ -> ShowDiagnoses |> dispatch)
-                    prop.children
-                        [
-                            Mui.typography [ typography.color.textPrimary; prop.text "ga naar diagnoses" ]
-                        ]
-                ]
-
-        let dropdown =
-            let value =
-                state.filter
-                |> Filter.filterToString
-                |> function
-                    | Some(_, s) -> s
-                    | None -> ""
-
-
-            Filter.mapping
-            |> List.map snd
-            |> DropDownBox.render value true "Filter" dispatch
-
-        let rec create data : ReactElement list =
-            data
-            |> List.map (fun d ->
-                Mui.treeItem
-                    [
-                        treeItem.nodeId d.id
-                        treeItem.label
-                            [
-                                Mui.typography
-                                    [ prop.className classes.label; typography.variant.button; prop.text d.label ]
-                            ]
-                        treeItem.onLabelClick (fun _ -> props.dispatch ({| state with item = d.id |}))
-                        treeItem.children (d.children |> create)
-                    ])
-
-        let treeView =
-            Mui.treeView
-                [
-
-                    treeView.defaultExpandIcon (Icons.expandMoreIcon "")
-                    treeView.defaultCollapseIcon (Icons.chevronRightIcon "")
-                    //                    prop.style [ style.padding 10 ]
-                    prop.children (props.data |> create)
-                ]
-
-        Html.div
-            [
-                prop.className classes.root
-                prop.children
-                    [
-                        Mui.drawer
-                            [
-                                drawer.open' props.isOpen
-                                drawer.variant.persistent
-                                drawer.anchor.left
-                                //                        prop.className classes.drawer
-                                drawer.classes.paper classes.drawer
-                                drawer.children
-                                    [
-                                        // this makes sure that the content of the drawer is
-                                        // below the app bar
-                                        Html.div [ prop.className classes.toolbar ]
-                                        showDiagnoses
-                                        dropdown
-                                        Html.div [ prop.style [ style.marginTop 20 ] ]
-                                        treeView
-                                    ]
-                            ]
-
-                    ]
-
-            ]
-        *)

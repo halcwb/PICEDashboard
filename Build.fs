@@ -21,17 +21,17 @@ let serverTestsPath = Path.getFullName "tests/Server"
 let clientTestsPath = Path.getFullName "tests/Client"
 
 
-Target.create "clean" (fun _ ->
+Target.create "Clean" (fun _ ->
     Shell.cleanDir deployPath
     Shell.cleanDir (Path.combine clientPath "dist")
     run dotnet [ "fable"; "clean"; "--yes"; "-e"; ".jsx" ] clientPath // Delete *.fs.js files created by Fable
 )
 
 
-Target.create "restoreclient" (fun _ -> run npm [ "ci" ] clientPath)
+Target.create "RestoreClient" (fun _ -> run npm [ "ci" ] clientPath)
 
 
-Target.create "bundle" (fun _ ->
+Target.create "Bundle" (fun _ ->
     [
         "server", dotnet [ "publish"; "-c"; "Release"; "-o"; deployPath ] serverPath
         "client",
@@ -52,14 +52,19 @@ Target.create "bundle" (fun _ ->
             clientPath
     ]
     |> runParallel
-    Shell.copyDir dataPath deployPath (fun _ -> true)
+    
+    let deployDataPath = Path.combine deployPath "data"
+    printfn $"Copying data to {deployDataPath} ..."
+    Shell.copyDir deployDataPath dataPath (fun _ -> true)
+    let result = System.IO.Directory.Exists(deployDataPath)
+    printfn $"Copying data ... done: {result}"
 )
 
 
-Target.create "build" (fun _ -> run dotnet [ "build"; sln ] ".")
+Target.create "Build" (fun _ -> run dotnet [ "build"; sln ] ".")
 
 
-Target.create "run" (fun _ ->
+Target.create "Run" (fun _ ->
     [
         "server", dotnet [ "run"; "--no-restore" ] serverPath
         "client", dotnet [ "fable"; "watch"; "-o"; "output"; "-s"; "-e"; ".jsx"; "--run"; "npx"; "vite" ] clientPath
@@ -67,14 +72,14 @@ Target.create "run" (fun _ ->
     |> runParallel)
 
 
-Target.create "testheadless" (fun _ ->
+Target.create "TestHeadless" (fun _ ->
     run dotnet [ "run" ] serverTestsPath
     run dotnet [ "fable"; "-o"; "output"; "-e"; ".jsx" ] clientTestsPath
 //    run npx [ "mocha"; "output" ] clientTestsPath
 )
 
 
-Target.create "watchtests" (fun _ ->
+Target.create "WatchTests" (fun _ ->
     [
         "server", dotnet [ "watch"; "run"; "--no-restore" ] serverTestsPath
         "client",
@@ -91,11 +96,11 @@ open Fake.Core.TargetOperators
 
 let dependencies =
     [
-        "clean" ==> "restoreclient" ==> "bundle"
-        "clean" ==> "restoreclient" ==> "build" ==> "run"
+        "Clean" ==> "RestoreClient" ==> "Bundle"
+        "Clean" ==> "RestoreClient" ==> "Build" ==> "Run"
 
-        "restoreclient" ==> "build" ==> "testheadless"
-        "restoreclient" ==> "build" ==> "watchtests"
+        "RestoreClient" ==> "Build" ==> "TestHeadless"
+        "RestoreClient" ==> "Build" ==> "WatchTests"
     ]
 
 

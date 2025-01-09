@@ -18,6 +18,13 @@ module AccordionList =
                     |} list
             |})
         =
+        let (value, setValue) = React.useState (false)
+        let expanded = props.items.Length = 1
+
+        if value <> expanded then
+            setValue (expanded)
+
+        Logging.log "value" value
 
         let accordion summary details =
             JSX.jsx
@@ -27,7 +34,7 @@ module AccordionList =
             import AccordionSummary from '@mui/material/AccordionSummary';
             
             <Accordion
-                defaultExpanded={false}
+                expanded={value}
                 square={true}
                 elevation={0}
             >
