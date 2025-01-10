@@ -49,7 +49,7 @@ let application =
         use_router webApp
         memory_cache
         use_gzip
-        //use_iis
+        use_iis
 
         service_config serviceConfig
         host_config Env.configureHost

@@ -401,8 +401,6 @@ let View () =
                     </Box>
                     """
 
-    let contSx = {| height = "100vh" |}
-
     let titleBar =
         Components.TitleBar.View {|
             title = "PICE Dashboard"
@@ -426,6 +424,8 @@ let View () =
                 |}
             |}
         |}
+
+    let contSx = {| height = "100vh"; marginLeft = 33 |}
 
     JSX.jsx
         $"""
