@@ -4,6 +4,7 @@ module Types =
 
     open System
     open Informedica.PimPrism.Lib.Types
+    open Informedica.Utils.Lib.Csv
 
     type Patient =
         {
@@ -58,6 +59,11 @@ module Types =
             AdmissionWeight: float option
             AdmissionLength: int option
             ContinuousReanimation: bool
+            VentDays: int option
+            VentInvDays: int option
+            VentNonInvDays : int option
+            VentOtherDays: int option
+            VentDuration : DataOption option
             Canule: bool
             Sepsis: bool
             PIM: PIM

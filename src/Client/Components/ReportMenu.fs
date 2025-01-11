@@ -105,7 +105,7 @@ module ReportMenu =
 
             DropDownBox.View
                 {
-                    Items = Filter.mapping |> List.map snd
+                    Items = Filter.mapping |> Array.map snd
                     Value = value
                     Dispatch = dispatch
                     Label = "Filter"
@@ -122,11 +122,17 @@ module ReportMenu =
 
         let rec treeItems data =
             data
-            |> List.map (fun d ->
+            |> Array.map (fun d ->
+                let children =
+                    if d.children |> List.isEmpty then
+                        [||]
+                    else
+                        d.children |> List.toArray |> treeItems
+
                 JSX.jsx
                     $""" 
                     <TreeItem key={d.id} itemId={d.id} id={d.id} label= {d.label} onClick={dispatchItem d.id} >
-                        {d.children |> treeItems}
+                        {children}
                     </TreeItem>
                     """)
 
@@ -158,7 +164,7 @@ module ReportMenu =
                     </Box>
                     <Divider />
                     <SimpleTreeView >
-                        {props.data |> treeItems}
+                        {props.data |> List.toArray |> treeItems}
                     </SimpleTreeView>
                 </Box>
             </Drawer>

@@ -8,6 +8,7 @@ console.log("proxying to", proxyTarget);
 
 // https://vite.dev/config/
 export default defineConfig({
+  base : "./",
   build: {
     outDir: "../../deploy/public",
   },

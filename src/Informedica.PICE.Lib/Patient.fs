@@ -163,6 +163,11 @@ module Patient =
         contReanimation
         sepsis
         canule
+        vent
+        ventInv
+        ventNonInv
+        ventOther
+        ventDuration
         pim
         prism24
         prism12
@@ -188,6 +193,11 @@ module Patient =
             ContinuousReanimation = contReanimation
             Sepsis = sepsis
             Canule = canule
+            VentDays = vent
+            VentInvDays = ventInv
+            VentNonInvDays = ventNonInv
+            VentOtherDays = ventOther
+            VentDuration = ventDuration
             PIM = pim
             PRISM24 = prism24
             PRISM12 = prism12

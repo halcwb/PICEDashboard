@@ -35,10 +35,10 @@ fsi.AddPrinter<DateTime> _.ToString("dd-MM-yyyy")
 
 
 [<Literal>]
-let cachePath = __SOURCE_DIRECTORY__ + "./../../../data/cache/data.cache"
+let cachePath = __SOURCE_DIRECTORY__ + "./../../Server/data/cache/data.cache"
 
 [<Literal>]
-let exportPath = __SOURCE_DIRECTORY__ + "./../../../data/mrdm/Export_PICE.xlsx"
+let exportPath = __SOURCE_DIRECTORY__ + "./../../Server/data/mrdm/Export_PICE.xlsx"
 
 
 File.exists exportPath
@@ -61,6 +61,7 @@ let pats, msgs =
 
 let stats = pats |> Array.toList |> Statistics.calculate Types.NoFilter
 
+stats.Totals.VentilationDuration
 
 Statistics.toMarkdown stats
 

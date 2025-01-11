@@ -16,8 +16,8 @@ open Informedica.PICE.Lib
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
-let cachePath = "./../../../data/cache/data.cache"
-let exportPath = "./../../../data/mrdm/Export_PICE.xlsx"
+let cachePath = "./..//data/cache/data.cache"
+let exportPath = "./..//data/mrdm/Export_PICE.xlsx"
 
 cachePath |> File.exists
 exportPath |> File.exists
@@ -30,6 +30,7 @@ let stats =
     |> Array.toList
     |> Statistics.calculate Types.NoFilter
     
+stats.Totals.VentilationDays
     
 let report = Report.create stats
 

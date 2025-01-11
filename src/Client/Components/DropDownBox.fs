@@ -14,7 +14,7 @@ module DropDownBox =
 
         let menuItems =
             props.Items
-            |> List.mapi (fun i (s: string) ->
+            |> Array.mapi (fun i (s: string) ->
                 let s = if s |> String.IsNullOrEmpty then "Geen" else s
 
                 JSX.jsx
@@ -31,7 +31,7 @@ module DropDownBox =
             props.Items[e?target?value] |> props.Dispatch
 
         let value =
-            match props.Items |> List.tryFindIndex ((=) props.Value) with
+            match props.Items |> Array.tryFindIndex ((=) props.Value) with
             // when first is none display nothing
             | Some i when i = 0 && props.FirstIsNone -> ""
             // otherwise display the value

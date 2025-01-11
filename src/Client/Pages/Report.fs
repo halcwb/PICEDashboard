@@ -373,11 +373,55 @@ module Report =
                                     |> getStackedBarChart paragraph.Title section
                                     |> toReact
                                 ]
+
                         | Graph when
                             chapter.Title = Literals.subGroupCanule
                             && paragraph.Title = Literals.paragraphTotals
                             ->
                             prop.children [ (fun t -> t.Cannule) |> getPieChart paragraph.Title section |> toReact ]
+
+                        | Graph when
+                            chapter.Title = Literals.subGroupVentilationDays
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.VentilationDays) |> getPieChart paragraph.Title section |> toReact
+                                ]
+                        | Graph when
+                            chapter.Title = Literals.subGroupVentilationDays
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+
+                            prop.children
+                                [
+                                    (fun t -> t.VentilationDays)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
+
+                        | Graph when
+                            chapter.Title = Literals.subGroupVentilationDuration
+                            && paragraph.Title = Literals.paragraphTotals
+                            ->
+                            prop.children
+                                [
+                                    (fun t -> t.VentilationDuration)
+                                    |> getPieChart paragraph.Title section
+                                    |> toReact
+                                ]
+
+                        | Graph when
+                            chapter.Title = Literals.subGroupVentilationDuration
+                            && paragraph.Title = Literals.paragraphPerYear
+                            ->
+
+                            prop.children
+                                [
+                                    (fun t -> t.VentilationDuration)
+                                    |> getStackedBarChart paragraph.Title section
+                                    |> toReact
+                                ]
 
                         | _ ->
                             Browser.Dom.console.log ("couldn't find: ", chapter.Title, paragraph.Title)
@@ -429,7 +473,7 @@ module Report =
                                 """
 
                         {|
-                            details = details
+                            details = details |> List.toArray
                             summary = summary |> toReact
                         |})
 
@@ -438,7 +482,15 @@ module Report =
             section.Chapters |> layoutChapters
 
         let layoutReport dt (sections: Section list) =
-            sections |> List.map (layoutDetails dt >> toReact) |> Html.div
+            let sections = sections |> List.toArray |> Array.map (layoutDetails dt >> toReact)
+
+            JSX.jsx
+                $"""
+            import React from 'react';
+            <React.Fragment>
+                {sections}
+            </React.Fragment>
+            """
 
 
     [<JSX.Component>]
@@ -450,6 +502,8 @@ module Report =
                 report: Report
             |})
         =
+        Logging.log "display type" props.displayType
+
         let report =
             match props.selected with
             | Some s -> Utils.selectReport s props.report
@@ -457,7 +511,6 @@ module Report =
 
         match props.displayType with
         | Print ->
-
             let sx = {| marginTop = 2; padding = 2 |}
             let md = Components.Markdown.View({| md = report.Markdown |})
 
@@ -469,6 +522,5 @@ module Report =
                 {md}        
             </Box>
             """
-            |> toReact
 
         | _ -> Utils.layoutReport props.displayType report.Sections

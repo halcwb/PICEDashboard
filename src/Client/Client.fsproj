@@ -11,6 +11,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Bindings.fs" />
     <Compile Include="Mui.fs" />
+    <Compile Include="Server.fs" />
     <Compile Include=".\Components\Markdown.fs" />
     <Compile Include=".\Components\DropDownBox.fs" />
     <Compile Include=".\Components\Accordion.fs" />

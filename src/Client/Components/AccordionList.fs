@@ -14,7 +14,7 @@ module AccordionList =
                 items:
                     {|
                         summary: ReactElement
-                        details: ReactElement list
+                        details: ReactElement[]
                     |} list
             |})
         =

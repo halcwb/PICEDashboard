@@ -224,7 +224,7 @@ let create (stats: Statistics) =
                 |> StringBuilder.appendLine Markdown.Literals.headers9
 
             stats.YearTotals
-            |> List.sortByDescending (fun t -> t.Year)
+            |> List.sortByDescending _.Year
             |> List.fold
                 (fun acc stat ->
                     let calc = calcPerc stat.Totals.Admissions
@@ -245,21 +245,21 @@ let create (stats: Statistics) =
                     acc |> StringBuilder.appendLineFormat Markdown.Literals.columns9 vals)
                 sb
             |> fun sb ->
-                let t = stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions)
+                let t = stats.YearTotals |> List.sumBy _.Totals.Admissions
                 let calc = calcPerc t
 
                 let vals =
                     [
                         Literals.paragraphTotals |> box
-                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.Patients) |> box
-                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.Admissions) |> box
-                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.Discharged) |> box
-                        stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDays) |> box
-                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PICUDeaths) |> float)
+                        stats.YearTotals |> List.sumBy _.Totals.Patients |> box
+                        stats.YearTotals |> List.sumBy _.Totals.Admissions |> box
+                        stats.YearTotals |> List.sumBy _.Totals.Discharged |> box
+                        stats.YearTotals |> List.sumBy _.Totals.PICUDays |> box
+                        calc (stats.YearTotals |> List.sumBy _.Totals.PICUDeaths |> float)
                         |> box
-                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM2Mortality)) |> box
-                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PIM3Mortality)) |> box
-                        calc (stats.YearTotals |> List.sumBy (fun s -> s.Totals.PRISM4Mortality)) |> box
+                        calc (stats.YearTotals |> List.sumBy _.Totals.PIM2Mortality) |> box
+                        calc (stats.YearTotals |> List.sumBy _.Totals.PIM3Mortality) |> box
+                        calc (stats.YearTotals |> List.sumBy _.Totals.PRISM4Mortality) |> box
                     ]
 
                 sb
@@ -267,9 +267,9 @@ let create (stats: Statistics) =
                 |> StringBuilder.toString
 
     let yrTots, moTots =
-        stats.YearTotals |> List.map (fun yt -> yt.Totals),
+        stats.YearTotals |> List.map _.Totals,
         stats.YearTotals
-        |> List.map (fun yt -> yt.Year |> string, yt.MonthTotals |> List.map (fun mt -> mt.Totals))
+        |> List.map (fun yt -> yt.Year |> string, yt.MonthTotals |> List.map _.Totals)
 
     {
         Sections = []
@@ -306,7 +306,7 @@ let create (stats: Statistics) =
         Literals.groupMortality
         Literals.groupDeathMode
         Literals.paragraphPerYear
-        (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DeathMode))
+        (countToTable stats.YearTotals _.Year _.Totals.DeathMode)
     |> addChapter Literals.sectionPICE Literals.groupPatient
     |> addSubChapter Literals.sectionPICE Literals.groupPatient Literals.groupGender
     |> addSubParagraph
@@ -320,7 +320,7 @@ let create (stats: Statistics) =
         Literals.groupPatient
         Literals.groupGender
         Literals.paragraphPerYear
-        (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Gender))
+        (countToTable stats.YearTotals _.Year _.Totals.Gender)
     |> addSubChapter Literals.sectionPICE Literals.groupPatient Literals.groupAge
     |> addSubParagraph
         Literals.sectionPICE
@@ -333,7 +333,7 @@ let create (stats: Statistics) =
         Literals.groupPatient
         Literals.groupAge
         Literals.paragraphPerYear
-        (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.AgeGroup))
+        (countToTable stats.YearTotals _.Year _.Totals.AgeGroup)
     |> addChapter Literals.sectionPICE Literals.groupAdmission
     |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphAdmDisch ""
     |> addParagraph Literals.sectionPICE Literals.groupAdmission Literals.paragraphOccupancy ""
@@ -379,7 +379,7 @@ let create (stats: Statistics) =
         Literals.groupDischarge
         Literals.groupDischargeReason
         Literals.paragraphPerYear
-        (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DischargeReasons))
+        (countToTable stats.YearTotals _.Year _.Totals.DischargeReasons)
     |> addChapter Literals.sectionPICE Literals.groupDiagnose
     |> addSubChapter Literals.sectionPICE Literals.groupDiagnose Literals.groupDiagnoseGroup
     |> addSubParagraph
@@ -393,7 +393,7 @@ let create (stats: Statistics) =
         Literals.groupDiagnose
         Literals.groupDiagnoseGroup
         Literals.paragraphPerYear
-        (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.DiagnoseGroups))
+        (countToTable stats.YearTotals _.Year _.Totals.DiagnoseGroups)
     |> addSubChapter Literals.sectionPICE Literals.groupDiagnose Literals.groupSpecialism
     |> addSubParagraph
         Literals.sectionPICE
@@ -406,7 +406,7 @@ let create (stats: Statistics) =
         Literals.groupDiagnose
         Literals.groupSpecialism
         Literals.paragraphPerYear
-        (countToTable stats.YearTotals (fun tot -> tot.Year) (fun tot -> tot.Totals.Specialism))
+        (countToTable stats.YearTotals _.Year _.Totals.Specialism)
     |> addChapter Literals.sectionPICE Literals.groupVentilation
     |> addSubChapter Literals.sectionPICE Literals.groupVentilation Literals.subGroupCanule
     |> addSubParagraph
@@ -415,5 +415,31 @@ let create (stats: Statistics) =
         Literals.subGroupCanule
         Literals.paragraphTotals
         ""
+    |> addSubChapter Literals.sectionPICE Literals.groupVentilation Literals.subGroupVentilationDays
+    |> addSubParagraph
+        Literals.sectionPICE
+        Literals.groupVentilation
+        Literals.subGroupVentilationDays
+        Literals.paragraphTotals
+        (printCount stats.Totals.VentilationDays true)
+    |> addSubParagraph
+        Literals.sectionPICE
+        Literals.groupVentilation
+        Literals.subGroupVentilationDays
+        Literals.paragraphPerYear
+        (countToTable stats.YearTotals _.Year _.Totals.VentilationDays)
+    |> addSubChapter Literals.sectionPICE Literals.groupVentilation Literals.subGroupVentilationDuration
+    |> addSubParagraph
+        Literals.sectionPICE
+        Literals.groupVentilation
+        Literals.subGroupVentilationDuration
+        Literals.paragraphTotals
+        (printCount stats.Totals.VentilationDuration true)
+    |> addSubParagraph
+        Literals.sectionPICE
+        Literals.groupVentilation
+        Literals.subGroupVentilationDuration
+        Literals.paragraphPerYear
+        (countToTable stats.YearTotals _.Year _.Totals.VentilationDuration)
     |> addChapter Literals.sectionPICE "Complicaties"
     |> addParagraph Literals.sectionPICE "Complicaties" "Volgt nog" ""

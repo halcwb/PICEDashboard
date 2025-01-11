@@ -5,10 +5,6 @@ module private Elmish =
 
 
     open Elmish
-    open Feliz
-    open Feliz.Router
-    open Fable.Remoting.Client
-    open Fable.Core
     open Shared
 
     type Model = {
@@ -43,10 +39,7 @@ module private Elmish =
         | NoOp
 
 
-    let serverApi =
-        Remoting.createApi ()
-        |> Remoting.withRouteBuilder Api.routerPaths
-        |> Remoting.buildProxy<Api.IServerApi>
+    let serverApi = Server.api
 
 
     let init () =
@@ -95,8 +88,6 @@ module private Elmish =
 
 
         | SideMenuOpenToggled ->
-            Logging.log "SideMenuOpenToggled" state.SideMenuIsOpen
-
             {
                 state with
                     SideMenuIsOpen = state.SideMenuIsOpen |> not
@@ -147,9 +138,9 @@ module private Elmish =
                     DisplayType =
                         match state.DisplayType with
                         | Print -> Graph
-                        | Graph -> Table
+                        | Graph -> Print
                         | Table -> Print
-                    DisplayTypeAcknowledged = false
+                    DisplayTypeAcknowledged = true // need to set this to false to show the dialog
             },
             Cmd.none
 
@@ -161,8 +152,6 @@ module private Elmish =
             Cmd.none
 
         | ReportFilterItemSelected(filter, s) ->
-            Logging.log "ReportFilterItemSelected" (filter, s)
-
             let cmd =
                 if state.SelectedFilter = filter then
                     Cmd.none
@@ -224,8 +213,6 @@ let private responsiveFontSizes theme = emitJsExpr theme "($1)"
 [<JSX.Component>]
 let View () =
     let state, dispatch = React.useElmish (Elmish.init, Elmish.update, [||])
-
-    Logging.log "Hello World" state.HelloWorld
 
     let createData id label children = {
         id = id
@@ -405,6 +392,8 @@ let View () =
         Components.TitleBar.View {|
             title = "PICE Dashboard"
             toggleSideMenu = fun () -> SideMenuOpenToggled |> dispatch
+            showGraph = state.DisplayType = Graph
+            toggleGraph = fun () -> DisplayTypeChanged |> dispatch
         |}
 
     let content =

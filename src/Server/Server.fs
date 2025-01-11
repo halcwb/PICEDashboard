@@ -41,11 +41,15 @@ let serviceConfig (services: IServiceCollection) =
             |> ignore
         )
 
+
+let publicPath = System.IO.Path.GetFullPath("./public")
+
+
 let application =
     application {
-        url ("http://*:" + port.ToString() + "/")
+        url ("http://0.0.0.0:" + port.ToString() + "/")
         use_mime_types [ ".svg", "image/svg+xml"; ".png", "image/png" ]
-        use_static "public" //publicPath
+        use_static publicPath
         use_router webApp
         memory_cache
         use_gzip

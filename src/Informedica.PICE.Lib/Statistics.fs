@@ -1,5 +1,7 @@
 namespace Informedica.PICE.Lib
 
+open Informedica.PICE.Lib.Types
+
 
 module Statistics =
 
@@ -42,7 +44,9 @@ module Statistics =
         member val TransportTeam: (string * int) list = [] with get, set
         member val Readmission: (string * int) list = [] with get, set
         member val LengthOfStay: (string * int) list = [] with get, set
-
+        member val VentilationDays: (string * int) list = [] with get, set
+        member val VentilationDuration: (string * int) list = [] with get, set
+    
     type MonthTotals() =
         member val Month = 0 with get, set
         member val Totals = Totals()
@@ -263,6 +267,31 @@ module Statistics =
                 | s when s = "langer dan 1 jaar" -> 4
                 | _ -> 999)
 
+        
+        
+        let ventToCount (pats : PICUAdmission list) =
+            pats
+            |> List.collect (fun pa ->
+                match pa.AdmissionDate, pa.DischargeDate with
+                | Some adt, Some ddt ->
+                    let totDays = (ddt - adt).TotalDays |> int
+                    let ventDays =
+                        (pa.VentInvDays |> Option.defaultValue 0)
+                        + (pa.VentNonInvDays |> Option.defaultValue 0)
+                        + (pa.VentOtherDays |> Option.defaultValue 0)
+                    let nonVentDays = totDays - (pa.VentDays |> Option.defaultValue 0)
+                    [
+                        "Geen beademing", if nonVentDays < 0 then 0 else nonVentDays
+                        "Non-invasieve beademing", pa.VentNonInvDays |> Option.defaultValue 0
+                        "Invasieve beademing", pa.VentInvDays |> Option.defaultValue 0
+                        "Overige beademing", pa.VentOtherDays |> Option.defaultValue 0
+                    ]
+                | _ -> []
+            )
+            |> List.groupBy fst
+            |> List.map (fun (k, v) -> (k, v |> List.sumBy snd))
+            
+            
         let pats =
             let notValid =
                 pats
@@ -573,6 +602,23 @@ module Statistics =
             |> List.countBy _.picuAdmission.Canule
             |> List.map (fun (k, v) -> (if k then "Canule" else "Geen canule"), v)
 
+        stats.Totals.VentilationDays <-
+            pats
+            |> List.map _.picuAdmission
+            |> ventToCount
+            
+        stats.Totals.VentilationDuration <-
+            pats
+            |> List.map _.picuAdmission.VentDuration
+            |> fun xs ->
+                let caps =
+                    xs
+                    |> List.sortBy (Option.map _.Id)
+                    |> getCaps
+                
+                xs
+                |> countBy "Onbekend" caps
+        
         stats.Totals.TransportHospital <-
             pats
             |> List.map _.hospitalAdmission.TransportHospital
@@ -724,6 +770,17 @@ module Statistics =
                 |> List.countBy _.Canule
                 |> List.map (fun (k, v) -> (if k then "Canule" else "Geen canule"), v)
 
+            tot.Totals.VentilationDays <-
+                admissions
+                |> ventToCount
+            
+            tot.Totals.VentilationDuration <-
+                admissions
+                |> List.map _.VentDuration
+                |> fun xs ->
+                    let caps = xs |> getCaps
+                    xs |> countBy "Onbekend" caps
+            
             tot.Totals.TransportHospital <-
                 filterAdmission (dateFilter yr None) _.hospitalAdmission
                 |> List.map _.TransportHospital
@@ -909,7 +966,10 @@ module Statistics =
                         |> List.map _.TransportTeam
                         |> countBy "Onbekend" (stats.Totals.TransportTeam |> List.map fst |> List.distinct)
 
-
+                    moTot.Totals.VentilationDays <-
+                        filterAdmission (dateFilter yr mo) _.picuAdmission
+                        |> ventToCount
+                        
                     moTot
 
                 ))
@@ -1065,6 +1125,8 @@ module Statistics =
             |> StringBuilder.newLine2
             |> printCount "#### PICU Ontslag redenen" stat.Totals.DischargeReasons true
             |> StringBuilder.newLine2
+            |> printCount "#### Ventilatie Dagen" stat.Totals.VentilationDays true
+            |> StringBuilder.newLine2
 
         let yrs =
             stats.YearTotals
@@ -1073,7 +1135,7 @@ module Statistics =
                 (fun acc ytot ->
                     acc
                     |> StringBuilder.appendLine $"## Rapportage over %i{ytot.Year}"
-                    |> printYearTotals "#### Mortaliteit Opnames/Ontslagen en Ligdagen" ytot
+                    |> printYearTotals "#### Mortaliteit Opnames/Ontslagen, Ligdagen en Beademingsdagen" ytot
                     |> StringBuilder.newLine2)
                 ("" |> StringBuilder.builder)
             |> StringBuilder.toString

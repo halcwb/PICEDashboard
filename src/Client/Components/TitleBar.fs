@@ -20,12 +20,48 @@ module TitleBar =
             {|
                 title: string
                 toggleSideMenu: unit -> unit
+                showGraph: bool
+                toggleGraph: unit -> unit
             |})
         =
 
 
         let sx1 = {| flexGrow = 1 |}
         let sx2 = {| mr = 2 |}
+
+        let toggleGraphButton =
+            if props.showGraph then
+                JSX.jsx
+                    $"""
+                import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
+                <IconButton
+                    size="large"
+                    edge="start"
+                    color="inherit"
+                    aria-label="menu"
+                    sx={sx2}
+                    onClick={props.toggleGraph}
+                    >
+                    <LocalPrintshopIcon />
+                </IconButton>
+                """
+            else
+                JSX.jsx
+                    $"""
+                import EqualizerIcon from '@mui/icons-material/Equalizer'; 
+
+                <IconButton
+                    size="large"
+                    edge="start"
+                    color="inherit"
+                    aria-label="menu"
+                    sx={sx2}
+                    onClick={props.toggleGraph}
+                    >
+                    <EqualizerIcon />
+                </IconButton>
+                """
+
 
         JSX.jsx
             $"""
@@ -56,6 +92,7 @@ module TitleBar =
                     <Typography variant="body1" component="div" sx={sx1}>
                         {props.title}
                     </Typography>
+                    {toggleGraphButton}
                     <IconButton
                         size="large"
                         edge="start"
@@ -64,7 +101,6 @@ module TitleBar =
                         sx={sx2}
                         >
                         <PublishIcon />
-
                     </IconButton>
                 </Toolbar>
             </AppBar>

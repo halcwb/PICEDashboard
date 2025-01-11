@@ -77,6 +77,12 @@ module Literals =
     let subGroupCanule = "Canule"
 
     [<Literal>]
+    let subGroupVentilationDays = "Beademing dagen"
+
+    [<Literal>]
+    let subGroupVentilationDuration = "Beademing duur"
+
+    [<Literal>]
     let paragraphTotals = "Totalen"
 
     [<Literal>]
@@ -188,6 +194,8 @@ module Types =
             Specialisme: (string * int) list
             Occupancy: (DateTime * int) list
             Cannule: (string * int) list
+            VentilationDays: (string * int) list
+            VentilationDuration: (string * int) list
             TransportHospital: (string * int) list
             TransportTeam: (string * int) list
             Readmission: (string * int) list
@@ -251,7 +259,7 @@ module Types =
         {
             Value: string
             FirstIsNone: bool
-            Items: string list
+            Items: string[]
             Label: string
             Dispatch: string -> unit
         }
@@ -275,7 +283,7 @@ module Filter =
     //"ouder dan 18 jaar"
     //"onbekende leeftijd"
     let mapping =
-        [
+        [|
             NoFilter, ""
             AgeFilter Neonate, "0 dagen - 4 weken"
             AgeFilter Infant, "1 maand - 1 jaar"
@@ -286,10 +294,10 @@ module Filter =
             DiagnoseFilter Cardiac, "cardiaal"
             DiagnoseFilter Oncology, "oncologie"
             DiagnoseFilter OtherDiagnoses, "overige diagnoses"
-        ]
+        |]
 
 
-    let stringToFilter s = mapping |> List.tryFind (snd >> (=) s)
+    let stringToFilter s = mapping |> Array.tryFind (snd >> (=) s)
 
 
-    let filterToString f = mapping |> List.tryFind (fst >> (=) f)
+    let filterToString f = mapping |> Array.tryFind (fst >> (=) f)

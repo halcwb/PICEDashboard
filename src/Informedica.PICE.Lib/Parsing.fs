@@ -201,7 +201,24 @@ module Parsing =
         else
             Result.okIfNone [| $"couldn't parse int %s{s}" |] (Parsers.parseInt s)
 
+    
+    let parseVent (s: string) =
+        match s |> parseInt with
+        | Ok (Some duration, _) ->
+            match duration with
+            | _ when duration > 3 * 30 -> Some { Id = "90"; Label = "> 3 maanden" }
+            | _ when duration > 30 -> Some { Id = "30"; Label = "> 1 maand" }
+            | _ when duration > 14 -> Some { Id = "14"; Label = "> 2 weken" }
+            | _ when duration > 7 -> Some { Id = "07"; Label = "> 1 week" }
+            | _ when duration > 2 -> Some { Id = "02"; Label = "> 2 dagen" }
+            | _ when duration = 1 -> Some { Id = "01"; Label = "1 dag" }
+            | _ when duration = 0 -> Some { Id = "00"; Label = "Geen" }
+            | _ -> Some { Id = "00"; Label = "Geen" }
+            |> Result.ok
+        | Ok (None, _) -> Some {Id = "00"; Label = "Geen"} |> Result.ok
+        | Error e -> Error e
 
+    
     let parsePatient (hospData: MRDMHospital.Row[]) (d: MRDMPatient.Row) =
         let getHospNum (data: MRDMHospital.Row[]) =
             let errs, hn =
@@ -456,6 +473,11 @@ module Parsing =
             <*> parseBool d.contrean12
             <*> parseBool d.septische_shock
             <*> parseBool d.canule
+            <*> parseInt d.adm_ventilationdays
+            <*> parseInt d.adm_ventilationdaysin
+            <*> parseInt d.adm_ventilationdaysni
+            <*> parseInt d.adm_ventilationdaysother
+            <*> parseVent d.adm_ventilationdaysin
             <*> pim d
             <*> Result.ok None
             <*> prism d

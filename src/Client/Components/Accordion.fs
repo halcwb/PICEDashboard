@@ -14,7 +14,7 @@ module Accordion =
                 item:
                     {|
                         summary: ReactElement
-                        details: ReactElement list
+                        details: ReactElement[]
                     |}
                 isOpen: bool
             |})
