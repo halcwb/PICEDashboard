@@ -326,7 +326,11 @@ module Statistics =
                 if c > 0 then
                     stats.Totals.InvalidPatients <-
                         stats.Totals.InvalidPatients |> List.append [ "Dubbele patienten", c ]
-
+                    stats.Totals.InvalidPatients <-
+                        let tot = pats |> List.length
+                        let invalid = stats.Totals.InvalidPatients |> List.map snd |> List.sum
+                        stats.Totals.InvalidPatients |> List.append [ "Valid patients", tot - invalid ]
+                        
                 xs
             |> List.collect (fun p ->
                 p.HospitalAdmissions
@@ -1021,7 +1025,14 @@ module Statistics =
         try
             if t > 0 then
                 StringBuilder.builder ""
-                |> StringBuilder.appendFormat "{0:F0} ({1:F1}%)" [ n |> box; (100. * n / (t |> float)) |> box ]
+                |> fun sb ->
+                    let perc = 100. * n / (t |> float)
+                    if perc < 0.1 then
+                        sb
+                        |> StringBuilder.appendFormat "{0:F0} ({1:F2}%)" [ n |> box; perc |> box ]
+                    else
+                        sb
+                        |> StringBuilder.appendFormat "{0:F0} ({1:F1}%)" [ n |> box; perc |> box ]
                 |> StringBuilder.toString
             else
                 $"%A{n}"
