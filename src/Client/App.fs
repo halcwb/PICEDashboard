@@ -18,7 +18,7 @@ module private Elmish =
         SelectedFilter: Filter
         SelectedTreeItem: string option
         ShowDiagnoses: bool
-        SelectedDiagnoses: string list
+        SelectedDiagnoses: string[]
     }
 
 
@@ -35,7 +35,7 @@ module private Elmish =
         | SideMenuOpenToggled
         | ShowDiagnoses
         | ShowReport
-        | DiagnosesSelected of string list
+        | DiagnosesSelected of string[]
         | NoOp
 
 
@@ -54,7 +54,7 @@ module private Elmish =
             SelectedFilter = NoFilter
             SelectedTreeItem = Some "0"
             ShowDiagnoses = false
-            SelectedDiagnoses = []
+            SelectedDiagnoses = [||]
 
         },
         Cmd.ofMsg (HelloWorld(Started))
@@ -272,7 +272,11 @@ let View () =
             | Resolved(Error e) -> display false $"Oeps:\n%s{e}"
             | Resolved(Ok report) ->
 
-                let dgs = report.Sections |> List.head |> (fun section -> section.Totals.Diagnoses)
+                let dgs =
+                    report.Sections
+                    |> List.head
+                    |> (fun section -> section.Totals.Diagnoses)
+                    |> List.toArray
 
                 let diagMenu =
                     let props = {|
@@ -285,7 +289,7 @@ let View () =
                                 (o:
                                     {|
                                         showReport: bool
-                                        selected: string list
+                                        selected: string[]
                                     |}) ->
                                 if o.showReport then
                                     ShowReport |> dispatch

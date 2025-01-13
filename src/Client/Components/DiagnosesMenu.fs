@@ -19,7 +19,11 @@ module DiagnosesMenu =
 
 
         let init () =
-            {| showReport = false; selected = [] |}, Cmd.none
+            {|
+                showReport = false
+                selected = [||]
+            |},
+            Cmd.none
 
 
         let update
@@ -28,7 +32,7 @@ module DiagnosesMenu =
             (state:
                 {|
                     showReport: bool
-                    selected: string list
+                    selected: string[]
                 |})
             =
             match msg with
@@ -46,12 +50,12 @@ module DiagnosesMenu =
             {|
                 isOpen: bool
                 toggle: unit -> unit
-                diagnoses: (string * int) list
-                selected: string list
+                diagnoses: (string * int)[]
+                selected: string[]
                 dispatch:
                     {|
                         showReport: bool
-                        selected: string list
+                        selected: string[]
                     |}
                         -> unit
             |})
@@ -74,10 +78,10 @@ module DiagnosesMenu =
 
         let diagnosesList =
             props.diagnoses
-            |> List.map (fun (k, v) -> k, sprintf "%s (%A)" k v)
-            |> List.sort
-            |> List.map (fun (value, label) ->
-                let chkd = props.selected |> List.exists ((=) value)
+            |> Array.map (fun (k, v) -> k, sprintf "%s (%A)" k v)
+            |> Array.sort
+            |> Array.map (fun (value, label) ->
+                let chkd = props.selected |> Array.exists ((=) value)
 
                 let onChange =
                     fun b ->
@@ -86,12 +90,12 @@ module DiagnosesMenu =
                         if b then
                             {|
                                 showReport = false
-                                selected = value :: props.selected
+                                selected = props.selected |> Array.append [| value |]
                             |}
                         else
                             {|
                                 showReport = false
-                                selected = props.selected |> List.filter ((<>) value)
+                                selected = props.selected |> Array.filter ((<>) value)
                             |}
                         |> props.dispatch
 

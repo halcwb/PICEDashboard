@@ -88,83 +88,55 @@ module OccupancyGraph =
 
             match opaque with
             | _ when label = "gemiddeld" ->
-                JSX.jsx
-                    $"""
-                <Line
-                    key={i}
-                    name={label}
-                    dataKey={dataKey}
-                    dot={false}
-                    stroke={color.gray}
-                    strokeWidth={4}
-                    strokeDasharray={[ 15, 5 ]}
-                    type="monotone"
-                    data={data}
-                />
-                """
+                {|
+                    strokeColor = color.gray
+                    strokeWidth = 4.
+                    strokeOpacity = 1.
+                    strokeDashArray = [| 15; 5 |]
+                |}
             | _ when label = "max" ->
-                JSX.jsx
-                    $"""
-                <Line
-                    key={i}
-                    name={label}
-                    dataKey={dataKey}
-                    dot={false}
-                    stroke={color.red}
-                    strokeOpacity={0.5}
-                    strokeWidth={4}
-                    strokeDasharray={[ 15, 5 ]}
-                    type="monotone"
-                    data={data}
-                />
-                """
+                {|
+                    strokeColor = color.red
+                    strokeWidth = 4.
+                    strokeOpacity = 0.5
+                    strokeDashArray = [| 15; 5 |]
+                |}
             | _ when label = "min" ->
-                JSX.jsx
-                    $"""
-                <Line
-                    key={i}
-                    name={label}
-                    dataKey={dataKey}
-                    dot={false}
-                    stroke={color.green}
-                    strokeOpacity={0.5}
-                    strokeWidth={4}
-                    strokeDasharray={[ 15, 5 ]}
-                    type="monotone"
-                    data={data}
-                />
-                """
+                {|
+                    strokeColor = color.green
+                    strokeWidth = 4.
+                    strokeOpacity = 0.5
+                    strokeDashArray = [| 15; 5 |]
+                |}
             | _ when label = "mean" ->
-                JSX.jsx
-                    $"""
-                <Line
-                    key={i}
-                    name={label}
-                    dataKey={dataKey}
-                    dot={false}
-                    stroke={color.gray}
-                    strokeOpacity={0.5}
-                    strokeWidth={4}
-                    strokeDasharray={[ 15, 5 ]}
-                    type="monotone"
-                    data={data}
-                />
-                """
+                {|
+                    strokeColor = color.gray
+                    strokeWidth = 4.
+                    strokeOpacity = 0.5
+                    strokeDashArray = [| 15; 5 |]
+                |}
             | false ->
-                JSX.jsx
-                    $"""
-                <Line
-                    key={i}
-                    name={label}
-                    dataKey={dataKey}
-                    dot={false}
-                    stroke={color.darkBlue}
-                    strokeOpacity={0.2}
-                    type="monotone"
-                    data={data}
-                />
-                """
+                {|
+                    strokeColor = color.darkBlue
+                    strokeWidth = 1.
+                    strokeOpacity = 0.2
+                    strokeDashArray = [||]
+                |}
             | true ->
+                {|
+                    strokeColor = color.darkBlue
+                    strokeWidth = 2.
+                    strokeOpacity = 1.
+                    strokeDashArray = [||]
+                |}
+            |> fun
+                   (props:
+                       {|
+                           strokeColor: string
+                           strokeWidth: float
+                           strokeOpacity: float
+                           strokeDashArray: int[]
+                       |}) ->
                 JSX.jsx
                     $"""
                 <Line
@@ -172,8 +144,9 @@ module OccupancyGraph =
                     name={label}
                     dataKey={dataKey}
                     dot={false}
-                    stroke={color.darkBlue}
-                    strokeWidth={2}
+                    strokeOpacity={props.strokeOpacity}
+                    stroke={props.strokeColor}
+                    strokeWidth={props.strokeWidth}
                     type="monotone"
                     data={data}
                 />
@@ -294,7 +267,7 @@ module OccupancyGraph =
             >
                 <CartesianGrid strokeDasharray={[ 1, 1 ]} />
                 <XAxis dataKey={fun (x: Point) -> x.date} allowDuplicatedCategory={false} />
-                <YAxis number dataKey={fun (x: Point) -> x.value} domain={[| 0, max |]} />
+                <YAxis number dataKey={fun (x: Point) -> x.value} domain={[| 0; max |]} />
                 <Tooltip />
                 <Legend verticalAlign="bottom" onMouseEnter={fun e -> e?value |> EnterLegend |> dispatch} />
                 {lines}

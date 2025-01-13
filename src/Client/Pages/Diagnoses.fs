@@ -42,14 +42,14 @@ module Diagnoses =
         (props:
             {|
                 displayType: DisplayType
-                selected: string list
+                selected: string[]
                 report: Report
             |})
         =
         let selectTxt = props.selected |> String.concat "/" |> sprintf "Selectie: %s"
 
         match props.selected with
-        | [] ->
+        | [||] ->
 
             let sx = {| paddingTop = 10 |}
 
@@ -72,7 +72,7 @@ module Diagnoses =
 
                 fun totals ->
                     totals.Diagnoses
-                    |> List.filter (fun (k, v) -> props.selected |> List.exists ((=) k))
+                    |> List.filter (fun (k, v) -> props.selected |> Array.exists ((=) k))
                 |> getStackedBarChart "Selectie" section
 
             JSX.jsx
