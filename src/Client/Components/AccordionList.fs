@@ -15,7 +15,7 @@ module AccordionList =
                     {|
                         summary: ReactElement
                         details: ReactElement[]
-                    |} list
+                    |}[]
             |})
         =
 
@@ -33,7 +33,7 @@ module AccordionList =
             Accordion.View(props)
 
         let items =
-            props.items |> List.map (fun item -> accordion item.summary item.details)
+            props.items |> Array.map (fun item -> accordion item.summary item.details)
 
         JSX.jsx
             $"""

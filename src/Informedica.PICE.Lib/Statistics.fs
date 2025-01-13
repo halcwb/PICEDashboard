@@ -782,7 +782,10 @@ module Statistics =
                 admissions
                 |> List.map _.VentDuration
                 |> fun xs ->
-                    let caps = xs |> getCaps
+                    let caps =
+                        xs
+                        |> List.sortBy (Option.map _.Id)
+                        |> getCaps
                     xs |> countBy "Onbekend" caps
             
             tot.Totals.TransportHospital <-

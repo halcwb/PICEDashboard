@@ -477,7 +477,7 @@ module Report =
                             summary = summary |> toReact
                         |})
 
-                Components.AccordionList.View({| items = props |})
+                Components.AccordionList.View({| items = props |> List.toArray |})
 
             section.Chapters |> layoutChapters
 
