@@ -140,7 +140,7 @@ module OccupancyGraph =
                 JSX.jsx
                     $"""
                 <Line
-                    key={i}
+                    key={i} 
                     name={label}
                     dataKey={dataKey}
                     dot={false}
