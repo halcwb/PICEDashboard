@@ -2,65 +2,131 @@ namespace Components
 
 
 open Fable.Core
+open Fable.Core.JsInterop
+
 
 module Markdown =
 
 
+    [<Import("getOverrides", from = "mui-markdown")>]
+    let private getOverrides () = emitJsExpr () "getOverrides()"
+
+    [<Emit "Object.assign({}, $0, $1)">]
+    let private objectAssign (x: obj) (y: obj) : obj = jsNative
+
+    [<Import("Typography", from = "@mui/material")>]
+    let private Typography: obj = jsNative
+
+
     [<JSX.Component>]
-    let View (props: {| md: string |}) =
+    let View (text: {| md: string |}) =
+        let headerSx =
+            {|
+                fontWeight = "bold"
+                color = "primary.main"
+                marginTop = 2
+                marginBottom = 1
+            |}
+
+        let h1 =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        sx = {| headerSx with fontSize = 24 |}
+                    |}
+            |}
+
+        let h2 =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        sx = {| headerSx with fontSize = 20 |}
+                    |}
+            |}
+
+        let h3 =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        sx = {| headerSx with fontSize = 18 |}
+                    |}
+            |}
+
+        let h4 =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        sx = {| headerSx with fontSize = 16 |}
+                    |}
+            |}
+
+        let h5 =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        sx = {| headerSx with fontSize = 14 |}
+                    |}
+            |}
+
+        let h6 =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        sx = {| headerSx with fontSize = 12 |}
+                    |}
+            |}
+
+        let p =
+            {|
+                ``component`` = Typography
+                props =
+                    {|
+                        fontSize = 12
+                        paddingTop = 2
+                        paddingBottom = 2
+                    |}
+            |}
+
+        let a =
+            {|
+                ``component`` = Typography
+                props = {| fontSize = 12 |}
+            |}
+
+        let overrides =
+            {|
+                h1 = h1
+                h2 = h2
+                h3 = h3
+                h4 = h4
+                h5 = h5
+                h6 = h6
+                p = p
+                a = a
+            |}
+
+        // merge the overrides with the default overrides
+        let overrides = objectAssign (getOverrides ()) overrides
+
+        let options =
+            {|
+                disableParsingRawHTML = true
+                overrides = overrides
+            |}
+
         JSX.jsx
             $"""
-            import {{ MuiMarkdown, getOverrides }} from 'mui-markdown';
-            import Typography from '@mui/material/Typography';
+            import {{ MuiMarkdown }} from 'mui-markdown';
 
             <MuiMarkdown 
-                options={{ {{
-                    disableParsingRawHTML : true,
-                    overrides : {{
-                        ...getOverrides(),
-                        h1 : 
-                            {{
-                                component : Typography,
-                                props : {{  fontSize : 24, fontWeight : "bold", color : "#0d47a1" }}
-                            }},
-                        h2 : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 20, fontWeight : "bold", paddingTop: 4, paddingBottom : 1, color :  "#0d47a1" }} }}
-                            }},
-                        h3 : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 18, fontWeight : "bold", paddingTop: 4, paddingBottom : 1, color :  "#0d47a1" }} }}
-                            }},
-                        h4 : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 16, fontWeight : "bold", paddingTop: 4, paddingBottom : 1, color :  "#0d47a1" }} }}
-                            }},
-                        h5 : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 14, fontWeight : "bold", paddingTop: 4, paddingBottom : 1, color :  "#0d47a1" }} }}
-                            }},
-                        h6 : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 14, fontWeight : "bold", paddingTop: 4, paddingBottom : 1, color :  "#0d47a1" }} }}
-                            }},
-                        p : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 12, paddingTop: 2, paddingBottom : 2 }} }}
-                            }},
-                        a : 
-                            {{
-                                component : Typography,
-                                props : {{ sx : {{ fontSize : 12 }} }}
-                            }}
-                    }}
-                }}  }}
+                options={options}
                 >
-                {props.md}
+                {text.md}
             </MuiMarkdown>
             """
