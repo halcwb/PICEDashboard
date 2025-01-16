@@ -98,6 +98,7 @@ publishnuget.cmd
 !/src/Client/public/
 !/src/Client/public/*.*
 !/src/Client/Components/
+!/src/Client/Views/
 !/src/Client/Pages/
 !/src/Informedica.PICE.Lib/
 !/src/Informedica.PICE.Lib/pice.xlsx
