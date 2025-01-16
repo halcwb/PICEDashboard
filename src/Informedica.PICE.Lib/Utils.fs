@@ -65,3 +65,20 @@ module Utils =
                     |> String.concat ", "
                     |> sprintf "countByList couldn't find %s in %s" k
                     |> failwith)
+
+
+    module Array =
+
+        let countByArray xs1 xs2 =
+            xs2
+            |> Array.append xs1
+            |> Array.countBy id
+            |> Array.map (fun (k, v) -> k, v - 1)
+            |> Array.sortBy (fun (k, _) ->
+                try
+                    xs1 |> Array.findIndex ((=) k)
+                with _ ->
+                    xs1
+                    |> String.concat ", "
+                    |> sprintf "countByList couldn't find %s in %s" k
+                    |> failwith)

@@ -6,7 +6,7 @@ module DropDownBox =
     open Fable.Core
     open Fable.Core.JsInterop
 
-    open Shared
+    open Components.Types
 
 
     [<JSX.Component>]
@@ -16,10 +16,13 @@ module DropDownBox =
             props.Items
             |> Array.mapi (fun i (s: string) ->
                 let s = if s |> String.IsNullOrEmpty then "Geen" else s
+                let k = $"{i}.{s}"
+
+                let s = s :> obj // temp fix for: https://github.com/fable-compiler/Fable/issues/3999
 
                 JSX.jsx
                     $"""
-                <MenuItem key={i} value={i}>
+                <MenuItem key={k} value={i}>
                     <Typography color="primary" variant="body1" > 
                         {s}
                     </Typography>
@@ -27,7 +30,6 @@ module DropDownBox =
                 """)
 
         let onChange (e: obj) =
-            Logging.log $"DropDownBox: {props.Label} changed to " e
             props.Items[e?target?value] |> props.Dispatch
 
         let value =
@@ -40,7 +42,7 @@ module DropDownBox =
             | None -> ""
 
         let sxFc = {| padding = 1; minWidth = 200 |}
-        let sxIl = {| padding = 0 |}
+        let sxIl = {| padding = 1 |}
 
         JSX.jsx
             $"""

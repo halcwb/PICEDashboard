@@ -35,18 +35,20 @@ module ColoredList =
                 text: string
                 color: string
                 background: string
-            |} list)
+            |}[])
         =
 
         let items =
             props
-            |> List.mapi (fun i p ->
+            |> Array.mapi (fun i p ->
                 let sx =
                     {|
                         fontWeight = "bold"
                         color = p.color
                         backgroundColor = p.background
                     |}
+
+                let key = $"%i{i}-%s{p.text}"
 
                 JSX.jsx
                     $"""
@@ -57,7 +59,7 @@ module ColoredList =
                     divider="true"
                     sx={sx}
                     button="true"
-                    key={i}>
+                    key={key}>
                     <Typography 
                         variant="body1"
                         >

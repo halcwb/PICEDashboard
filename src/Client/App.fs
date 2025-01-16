@@ -140,7 +140,7 @@ module private Elmish =
                         | Print -> Graph
                         | Graph -> Print
                         | Table -> Print
-                    DisplayTypeAcknowledged = true // need to set this to false to show the dialog
+                    DisplayTypeAcknowledged = false
             },
             Cmd.none
 
@@ -201,6 +201,7 @@ open Fable.React
 open Elmish
 open Shared
 
+open Components.Types
 
 [<Import("createTheme", from = "@mui/material/styles")>]
 let private createTheme props = emitJsExpr props "($1, { factor : 2 })"
@@ -221,24 +222,26 @@ let View () =
 
     }
 
-    let mapToTreeData (sections: Section list) =
+    let mapToTreeData (sections: Section[]) =
         let rec mapChapter s (chapter: Chapter) =
             let paragraphs =
                 chapter.Paragraphs
-                |> List.mapi (fun i p -> createData (sprintf "%s.P|%i" s i) p.Title [])
+                |> Array.mapi (fun i p -> createData ($"%s{s}.P|%i{i}") p.Title [||])
 
             chapter.Chapters
-            |> List.mapi (fun i chapter -> chapter |> mapChapter (sprintf "%s.C|%i" s i))
-            |> List.append paragraphs
+            |> Array.mapi (fun i chapter -> chapter |> mapChapter ($"%s{s}.C|%i{i}"))
+            |> Array.append paragraphs
             |> createData s chapter.Title
 
         sections
-        |> List.mapi (fun i section ->
+        |> Array.mapi (fun i section ->
             section.Chapters
-            |> List.mapi (fun i2 chapter -> chapter |> mapChapter (sprintf "%i.C|%i" i i2))
+            |> Array.mapi (fun i2 chapter -> chapter |> mapChapter ($"%i{i}.C|%i{i2}"))
             |> createData (string i) section.Title)
 
     let display showProgress (s: string) =
+
+        let s = s :> obj // temp fix for: https://github.com/fable-compiler/Fable/issues/3999
 
         if showProgress then
             JSX.jsx
@@ -272,11 +275,7 @@ let View () =
             | Resolved(Error e) -> display false $"Oeps:\n%s{e}"
             | Resolved(Ok report) ->
 
-                let dgs =
-                    report.Sections
-                    |> List.head
-                    |> (fun section -> section.Totals.Diagnoses)
-                    |> List.toArray
+                let dgs = report.Sections |> Array.head |> (fun section -> section.Totals.Diagnoses)
 
                 let diagMenu =
                     let props = {|
@@ -297,7 +296,7 @@ let View () =
                                     o.selected |> DiagnosesSelected |> dispatch
                     |}
 
-                    Components.DiagnosesMenu.View(props)
+                    Views.DiagnosesMenu.View(props)
 
                 let diagPage =
                     let props = {|
@@ -330,7 +329,7 @@ let View () =
                 let treeData = report.Sections |> mapToTreeData
 
                 let reportMenu =
-                    Components.ReportMenu.View {|
+                    Views.ReportMenu.View {|
                         data = treeData
                         isOpen = state.SideMenuIsOpen
                         toggle = fun () -> SideMenuOpenToggled |> dispatch
@@ -403,6 +402,8 @@ let View () =
     let content =
         if state.RequestPatients then
             let s = "Patienten worden opgehaald ..."
+            let s = s :> obj // temp fix for: https://github.com/fable-compiler/Fable/issues/3999
+
             JSX.jsx $"""<React.Fragment>{s}</React.Fragment>""" //props.dispatch |> createUploadDialog
         else
             createMainContent state dispatch

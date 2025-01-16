@@ -21,59 +21,64 @@ module Report =
         let selectReport (s: string) (report: Report) =
             Browser.Dom.console.log ("selecting", s)
 
-            let rec selectChapter (ids: string list) (chapters: Chapter list) =
+            let rec selectChapter (ids: string[]) (chapters: Chapter[]) =
                 Browser.Dom.console.log (
                     "select chapter",
                     ids |> String.concat ", ",
-                    chapters |> List.map (fun c -> c.Title) |> String.concat ", "
+                    chapters |> Array.map (fun c -> c.Title) |> String.concat ", "
                 )
 
-                match ids with
-                | id :: tail ->
+                if ids |> Array.length > 0 then
+                    let id = ids[0]
+                    let tail = ids |> Array.skip 1
+
                     match id |> String.split2 with
                     | [ s; id ] when s = "C" ->
-                        let chapter = chapters.[id |> int]
+                        let chapter = chapters[id |> int]
                         Browser.Dom.console.log ("selected chapter: ", chapter.Title)
 
                         match tail with
-                        | [] -> [ chapter ]
-                        | [ id ] ->
+                        | [||] -> [| chapter |]
+                        | [| id |] ->
                             Browser.Dom.console.log ("Finishing with: ", id)
 
                             match id |> String.split2 with
                             | [ s; id ] when s = "C" ->
-                                [
+                                [|
                                     { chapter with
-                                        Chapters = [ chapter.Chapters.[id |> int] ]
-                                        Paragraphs = []
+                                        Chapters = [| chapter.Chapters.[id |> int] |]
+                                        Paragraphs = [||]
                                     }
-                                ]
+                                |]
                             | [ s; id ] when s = "P" ->
                                 Browser.Dom.console.log ("Picked paragraph", id)
 
-                                [
+                                [|
                                     { chapter with
-                                        Paragraphs = [ chapter.Paragraphs.[id |> int] ]
-                                        Chapters = []
+                                        Paragraphs = [| chapter.Paragraphs[id |> int] |]
+                                        Chapters = [||]
                                     }
-                                ]
+                                |]
                             | _ -> sprintf "failwith couldn't get %s" id |> failwith
                         | _ ->
-                            [
+                            [|
                                 { chapter with
-                                    Paragraphs = []
+                                    Paragraphs = [||]
                                     Chapters = (chapter.Chapters |> selectChapter tail)
                                 }
-                            ]
+                            |]
                     | _ -> sprintf "failwith couldn't get %s" id |> failwith
-                | _ -> chapters
+                else
+                    chapters
 
             match s |> String.split with
             | [ id ] ->
                 { report with
-                    Sections = report.Sections.[id |> int] |> List.singleton
+                    Sections = report.Sections.[id |> int] |> Array.singleton
                 }
             | id :: tail ->
+                let tail = tail |> Array.ofList
+
                 { report with
                     Sections =
                         report.Sections.[id |> int]
@@ -81,7 +86,7 @@ module Report =
                             { section with
                                 Chapters = section.Chapters |> selectChapter tail
                             }
-                        |> List.singleton
+                        |> Array.singleton
                 }
 
             | _ -> report
@@ -92,7 +97,7 @@ module Report =
                 {|
                     title = title
                     data = section.Totals |> get
-                    periods = section.YearTotals |> List.map (fun t -> t.Period, t |> get)
+                    periods = section.YearTotals |> Array.map (fun t -> t.Period, t |> get)
                 |}
 
             Components.PieChart.View(props)
@@ -101,16 +106,16 @@ module Report =
         let getStackedBarChart title section get =
             let perYr =
                 section.YearTotals
-                |> List.map (fun t -> t.Period, t |> get)
-                |> List.filter (fun (_, tots) -> tots |> List.sumBy snd > 0)
+                |> Array.map (fun t -> t.Period, t |> get)
+                |> Array.filter (fun (_, tots) -> tots |> Array.sumBy snd > 0)
 
             let perMo =
                 section.MonthTotals
-                |> List.map (fun (yr, xs) ->
+                |> Array.map (fun (yr, xs) ->
                     yr,
                     xs
-                    |> List.map (fun t -> t.Period, t |> get)
-                    |> List.filter (fun (p, tots) -> tots |> List.sumBy snd > 0))
+                    |> Array.map (fun t -> t.Period, t |> get)
+                    |> Array.filter (fun (p, tots) -> tots |> Array.sumBy snd > 0))
 
             let props =
                 {|
@@ -162,7 +167,7 @@ module Report =
                                             content = paragraph.Content
                                         |}
 
-                                    Components.MortalityGraph.View(props) |> toReact
+                                    Views.MortalityGraph.View(props) |> toReact
                                 ]
 
                         | Graph when
@@ -175,7 +180,7 @@ module Report =
 
                                     let props = {| totals = section.YearTotals |}
 
-                                    Components.SMRGraph.View(props) |> toReact
+                                    Views.SMRGraph.View(props) |> toReact
                                 ]
 
                         | Graph when
@@ -188,7 +193,7 @@ module Report =
 
                                     let props = {| totals = section.YearTotals |}
 
-                                    Components.FunnelPlot.View(props) |> toReact
+                                    Views.FunnelPlot.View(props) |> toReact
                                 ]
 
                         | Graph when
@@ -201,7 +206,7 @@ module Report =
 
                                     let props = {| totals = section.YearTotals |}
 
-                                    Components.AdmissionsGraph.View(props) |> toReact
+                                    Views.AdmissionsGraph.View(props) |> toReact
                                 ]
 
 
@@ -216,10 +221,11 @@ module Report =
                                         {|
                                             title = paragraph.Title
                                             data =
-                                                section.YearTotals |> List.map (fun ytot -> ytot.Period, ytot.Occupancy)
+                                                section.YearTotals
+                                                |> Array.map (fun ytot -> ytot.Period, ytot.Occupancy)
                                         |}
 
-                                    Components.OccupancyGraph.View props |> toReact
+                                    Views.OccupancyGraph.View props |> toReact
 
                                     """Ga met de muis over de labels onderaan om de x-as om
                                     het gemiddelde of een jaar uit te lichten. Gebruik de bovenste 
@@ -424,7 +430,7 @@ module Report =
                                 ]
 
                         | _ ->
-                            Browser.Dom.console.log ("couldn't find: ", chapter.Title, paragraph.Title)
+                            Logging.log "couldn't find graphs for " (chapter.Title, paragraph.Title)
 
                             prop.children
                                 [
@@ -437,52 +443,69 @@ module Report =
 
             let rec getDetails chapter =
                 chapter.Paragraphs
-                |> List.map (mapParagraph chapter)
+                |> Array.map (mapParagraph chapter)
                 |> fun els ->
-                    if chapter.Chapters |> List.isEmpty then
+                    if chapter.Chapters |> Array.isEmpty then
                         els
                     else
                         let details =
                             chapter.Chapters
-                            |> List.collect (fun chapter ->
-                                [
-                                    let props =
-                                        {|
-                                            md = chapter.Title |> sprintf "#### %s"
-                                        |}
+                            |> Array.collect (fun chapter ->
+                                Array.append
+                                    [|
+                                        let props =
+                                            {|
+                                                md = chapter.Title |> sprintf "#### %s"
+                                            |}
 
-                                    Components.Markdown.View(props) |> toReact
-                                ]
-                                @ (chapter |> getDetails))
+                                        Components.Markdown.View(props) |> toReact
+                                    |]
+                                    (chapter |> getDetails))
 
-                        els @ details
+                        Array.append els details
 
             let layoutChapters chapters =
                 let props =
                     chapters
-                    |> List.map (fun chapter ->
+                    |> Array.map (fun chapter ->
                         let details = chapter |> getDetails
 
                         let summary =
                             JSX.jsx
                                 $""" 
+                                import React from 'react';
                                 import Typography from '@mui/material/Typography';
-                                <Typography variant="h6" color="primary">
-                                    {chapter.Title} 
-                                </Typography>
+                                <React.Fragment key={chapter.Title}>
+                                    <Typography variant="h6" color="primary">
+                                        {chapter.Title} 
+                                    </Typography>
+                                </React.Fragment>
                                 """
 
                         {|
-                            details = details |> List.toArray
+                            details = details
                             summary = summary |> toReact
                         |})
 
-                Components.AccordionList.View({| items = props |> List.toArray |})
+                Components.AccordionList.View({| items = props |})
 
             section.Chapters |> layoutChapters
 
-        let layoutReport dt (sections: Section list) =
-            let sections = sections |> List.toArray |> Array.map (layoutDetails dt >> toReact)
+
+        let layoutReport dt (sections: Section[]) =
+            let sections =
+                sections
+                |> Array.map (fun sect ->
+                    let det = layoutDetails dt sect
+
+                    JSX.jsx
+                        $"""
+                    import React from 'react';
+
+                    <React.Fragment key={sect.Title}>
+                        {det}
+                    </React.Fragment>
+                    """)
 
             JSX.jsx
                 $"""
@@ -502,8 +525,6 @@ module Report =
                 report: Report
             |})
         =
-        Logging.log "display type" props.displayType
-
         let report =
             match props.selected with
             | Some s -> Utils.selectReport s props.report

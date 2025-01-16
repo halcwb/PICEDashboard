@@ -62,6 +62,7 @@ module TitleBar =
                 </IconButton>
                 """
 
+        let title = props.title :> obj // temp fix for: https://github.com/fable-compiler/Fable/issues/3999
 
         JSX.jsx
             $"""
@@ -90,7 +91,7 @@ module TitleBar =
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="body1" component="div" sx={sx1}>
-                        {props.title}
+                        {title}
                     </Typography>
                     {toggleGraphButton}
                     <IconButton

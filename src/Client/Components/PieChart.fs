@@ -12,7 +12,7 @@ module PieChart =
     module private Elmish =
 
 
-        let createPieSlice name value color =
+        let createSlice name value color =
             {|
                 name = name
                 value = value
@@ -21,7 +21,7 @@ module PieChart =
 
 
         let colorKeyValueList xs =
-            xs |> List.mapi (fun i (k, v) -> createPieSlice k v (Colors.getColor i))
+            xs |> Array.mapi (fun i (k, v) -> createSlice k v (Colors.getColor i))
 
 
         let createListItem color background text =
@@ -32,13 +32,13 @@ module PieChart =
             |}
 
         let coloredItemList xs =
-            xs |> List.mapi (fun i s -> createListItem color.white (Colors.getColor i) s)
+            xs |> Array.mapi (fun i s -> createListItem color.white (Colors.getColor i) s)
 
         let keyValueListToColoredItems kvs =
-            let t = kvs |> List.map snd |> List.sum |> float
+            let t = kvs |> Array.map snd |> Array.sum |> float
 
             kvs
-            |> List.map (fun (k, v) -> sprintf "%s: %i (%.0f" k v (100. * (v |> float) / t) |> sprintf "%s%%)")
+            |> Array.map (fun (k, v) -> sprintf "%s: %i (%.0f" k v (100. * (v |> float) / t) |> sprintf "%s%%)")
             |> coloredItemList
 
 
@@ -113,44 +113,49 @@ module PieChart =
         (props:
             {|
                 title: string
-                data: (string * int) list
-                periods: (string * (string * int) list) list
+                data: (string * int)[]
+                periods: (string * (string * int)[])[]
             |})
         =
-        let last = (props.periods |> List.length) - 1
+        let last = (props.periods |> Array.length) - 1
         let state, dispatch = React.useElmish (init last, update, [||])
 
         let p, data =
             match state.position with
             | Stopped ->
                 let start, end' =
-                    props.periods |> List.head |> fst, props.periods |> List.rev |> List.head |> fst
+                    props.periods |> Array.head |> fst, props.periods |> Array.rev |> Array.head |> fst
 
                 sprintf "%s - %s" start end', props.data
             | _ ->
                 let i =
                     match state.position with
                     | Position i -> i
-                    | Last -> (props.periods |> List.length) - 1
+                    | Last -> (props.periods |> Array.length) - 1
                     | _ -> 0
 
-                props.periods[i % (props.periods |> List.length)]
+                props.periods[i % (props.periods |> Array.length)]
 
         let coloredList =
             let data = data |> keyValueListToColoredItems
             ColoredList.View(data)
 
         let pieChart =
-            let data = data |> colorKeyValueList |> List.toArray
+            let data = data |> colorKeyValueList
 
             let cells =
                 data
                 |> Array.map (fun d ->
+
+                    let color = d.color :> obj // temp fix for: https://github.com/fable-compiler/Fable/issues/3999
+                    let key = d.name
+
                     JSX.jsx
                         $"""
                     import React from "react";
                     import {{ Cell }} from 'recharts';
-                    <Cell fill={d.color} />
+
+                    <Cell key={key} fill={color} />
                     """)
 
             JSX.jsx
@@ -168,7 +173,6 @@ module PieChart =
                     {cells}
                 </Pie>
             </PieChart>
-
             """
 
         let toolbarTitle = $"{props.title} {p}"

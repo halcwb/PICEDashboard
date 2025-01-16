@@ -6,6 +6,10 @@ module Dialog =
 
     open Fable.Core
 
+    let private renderMd (md: string) =
+        let props = {| md = md |}
+        Markdown.View props
+
 
     [<JSX.Component>]
     let View
@@ -18,25 +22,21 @@ module Dialog =
         =
         JSX.jsx
             $"""
-        
+        import Dialog from '@mui/material/Dialog';
+        import DialogTitle from '@mui/material/DialogTitle';
+        import DialogContent from '@mui/material/DialogContent';
+        import DialogActions from '@mui/material/DialogActions';
+        import Button from '@mui/material/Button';
+
+        <Dialog open={true} onClose={props.dispatch}>
+            <DialogTitle>{props.title |> renderMd}</DialogTitle>
+            <DialogContent>
+                {props.content |> renderMd}
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={props.dispatch} color="primary">
+                    Ok
+                </Button>
+            </DialogActions>
+        </Dialog>
         """
-
-(*
-
-            Mui.dialog [
-                dialog.open' true
-                dialog.onClose (fun _ -> () |> props.dispatch)
-                dialog.children [
-                    Mui.dialogTitle [ props.title |> Components.Markdown.render ]
-                    Mui.dialogContent [ 
-                        props.content |> Components.Markdown.render 
-                    ]
-                    Mui.dialogActions [
-                        Mui.button [
-                            prop.onClick (fun _ -> () |> props.dispatch)
-                            prop.text "Ok"
-                        ]
-                    ]
-                ]
-            ]
-    *)

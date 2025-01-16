@@ -33,7 +33,19 @@ module AccordionList =
             Accordion.View(props)
 
         let items =
-            props.items |> Array.map (fun item -> accordion item.summary item.details)
+            props.items
+            |> Array.mapi (fun i item ->
+                let item = accordion item.summary item.details
+
+                JSX.jsx
+                    $"""
+                    import React from 'react';
+                    
+                    <React.Fragment key={i}>
+                        {item}
+                    </React.Fragment>
+                """)
+
 
         JSX.jsx
             $"""

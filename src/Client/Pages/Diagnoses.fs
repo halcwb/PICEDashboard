@@ -16,16 +16,16 @@ module Diagnoses =
     let private getStackedBarChart title section get =
         let perYr =
             section.YearTotals
-            |> List.map (fun t -> t.Period, t |> get)
-            |> List.filter (fun (_, tots) -> tots |> List.sumBy snd > 0)
+            |> Array.map (fun t -> t.Period, t |> get)
+            |> Array.filter (fun (_, tots) -> tots |> Array.sumBy snd > 0)
 
         let perMo =
             section.MonthTotals
-            |> List.map (fun (yr, xs) ->
+            |> Array.map (fun (yr, xs) ->
                 yr,
                 xs
-                |> List.map (fun t -> t.Period, t |> get)
-                |> List.filter (fun (p, tots) -> tots |> List.sumBy snd > 0))
+                |> Array.map (fun t -> t.Period, t |> get)
+                |> Array.filter (fun (p, tots) -> tots |> Array.sumBy snd > 0))
 
         let props =
             {|
@@ -68,11 +68,11 @@ module Diagnoses =
             let sx = {| paddingTop = 10 |}
 
             let chart =
-                let section = props.report.Sections |> List.head
+                let section = props.report.Sections |> Array.head
 
                 fun totals ->
                     totals.Diagnoses
-                    |> List.filter (fun (k, v) -> props.selected |> Array.exists ((=) k))
+                    |> Array.filter (fun (k, v) -> props.selected |> Array.exists ((=) k))
                 |> getStackedBarChart "Selectie" section
 
             JSX.jsx

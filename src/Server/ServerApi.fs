@@ -22,30 +22,30 @@ let init = Parsing.parseMRDM exportPath cachePath
 let mapTotals (totals: Statistics.Totals) =
     {
         Period = totals.Period
-        InvalidPatients = totals.InvalidPatients
+        InvalidPatients = totals.InvalidPatients |> List.toArray
         Patients = totals.Patients
-        Readmission = totals.Readmission
+        Readmission = totals.Readmission |> List.toArray
         Admissions = totals.Admissions
         Admitted = totals.Admitted
         Deaths = totals.Deaths
-        DeathMode = totals.DeathMode
+        DeathMode = totals.DeathMode |> List.toArray
         Discharged = totals.Discharged
-        DischargeReasons = totals.DischargeReasons
-        HospitalDischargeDestinations = totals.HospitalDischargeDestinations
-        Urgency = totals.Urgency
-        Gender = totals.Gender
-        AgeGroup = totals.AgeGroup
-        DiagnoseGroups = totals.DiagnoseGroups
-        Diagnoses = totals.Diagnoses
-        Specialisme = totals.Specialism
-        Occupancy = totals.Occupancy
-        Cannule = totals.Canule
-        VentilationDays = totals.VentilationDays
-        VentilationDuration = totals.VentilationDuration
-        TransportHospital = totals.TransportHospital
-        TransportTeam = totals.TransportTeam
+        DischargeReasons = totals.DischargeReasons |> List.toArray
+        HospitalDischargeDestinations = totals.HospitalDischargeDestinations |> List.toArray
+        Urgency = totals.Urgency |> List.toArray
+        Gender = totals.Gender |> List.toArray
+        AgeGroup = totals.AgeGroup |> List.toArray
+        DiagnoseGroups = totals.DiagnoseGroups |> List.toArray
+        Diagnoses = totals.Diagnoses |> List.toArray
+        Specialisme = totals.Specialism |> List.toArray
+        Occupancy = totals.Occupancy |> List.toArray
+        Cannule = totals.Canule |> List.toArray
+        VentilationDays = totals.VentilationDays |> List.toArray
+        VentilationDuration = totals.VentilationDuration |> List.toArray
+        TransportHospital = totals.TransportHospital |> List.toArray
+        TransportTeam = totals.TransportTeam |> List.toArray
         PICUDays = totals.PICUDays
-        LengthOfStay = totals.LengthOfStay
+        LengthOfStay = totals.LengthOfStay |> List.toArray
         PICUDeaths = totals.PICUDeaths
         PIM2Mortality = totals.PIM2Mortality
         PIM3Mortality = totals.PIM3Mortality
@@ -65,14 +65,14 @@ let createReport filter =
         | [] ->
             {
                 Title = chapter.Title
-                Chapters = []
-                Paragraphs = chapter.Paragraphs |> List.map mapParagraph
+                Chapters = [||]
+                Paragraphs = chapter.Paragraphs |> List.map mapParagraph |> List.toArray
             }
         | _ ->
             {
                 Title = chapter.Title
-                Chapters = chapter.Chapters |> List.map mapChapter
-                Paragraphs = chapter.Paragraphs |> List.map mapParagraph
+                Chapters = chapter.Chapters |> List.map mapChapter |> List.toArray
+                Paragraphs = chapter.Paragraphs |> List.map mapParagraph |> List.toArray
             }
 
     match filterPath |> Cache.getCache<Report> with
@@ -92,11 +92,12 @@ let createReport filter =
                     |> List.map (fun s ->
                         {
                             Title = s.Title
-                            Chapters = s.Chapters |> List.map mapChapter
+                            Chapters = s.Chapters |> List.map mapChapter |> List.toArray
                             Totals = s.Totals |> mapTotals
-                            YearTotals = s.YearTotals |> List.map mapTotals
-                            MonthTotals = s.MonthTotals |> List.map (fun (yr, tots) -> yr, tots |> List.map mapTotals)
+                            YearTotals = s.YearTotals |> List.map mapTotals |> List.toArray
+                            MonthTotals = s.MonthTotals |> List.map (fun (yr, tots) -> yr, tots |> List.map mapTotals |> List.toArray) |> List.toArray
                         })
+                    |> List.toArray
                 Markdown = rep.Markdown
             }
         |> fun report ->

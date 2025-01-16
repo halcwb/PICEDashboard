@@ -98,7 +98,7 @@ module StackedBarChart =
             />
             """
 
-        labels |> List.mapi create |> List.toArray
+        labels |> Array.mapi create
 
 
     open Elmish
@@ -109,24 +109,25 @@ module StackedBarChart =
         (props:
             {|
                 title: string
-                perYear: (string * (string * int) list) list
-                perMonth: (string * (string * ((string * int) list)) list) list
+                perYear: (string * (string * int)[])[]
+                perMonth: (string * (string * ((string * int)[]))[])[]
             |})
         =
-        let last = (props.perMonth |> List.length) - 1
+        let last = (props.perMonth |> Array.length) - 1
         let state, dispatch = React.useElmish (init last, update, [||])
 
         let p, data =
-            let total xs = xs |> List.map snd |> List.sum |> float
+            let total xs =
+                xs |> Array.map snd |> Array.sum |> float
 
             let map xs =
                 xs
-                |> List.map (fun (period, data) ->
+                |> Array.map (fun (period, data) ->
                     let t = data |> total
 
                     period,
                     data
-                    |> List.map (fun (k, v) ->
+                    |> Array.map (fun (k, v) ->
                         k,
                         if state.showPercentage then
                             (100. * (v |> float) / t) |> Math.round 2
@@ -139,15 +140,19 @@ module StackedBarChart =
                 let i =
                     match state.position with
                     | Position i -> i
-                    | Last -> (props.perMonth |> List.length) - 1
+                    | Last -> (props.perMonth |> Array.length) - 1
                     | _ -> 0
 
-                let xs = props.perMonth |> List.item (i % (props.perMonth |> List.length))
+                let xs = props.perMonth |> Array.item (i % (props.perMonth |> Array.length))
 
                 xs |> fst, xs |> snd |> map
 
         let bars =
-            props.perYear |> List.collect snd |> List.map fst |> List.distinct |> createBars
+            props.perYear
+            |> Array.collect snd
+            |> Array.map fst
+            |> Array.distinct
+            |> createBars
 
         let toolbarTitle = $"{props.title} {p}"
 
@@ -167,7 +172,7 @@ module StackedBarChart =
 
         let getDataKey = fun (k, _) -> k.ToString()
 
-        let data = data |> List.toArray |> Array.map (fun (k, xs) -> k, xs |> List.toArray)
+        let data = data |> Array.map (fun (k, xs) -> k, xs)
 
         if p <> "" then
             Logging.log $"data fro {p}" data

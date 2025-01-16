@@ -120,13 +120,16 @@ module Markdown =
                 overrides = overrides
             |}
 
+        let md = text.md :> obj // temp fix for: https://github.com/fable-compiler/Fable/issues/3999
+
         JSX.jsx
             $"""
+            import React from 'react';
             import {{ MuiMarkdown }} from 'mui-markdown';
-
+            
             <MuiMarkdown 
                 options={options}
                 >
-                {text.md}
+                {md}
             </MuiMarkdown>
             """

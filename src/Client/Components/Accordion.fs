@@ -27,6 +27,18 @@ module Accordion =
 
         let toggle = fun _ -> setValue (not value)
 
+        let details =
+            props.item.details
+            |> Array.mapi (fun i detail ->
+                JSX.jsx
+                    $"""
+                    import React from 'react';
+
+                    <React.Fragment key={i} >
+                        {detail}
+                    </React.Fragment>
+                """)
+
         JSX.jsx
             $"""
         import Accordion from '@mui/material/Accordion';
@@ -43,7 +55,7 @@ module Accordion =
                 {props.item.summary}
             </AccordionSummary>
             <AccordionDetails>
-                {props.item.details}
+                {details}
             </AccordionDetails>
         </Accordion>
         """

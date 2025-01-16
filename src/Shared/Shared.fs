@@ -172,7 +172,7 @@ module Types =
     type Totals =
         {
             Period: string
-            InvalidPatients: (string * int) list
+            InvalidPatients: (string * int)[]
             Patients: int
             Admissions: int
             Admitted: int
@@ -180,50 +180,50 @@ module Types =
             PICUDays: int
             Deaths: int
             PICUDeaths: int
-            DeathMode: (string * int) list
+            DeathMode: (string * int)[]
             PIM2Mortality: float
             PIM3Mortality: float
             PRISM4Mortality: float
-            Urgency: (string * int) list
-            Gender: (string * int) list
-            AgeGroup: (string * int) list
-            DischargeReasons: (string * int) list
-            HospitalDischargeDestinations: (string * int) list
-            DiagnoseGroups: (string * int) list
-            Diagnoses: (string * int) list
-            Specialisme: (string * int) list
-            Occupancy: (DateTime * int) list
-            Cannule: (string * int) list
-            VentilationDays: (string * int) list
-            VentilationDuration: (string * int) list
-            TransportHospital: (string * int) list
-            TransportTeam: (string * int) list
-            Readmission: (string * int) list
-            LengthOfStay: (string * int) list
+            Urgency: (string * int)[]
+            Gender: (string * int)[]
+            AgeGroup: (string * int)[]
+            DischargeReasons: (string * int)[]
+            HospitalDischargeDestinations: (string * int)[]
+            DiagnoseGroups: (string * int)[]
+            Diagnoses: (string * int)[]
+            Specialisme: (string * int)[]
+            Occupancy: (DateTime * int)[]
+            Cannule: (string * int)[]
+            VentilationDays: (string * int)[]
+            VentilationDuration: (string * int)[]
+            TransportHospital: (string * int)[]
+            TransportTeam: (string * int)[]
+            Readmission: (string * int)[]
+            LengthOfStay: (string * int)[]
         }
 
 
     type Report =
         {
-            Sections: Section list
+            Sections: Section[]
             Markdown: string
         }
 
     and Section =
         {
             Title: string
-            Chapters: Chapter list
+            Chapters: Chapter[]
             Totals: Totals
-            YearTotals: Totals list
+            YearTotals: Totals[]
             // string = year to which totals belong
-            MonthTotals: (string * Totals list) list
+            MonthTotals: (string * Totals[])[]
         }
 
     and Chapter =
         {
             Title: string
-            Chapters: Chapter list
-            Paragraphs: Paragraph list
+            Chapters: Chapter[]
+            Paragraphs: Paragraph[]
         }
 
     and Paragraph = { Title: string; Content: string }
@@ -246,23 +246,6 @@ module Types =
         | MiddleChildhood
         | Adolescence
 
-
-    type TreeData =
-        {
-            id: string
-            label: string
-            children: TreeData list
-        }
-
-
-    type DropDownItems =
-        {
-            Value: string
-            FirstIsNone: bool
-            Items: string[]
-            Label: string
-            Dispatch: string -> unit
-        }
 
     type DisplayType =
         | Print

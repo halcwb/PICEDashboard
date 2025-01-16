@@ -21,14 +21,14 @@ module Math =
     let calcAverage getTotal getCount tots =
         let t =
             tots
-            |> List.sumBy (fun t ->
+            |> Seq.sumBy (fun t ->
                 if t |> getTotal = 0 then
                     0.
                 else
                     (t |> getCount) / (t |> getTotal |> float))
             |> float
 
-        t / (tots |> List.length |> float)
+        t / (tots |> Seq.length |> float)
 
 
 open Fable.Core
@@ -44,6 +44,21 @@ let inline toReact (el: JSX.Element) : ReactElement = unbox el
 let inline toStyle (styles: IStyleAttribute list) : obj = JsInterop.createObj (unbox styles)
 
 let inline spread (value: obj) : obj = emitJsStatement value """...$0"""
+
+
+module Array =
+
+    let inline mapKeyEls f els =
+        els
+        |> Array.map (fun (key, el) ->
+            JSX.jsx
+                $"""
+                import React from 'react';
+
+                <React.Fragment key={key}>
+                    {el |> f}
+                </React.Fragment>
+            """)
 
 
 let toClass (classes: (string * bool) list) : string =
@@ -74,11 +89,11 @@ module Logging =
 
     open Browser.Dom
 
-    let log (msg: string) a = console.log (box msg, [| box a |])
+    let inline log (msg: string) a = console.log (box msg, [| box a |])
 
-    let error (msg: string) e = console.error (box msg, [| box e |])
+    let inline error (msg: string) e = console.error (box msg, [| box e |])
 
-    let warning (msg: string) a = console.warn (box msg, [| box a |])
+    let inline warning (msg: string) a = console.warn (box msg, [| box a |])
 
 
 module GoogleDocs =
@@ -132,4 +147,4 @@ module Colors =
         color.darkTurqouise
     |]
 
-    let getColor i = bgColors.[i % bgColors.Length]
+    let getColor i = bgColors[i % bgColors.Length]
