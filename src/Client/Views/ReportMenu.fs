@@ -62,27 +62,8 @@ module ReportMenu =
     open Elmish
 
 
-    let private renderTreeItem id label children dispatch =
-        let props =
-            {|
-                id = id
-                label = label
-                children = children
-                dispatch = dispatch
-            |}
-
-        JSX.jsx
-            $"""
-        import React from 'react';
-    
-        <React.Fragment key={id} >
-            {Components.TreeItem.View props}            
-        </React.Fragment>
-        """
-
-
-    let private renderTree items =
-        let props = {| items = items |}
+    let private renderTree dispatch data =
+        let props = {| data = data; dispatch = dispatch |}
 
         Components.SimpleTreeView.View(props)
 
@@ -139,23 +120,12 @@ module ReportMenu =
                 }
 
         let dispatchItem id =
-            fun _ ->
+            fun () ->
                 if id <> props.currentItem then
                     props.dispatch ({| state with item = id |})
 
-        let rec treeItems data =
-            let map d =
-                let children =
-                    if d.children |> Array.isEmpty then
-                        [||]
-                    else
-                        d.children |> treeItems
 
-                renderTreeItem d.id d.label children (dispatchItem d.id)
-
-            data |> Array.map (fun d -> d.id, d) |> Array.mapKeyEls map
-
-        let tree = props.data |> treeItems |> renderTree
+        let tree = renderTree dispatchItem props.data
 
         let bxSx = {| width = drawerWidth; padding = 1 |}
 

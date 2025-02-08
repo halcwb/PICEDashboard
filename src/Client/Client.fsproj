@@ -24,7 +24,6 @@
     <Compile Include=".\Components\PieChart.fs" />
     <Compile Include=".\Components\StackedBarChart.fs" />
     <Compile Include=".\Components\Dialog.fs" />
-    <Compile Include=".\Components\TreeItem.fs" />
     <Compile Include=".\Components\SimpleTreeView.fs" />
     <Compile Include=".\Views\ReportMenu.fs" />
     <Compile Include=".\Views\DiagnosesMenu.fs" />
