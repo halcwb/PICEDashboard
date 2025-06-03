@@ -75,6 +75,7 @@ publishnuget.cmd
 # Add github actions
 !.github/
 !.github/workflows/
+!.github/instructions/
 !.github/workflows/*.yml
 !.github/ISSUE_TEMPLATE/
 
